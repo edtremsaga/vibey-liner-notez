@@ -1,0 +1,340 @@
+.album-page {
+  min-height: 100vh;
+  background-color: #fafafa;
+  padding: 2rem 0;
+}
+
+.album-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 2rem;
+  color: #666;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.back-link:hover {
+  color: #1a1a1a;
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #666;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.error {
+  color: #c33;
+}
+
+.error h2 {
+  margin-bottom: 1rem;
+  color: #c33;
+}
+
+.error p {
+  margin-bottom: 0.5rem;
+}
+
+.back-button {
+  display: block;
+  margin: 2rem auto;
+  padding: 0.75rem 1.5rem;
+  background-color: #1a1a1a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.back-button:hover {
+  background-color: #333;
+}
+
+/* Album Identity */
+.album-identity {
+  margin-bottom: 3rem;
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.cover-art {
+  flex-shrink: 0;
+  width: 300px;
+  height: 300px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cover-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.album-header {
+  flex: 1;
+  padding-top: 1rem;
+}
+
+.album-title {
+  font-size: 2.5rem;
+  font-weight: 300;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.album-artist {
+  font-size: 1.5rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+  font-weight: 400;
+}
+
+.album-year {
+  font-size: 1rem;
+  color: #999;
+  font-weight: 300;
+}
+
+/* Editions */
+.editions-section {
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.editions-section h2 {
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.editions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.edition-button {
+  padding: 0.75rem 1.25rem;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.edition-button:hover {
+  border-color: #999;
+}
+
+.edition-button.active {
+  border-color: #1a1a1a;
+  background-color: #f5f5f5;
+}
+
+.edition-title {
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.edition-date,
+.edition-format {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* Tracklist */
+.tracklist-section {
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tracklist-section h2 {
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.tracklist {
+  list-style: none;
+  counter-reset: track-counter;
+}
+
+.track-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f0f0f0;
+  counter-increment: track-counter;
+}
+
+.track-item:last-child {
+  border-bottom: none;
+}
+
+.track-position {
+  min-width: 3rem;
+  font-size: 0.9rem;
+  color: #666;
+  font-variant-numeric: tabular-nums;
+}
+
+.track-title {
+  flex: 1;
+  font-size: 1rem;
+  color: #1a1a1a;
+}
+
+.track-duration {
+  font-size: 0.9rem;
+  color: #999;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Credits */
+.credits-section {
+  margin-bottom: 3rem;
+}
+
+.credits-section h2 {
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.credits-group {
+  margin-bottom: 2.5rem;
+}
+
+.credits-group h3 {
+  font-size: 1.25rem;
+  font-weight: 400;
+  margin-bottom: 1rem;
+  color: #444;
+}
+
+.credits-list {
+  list-style: none;
+  margin-bottom: 1.5rem;
+}
+
+.credit-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 0.95rem;
+}
+
+.credit-item:last-child {
+  border-bottom: none;
+}
+
+.credit-name {
+  color: #1a1a1a;
+  font-weight: 400;
+}
+
+.credit-role {
+  color: #666;
+  text-transform: capitalize;
+}
+
+.track-credits {
+  margin-bottom: 2rem;
+  padding-left: 1rem;
+  border-left: 2px solid #e0e0e0;
+}
+
+.track-credit-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  color: #333;
+}
+
+.credit-category {
+  margin-bottom: 1rem;
+}
+
+.category-label {
+  display: block;
+  font-size: 0.85rem;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.no-credits {
+  color: #999;
+  font-style: italic;
+  padding: 2rem 0;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .album-identity {
+    flex-direction: column;
+  }
+
+  .cover-art {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .album-title {
+    font-size: 2rem;
+    text-align: center;
+  }
+
+  .album-artist {
+    text-align: center;
+  }
+
+  .album-year {
+    text-align: center;
+  }
+
+  .editions-list {
+    flex-direction: column;
+  }
+
+  .track-item {
+    flex-wrap: wrap;
+  }
+}
+
