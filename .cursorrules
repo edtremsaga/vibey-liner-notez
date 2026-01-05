@@ -1,13 +1,49 @@
 # Cursor Rules for vibey liner notez
 
-## Primary Workflow Rule
+## ⚠️ CRITICAL WORKFLOW RULE - MUST FOLLOW ⚠️
 
-**Before writing any code:**
-1. Explain back to the user what you understand from their request
-2. Wait for explicit confirmation/agreement before implementing
-3. Only proceed with code changes after the user agrees
+**NEVER make code changes without following this workflow:**
 
-This ensures we're aligned on what will happen before any code gets written.
+### REQUIRED Steps Before ANY Code Changes:
+
+1. **EXPLAIN**: Clearly describe what you understand the user is asking for
+   - Summarize the request in your own words
+   - List what files/functions will be affected
+   - Describe the expected behavior/outcome
+
+2. **WAIT**: Explicitly wait for user confirmation
+   - Use phrases like "Should I proceed?" or "Does this sound correct?"
+   - DO NOT proceed until user explicitly confirms with words like:
+     - "proceed"
+     - "yes"
+     - "go ahead"
+     - "implement"
+     - "that's correct"
+     - "do it"
+
+3. **THEN CODE**: Only after explicit confirmation, proceed with code changes
+
+### HARD STOPS:
+
+- ❌ NEVER use `search_replace`, `write`, `edit_file`, or any code editing tools until user confirms
+- ❌ NEVER assume agreement - always wait for explicit confirmation
+- ❌ NEVER skip the explanation step, even for "simple" requests
+- ✅ ALWAYS explain first, wait for confirmation, then code
+
+### Checklist Format (use this structure):
+
+```
+## Understanding:
+[Your explanation of what user wants]
+
+## Proposed Changes:
+[What files/functions you'll modify]
+
+## Awaiting Confirmation:
+[Wait for user to explicitly confirm before proceeding]
+```
+
+**This rule applies to ALL requests, no exceptions.**
 
 ## Project Context
 

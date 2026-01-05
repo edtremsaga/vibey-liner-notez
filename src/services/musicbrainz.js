@@ -53,15 +53,55 @@ function parsePosition(track, medium) {
   return track.number.toString()
 }
 
-// Search for release groups by artist name and album name
-export async function searchReleaseGroups(artistName, albumName) {
-  if (!artistName || !albumName) {
-    throw new Error('Both artist name and album name are required')
+// Search for release groups by artist name and optional album name
+// If albumName is provided, searches for specific album
+// If only artistName, returns releases by that artist (filtered by releaseType if provided)
+// releaseType: Album, EP, Single, Live, Compilation, Soundtrack, or null for all types
+export async function searchReleaseGroups(artistName, albumName = null, releaseType = null) {
+  if (!artistName) {
+    throw new Error('Artist name is required')
   }
   
-  // Construct query: artist:"name" AND release:"name"
-  const query = `artist:"${artistName}" AND release:"${albumName}"`
-  const url = `${MB_API_BASE}/release-group?query=${encodeURIComponent(query)}&limit=20&fmt=json`
+  // Define query patterns for each release type
+  // Some types use primarytype only, others use primarytype + secondarytype
+  // For "Album", we need to exclude albums with secondary types (Live, Compilation, Soundtrack)
+  // to get only studio albums
+  function buildTypeQuery(releaseType) {
+    const typeQueries = {
+      'Album': 'primarytype:album NOT secondarytype:live NOT secondarytype:compilation NOT secondarytype:soundtrack',
+      'EP': 'primarytype:ep',
+      'Single': 'primarytype:single',
+      'Live': 'primarytype:album AND secondarytype:live',
+      'Compilation': 'primarytype:album AND secondarytype:compilation',
+      'Soundtrack': 'primarytype:album AND secondarytype:soundtrack'
+    }
+    return typeQueries[releaseType] || null
+  }
+  
+  let query
+  let limit = 20
+  
+  if (albumName) {
+    // Specific album search: artist:"name" AND release:"name"
+    query = `artist:"${artistName}" AND release:"${albumName}"`
+  } else {
+    // Artist-only search: filter by release type if specified
+    if (releaseType) {
+      const typeQuery = buildTypeQuery(releaseType)
+      if (typeQuery) {
+        query = `artist:"${artistName}" AND ${typeQuery}`
+      } else {
+        // Fallback to primarytype if type not in mapping
+        query = `artist:"${artistName}" AND primarytype:${releaseType}`
+      }
+    } else {
+      // No type filter - get all release types
+      query = `artist:"${artistName}"`
+    }
+    limit = 100 // Increase limit for artist-only searches
+  }
+  
+  const url = `${MB_API_BASE}/release-group?query=${encodeURIComponent(query)}&limit=${limit}&fmt=json`
   
   try {
     const response = await rateLimitedFetch(url, {
@@ -77,9 +117,10 @@ export async function searchReleaseGroups(artistName, albumName) {
     
     const data = await response.json()
     const releaseGroups = data['release-groups'] || []
+    const totalCount = data.count || releaseGroups.length
     
     // Transform to simple result format
-    return releaseGroups.map(rg => ({
+    let results = releaseGroups.map(rg => ({
       releaseGroupId: rg.id,
       title: rg.title,
       artistName: extractArtistName(rg['artist-credit']),
@@ -87,6 +128,30 @@ export async function searchReleaseGroups(artistName, albumName) {
         ? parseInt(rg['first-release-date'].substring(0, 4)) 
         : null
     }))
+    
+    // For artist-only searches, sort by year (newest first), then by title
+    if (!albumName) {
+      results.sort((a, b) => {
+        // Sort by year (newest first), then by title
+        if (a.releaseYear && b.releaseYear) {
+          if (b.releaseYear !== a.releaseYear) {
+            return b.releaseYear - a.releaseYear
+          }
+        } else if (a.releaseYear && !b.releaseYear) {
+          return -1
+        } else if (!a.releaseYear && b.releaseYear) {
+          return 1
+        }
+        // If years are equal or both null, sort by title
+        return (a.title || '').localeCompare(b.title || '')
+      })
+    }
+    
+    return {
+      results,
+      totalCount,
+      isArtistOnly: !albumName
+    }
   } catch (error) {
     console.error('Error searching release groups:', error)
     throw error

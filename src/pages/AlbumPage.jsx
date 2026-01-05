@@ -7,9 +7,25 @@ function AlbumPage() {
   // Search state
   const [searchArtist, setSearchArtist] = useState('')
   const [searchAlbum, setSearchAlbum] = useState('')
+  const [releaseType, setReleaseType] = useState('Album') // Default to Album
   const [searching, setSearching] = useState(false)
   const [searchResults, setSearchResults] = useState(null)
   const [searchError, setSearchError] = useState(null)
+  const [searchMeta, setSearchMeta] = useState(null) // { totalCount, isArtistOnly, releaseType }
+  const [displayedResults, setDisplayedResults] = useState([])
+  const [resultsPage, setResultsPage] = useState(1)
+  const [sortOption, setSortOption] = useState('newest') // 'newest', 'oldest', 'title-az', 'title-za'
+  const RESULTS_PER_PAGE = 20
+  
+  // Available release types for filtering
+  const RELEASE_TYPES = [
+    { value: 'Album', label: 'Albums' },
+    { value: 'EP', label: 'EPs' },
+    { value: 'Single', label: 'Singles' },
+    { value: 'Live', label: 'Live Albums' },
+    { value: 'Compilation', label: 'Compilations' },
+    { value: 'Soundtrack', label: 'Soundtracks' }
+  ]
   
   // Album state
   const [album, setAlbum] = useState(null)
@@ -26,29 +42,126 @@ function AlbumPage() {
   
   // Track credits collapse state (Set of track IDs that are expanded)
   const [expandedTracks, setExpandedTracks] = useState(new Set())
+  
+  // Get heading text based on release type
+  function getResultsHeading(releaseType) {
+    const headingMap = {
+      'Album': 'Albums Found',
+      'EP': 'EPs Found',
+      'Single': 'Singles Found',
+      'Live': 'Live Albums Found',
+      'Compilation': 'Compilations Found',
+      'Soundtrack': 'Soundtracks Found'
+    }
+    return headingMap[releaseType] || 'Albums Found'
+  }
+  
+  // Get pluralized release type name for results count
+  function getReleaseTypePlural(releaseType) {
+    const pluralMap = {
+      'Album': 'albums',
+      'EP': 'EPs',
+      'Single': 'singles',
+      'Live': 'live albums',
+      'Compilation': 'compilations',
+      'Soundtrack': 'soundtracks'
+    }
+    return pluralMap[releaseType] || 'albums'
+  }
+  
+  // Sort results based on selected sort option
+  function sortResults(results, sortOption) {
+    const sorted = [...results] // Create a copy to avoid mutating original
+    
+    switch (sortOption) {
+      case 'newest':
+        // Sort by year (newest first), then by title
+        sorted.sort((a, b) => {
+          if (a.releaseYear && b.releaseYear) {
+            if (b.releaseYear !== a.releaseYear) {
+              return b.releaseYear - a.releaseYear
+            }
+          } else if (a.releaseYear && !b.releaseYear) {
+            return -1
+          } else if (!a.releaseYear && b.releaseYear) {
+            return 1
+          }
+          return (a.title || '').localeCompare(b.title || '')
+        })
+        break
+      case 'oldest':
+        // Sort by year (oldest first), then by title
+        sorted.sort((a, b) => {
+          if (a.releaseYear && b.releaseYear) {
+            if (a.releaseYear !== b.releaseYear) {
+              return a.releaseYear - b.releaseYear
+            }
+          } else if (!a.releaseYear && b.releaseYear) {
+            return -1
+          } else if (a.releaseYear && !b.releaseYear) {
+            return 1
+          }
+          return (a.title || '').localeCompare(b.title || '')
+        })
+        break
+      case 'title-az':
+        // Sort by title A-Z
+        sorted.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
+        break
+      case 'title-za':
+        // Sort by title Z-A
+        sorted.sort((a, b) => (b.title || '').localeCompare(a.title || ''))
+        break
+      default:
+        // Default to newest
+        break
+    }
+    
+    return sorted
+  }
+  
+  // Handle sort option change
+  function handleSortChange(newSortOption) {
+    setSortOption(newSortOption)
+    if (searchResults) {
+      const sorted = sortResults(searchResults, newSortOption)
+      setSearchResults(sorted)
+      setDisplayedResults(sorted.slice(0, RESULTS_PER_PAGE))
+      setResultsPage(1) // Reset to first page
+    }
+  }
 
   // Handle search form submission
   async function handleSearch(e) {
     e.preventDefault()
     
-    if (!searchArtist.trim() || !searchAlbum.trim()) {
-      setSearchError('Please enter both artist name and album name')
+    if (!searchArtist.trim()) {
+      setSearchError('Please enter an artist name')
       return
     }
     
     setSearching(true)
     setSearchError(null)
     setSearchResults(null)
+    setSearchMeta(null)
     setAlbum(null)
     setAlbumError(null)
+    setDisplayedResults([])
+    setResultsPage(1)
     
     try {
-      const results = await searchReleaseGroups(searchArtist.trim(), searchAlbum.trim())
+      const albumName = searchAlbum.trim() || null
+      // Only use release type filter for artist-only searches (when album name is not provided)
+      const typeFilter = albumName ? null : releaseType
+      const searchResponse = await searchReleaseGroups(searchArtist.trim(), albumName, typeFilter)
+      
+      const { results, totalCount, isArtistOnly } = searchResponse
       
       if (results.length === 0) {
-        setSearchError('No album found. Please check spelling and try again.')
-      } else if (results.length === 1) {
-        // Single result - show basic info immediately, then load full album
+        const releaseTypePlural = getReleaseTypePlural(typeFilter || 'Album')
+        setSearchError(`No ${releaseTypePlural} found. Please check spelling and try again.`)
+      } else if (results.length === 1 && !isArtistOnly) {
+        // Single specific album result - show basic info immediately, then load full album
         const result = results[0]
         setAlbum({
           albumId: result.releaseGroupId,
@@ -68,14 +181,45 @@ function AlbumPage() {
         // Load full album data in background
         await loadAlbum(result.releaseGroupId)
       } else {
-        // Multiple results - show list
-        setSearchResults(results)
+        // Multiple results - sort and show list with pagination
+        const sortedResults = sortResults(results, sortOption)
+        setSearchResults(sortedResults)
+        setSearchMeta({ totalCount, isArtistOnly, releaseType: typeFilter || 'Album' })
+        // Show first page of results
+        setDisplayedResults(sortedResults.slice(0, RESULTS_PER_PAGE))
+        setResultsPage(1) // Reset pagination
       }
     } catch (err) {
       console.error('Error searching albums:', err)
       setSearchError(err.message || 'Failed to search albums. Please try again.')
     } finally {
       setSearching(false)
+    }
+  }
+  
+  // Load more results (pagination)
+  function handleLoadMore() {
+    if (!searchResults) return
+    
+    // Check if we've already displayed all results
+    if (displayedResults.length >= searchResults.length) {
+      return // Already showing all results, nothing to load
+    }
+    
+    const nextPage = resultsPage + 1
+    const startIndex = nextPage * RESULTS_PER_PAGE
+    
+    // Ensure we don't go beyond the array bounds
+    if (startIndex >= searchResults.length) {
+      return // Already at or beyond the end
+    }
+    
+    const endIndex = Math.min(startIndex + RESULTS_PER_PAGE, searchResults.length)
+    const newResults = searchResults.slice(startIndex, endIndex)
+    
+    if (newResults.length > 0) {
+      setDisplayedResults(prev => [...prev, ...newResults])
+      setResultsPage(nextPage)
     }
   }
   
@@ -167,9 +311,14 @@ function AlbumPage() {
     setAlbum(null)
     setAlbumError(null)
     setSearchResults(null)
+    setSearchMeta(null)
     setSearchError(null)
     setSearchArtist('')
     setSearchAlbum('')
+    setReleaseType('Album') // Reset to default
+    setDisplayedResults([])
+    setResultsPage(1)
+    setSortOption('newest') // Reset to default sort
     setExpandedTracks(new Set())
     setEditionsExpanded(false)
   }
@@ -208,17 +357,34 @@ function AlbumPage() {
                 />
               </div>
               <div className="search-field">
-                <label htmlFor="album-name">Album Name</label>
+                <label htmlFor="album-name">Album Name <span className="optional-label">(optional)</span></label>
                 <input
                   id="album-name"
                   type="text"
                   value={searchAlbum}
                   onChange={(e) => setSearchAlbum(e.target.value)}
-                  placeholder="e.g., Aladdin Sane"
+                  placeholder="e.g., Aladdin Sane (leave blank to see all albums)"
                   disabled={searching}
-                  required
                 />
               </div>
+              {!searchAlbum.trim() && (
+                <div className="search-field">
+                  <label>Release Type</label>
+                  <div className="release-type-button-group">
+                    {RELEASE_TYPES.map(type => (
+                      <button
+                        key={type.value}
+                        type="button"
+                        className={`release-type-button ${releaseType === type.value ? 'active' : ''}`}
+                        onClick={() => setReleaseType(type.value)}
+                        disabled={searching}
+                      >
+                        {type.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <button 
                 type="submit" 
                 className="search-button"
@@ -253,10 +419,45 @@ function AlbumPage() {
       <div className="album-page">
         <div className="album-container">
           <section className="search-results-section">
-            <h2>Multiple Albums Found</h2>
-            <p className="results-count">Found {searchResults.length} matching albums. Please select one:</p>
+            <div className="search-results-header">
+              <h2>{getResultsHeading(searchMeta?.releaseType || 'Album')}</h2>
+              <button 
+                className="new-search-button"
+                onClick={handleNewSearch}
+              >
+                New Search
+              </button>
+            </div>
+            {searchMeta && (
+              <div className="results-meta">
+                <div className="results-meta-row">
+                  <p className="results-count">
+                    Showing {displayedResults.length} of {searchMeta.totalCount} {getReleaseTypePlural(searchMeta.releaseType || 'Album')}
+                    {searchMeta.isArtistOnly && (
+                      <span className="refine-suggestion">
+                        {' '}• Enter an album name to narrow your search
+                      </span>
+                    )}
+                  </p>
+                  <div className="sort-control">
+                    <label htmlFor="sort-select">Sort by:</label>
+                    <select
+                      id="sort-select"
+                      value={sortOption}
+                      onChange={(e) => handleSortChange(e.target.value)}
+                      className="sort-select"
+                    >
+                      <option value="newest">Newest First</option>
+                      <option value="oldest">Oldest First</option>
+                      <option value="title-az">Title A-Z</option>
+                      <option value="title-za">Title Z-A</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
             <ul className="results-list">
-              {searchResults.map((result) => (
+              {displayedResults.map((result) => (
                 <li key={result.releaseGroupId} className="result-item">
                   <button
                     className="result-button"
@@ -271,12 +472,14 @@ function AlbumPage() {
                 </li>
               ))}
             </ul>
-            <button 
-              className="new-search-button"
-              onClick={handleNewSearch}
-            >
-              New Search
-            </button>
+            {searchResults && displayedResults.length < searchResults.length && (
+              <button 
+                className="load-more-button"
+                onClick={handleLoadMore}
+              >
+                Load More ({searchResults.length - displayedResults.length} remaining)
+              </button>
+            )}
           </section>
         </div>
       </div>
