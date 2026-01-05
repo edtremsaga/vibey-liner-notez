@@ -21,7 +21,7 @@ function AlbumPage() {
   
   // Available release types for filtering
   const RELEASE_TYPES = [
-    { value: 'Album', label: 'Albums' },
+    { value: 'Album', label: 'Studio Albums' },
     { value: 'EP', label: 'EPs' },
     { value: 'Single', label: 'Singles' },
     { value: 'Live', label: 'Live Albums' },
@@ -48,27 +48,50 @@ function AlbumPage() {
   // Get heading text based on release type
   function getResultsHeading(releaseType) {
     const headingMap = {
-      'Album': 'Albums Found',
+      'Album': 'Studio Albums Found',
       'EP': 'EPs Found',
       'Single': 'Singles Found',
       'Live': 'Live Albums Found',
       'Compilation': 'Compilations Found',
       'Soundtrack': 'Soundtracks Found'
     }
-    return headingMap[releaseType] || 'Albums Found'
+    return headingMap[releaseType] || 'Studio Albums Found'
   }
   
   // Get pluralized release type name for results count
   function getReleaseTypePlural(releaseType) {
     const pluralMap = {
-      'Album': 'albums',
+      'Album': 'studio albums',
       'EP': 'EPs',
       'Single': 'singles',
       'Live': 'live albums',
       'Compilation': 'compilations',
       'Soundtrack': 'soundtracks'
     }
-    return pluralMap[releaseType] || 'albums'
+    return pluralMap[releaseType] || 'studio albums'
+  }
+  
+  // Get singular release type name for loading messages
+  function getReleaseTypeSingular(releaseType) {
+    const singularMap = {
+      'Album': 'studio album',
+      'EP': 'EP',
+      'Single': 'single',
+      'Live': 'live album',
+      'Compilation': 'compilation',
+      'Soundtrack': 'soundtrack'
+    }
+    return singularMap[releaseType] || 'release'
+  }
+  
+  // Get the appropriate release type term for loading message
+  function getLoadingReleaseType() {
+    // Use searchMeta.releaseType if available (from current search context)
+    if (searchMeta && searchMeta.releaseType) {
+      return getReleaseTypeSingular(searchMeta.releaseType)
+    }
+    // Default to generic term if no context available
+    return 'release'
   }
   
   // Sort results based on selected sort option
@@ -292,7 +315,7 @@ function AlbumPage() {
       setAlbum(null)
     }
     
-    setSearchResults(null)
+    // Don't clear searchResults - we need it for "Back to Results" button
     setEditionsExpanded(false) // Reset editions collapse state when loading new album
     setLoadingBasicInfo(false) // Basic info already shown from search results
     setLoadingTracklist(true)
@@ -368,13 +391,25 @@ function AlbumPage() {
   function handleNewSearch() {
     setAlbum(null)
     setAlbumError(null)
-    setSearchResults(null)
-    setSearchMeta(null)
-    setSearchError(null)
-    setSearchArtist('')
-    setSearchAlbum('')
-    setReleaseType('Album') // Reset to default
-    setDisplayedResults([])
+    
+    // If search results exist, just clear album to return to results
+    // Otherwise, clear everything to start fresh
+    if (searchResults && searchResults.length > 0) {
+      // Return to search results - reset to first page
+      setSearchError(null)
+      setDisplayedResults(searchResults.slice(0, RESULTS_PER_PAGE))
+      setResultsPage(1)
+    } else {
+      // Start completely fresh - clear everything
+      setSearchResults(null)
+      setSearchMeta(null)
+      setSearchError(null)
+      setSearchArtist('')
+      setSearchAlbum('')
+      setReleaseType('Album') // Reset to default
+      setDisplayedResults([])
+      setResultsPage(1)
+    }
     setResultsPage(1)
     setSortOption('newest') // Reset to default sort
     setExpandedTracks(new Set())
@@ -465,14 +500,18 @@ function AlbumPage() {
     return (
       <div className="album-page">
         <div className="loading">
-          {searching ? 'Searching for albums...' : 'Loading album from MusicBrainz...'}
+          {searching 
+            ? `Searching for ${searchMeta?.releaseType ? getReleaseTypePlural(searchMeta.releaseType) : 'albums'}...`
+            : `Loading ${getLoadingReleaseType()} from MusicBrainz...`
+          }
         </div>
       </div>
     )
   }
   
   // Show search results list (multiple results)
-  if (searchResults && searchResults.length > 1) {
+  // Only show if no album is currently loaded (album takes priority)
+  if (searchResults && searchResults.length > 1 && !album) {
     return (
       <div className="album-page">
         <div className="album-container">
@@ -570,7 +609,7 @@ function AlbumPage() {
               className="new-search-button"
               onClick={handleNewSearch}
             >
-              New Search
+              {searchResults && searchResults.length > 0 ? 'Back to Results' : 'New Search'}
             </button>
           </div>
         </div>
@@ -588,7 +627,7 @@ function AlbumPage() {
             className="new-search-button"
             onClick={handleNewSearch}
           >
-            New Search
+            {searchResults && searchResults.length > 0 ? 'Back to Results' : 'New Search'}
           </button>
         </div>
       </div>
@@ -610,7 +649,7 @@ function AlbumPage() {
           onClick={handleNewSearch}
           style={{ marginBottom: '2rem' }}
         >
-          New Search
+          {searchResults && searchResults.length > 0 ? 'Back to Results' : 'New Search'}
         </button>
         
         {/* Album Identity */}
