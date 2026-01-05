@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { fetchAlbumData, searchReleaseGroups } from '../services/musicbrainz'
+import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, fetchCoverArt } from '../services/musicbrainz'
 import { formatDuration } from '../utils/formatDuration'
 import './AlbumPage.css'
 
@@ -15,6 +15,11 @@ function AlbumPage() {
   const [album, setAlbum] = useState(null)
   const [loadingAlbum, setLoadingAlbum] = useState(false)
   const [albumError, setAlbumError] = useState(null)
+  
+  // Progressive loading states
+  const [loadingBasicInfo, setLoadingBasicInfo] = useState(false)
+  const [loadingTracklist, setLoadingTracklist] = useState(false)
+  const [loadingCredits, setLoadingCredits] = useState(false)
   
   // Editions collapse state
   const [editionsExpanded, setEditionsExpanded] = useState(false)
@@ -43,8 +48,25 @@ function AlbumPage() {
       if (results.length === 0) {
         setSearchError('No album found. Please check spelling and try again.')
       } else if (results.length === 1) {
-        // Single result - automatically load full album
-        await loadAlbum(results[0].releaseGroupId)
+        // Single result - show basic info immediately, then load full album
+        const result = results[0]
+        setAlbum({
+          albumId: result.releaseGroupId,
+          title: result.title,
+          artistName: result.artistName,
+          releaseYear: result.releaseYear,
+          albumType: 'album',
+          coverArtUrl: null, // Will load later
+          editions: [],
+          tracks: null,
+          credits: null,
+          recordingInfo: null,
+          externalLinks: null,
+          sources: null,
+          dataNotes: null
+        })
+        // Load full album data in background
+        await loadAlbum(result.releaseGroupId)
       } else {
         // Multiple results - show list
         setSearchResults(results)
@@ -57,22 +79,86 @@ function AlbumPage() {
     }
   }
   
-  // Load full album details
+  // Load full album details with progressive loading
   async function loadAlbum(releaseGroupId) {
-    setLoadingAlbum(true)
-    setAlbumError(null)
-    setAlbum(null)
+    // Don't clear album if it already has basic info (from search results)
+    const hasBasicInfo = album && album.title && album.artistName
+    
+    if (!hasBasicInfo) {
+      setLoadingAlbum(true)
+      setAlbumError(null)
+      setAlbum(null)
+    }
+    
     setSearchResults(null)
     setEditionsExpanded(false) // Reset editions collapse state when loading new album
+    setLoadingBasicInfo(false) // Basic info already shown from search results
+    setLoadingTracklist(true)
+    setLoadingCredits(false)
     
     try {
-      const albumData = await fetchAlbumData(releaseGroupId)
-      setAlbum(albumData)
+      // Fetch basic info (without waiting for cover art)
+      const basicData = await fetchAlbumBasicInfo(releaseGroupId)
+      
+      // Update album with basic info (cover art will be null initially)
+      if (hasBasicInfo) {
+        // Keep existing album data, just update if needed
+        setAlbum(prev => ({
+          ...prev,
+          ...basicData.basicInfo
+        }))
+      } else {
+        setAlbum({
+          ...basicData.basicInfo,
+          albumType: 'album',
+          editions: [],
+          tracks: null,
+          credits: null,
+          recordingInfo: null,
+          externalLinks: null,
+          sources: null,
+          dataNotes: null
+        })
+      }
+      
+      // Start cover art fetch in parallel (non-blocking)
+      // It will update the album state when it arrives
+      fetchCoverArt(releaseGroupId, basicData.selectedReleaseId)
+        .then(coverArtUrl => {
+          if (coverArtUrl) {
+            setAlbum(prev => prev ? { ...prev, coverArtUrl } : null)
+          }
+        })
+        .catch(err => {
+          console.warn('Failed to load cover art:', err)
+          // Don't show error - cover art is optional
+        })
+      
+      setLoadingTracklist(true)
+      
+      // Fetch full album data (tracks, credits, etc.)
+      // Pass basic data to avoid duplicate API calls
+      const albumData = await fetchAlbumData(releaseGroupId, basicData)
+      
+      // Update with full data, preserving cover art if it was already loaded
+      setAlbum(prev => {
+        const updated = { ...albumData }
+        // Preserve cover art if it was already loaded in parallel
+        if (prev && prev.coverArtUrl && !updated.coverArtUrl) {
+          updated.coverArtUrl = prev.coverArtUrl
+        }
+        return updated
+      })
+      setLoadingTracklist(false)
+      setLoadingCredits(false)
     } catch (err) {
       console.error('Error fetching album data:', err)
       setAlbumError(err.message || 'Failed to load album data from MusicBrainz')
     } finally {
       setLoadingAlbum(false)
+      setLoadingBasicInfo(false)
+      setLoadingTracklist(false)
+      setLoadingCredits(false)
     }
   }
   
@@ -340,7 +426,13 @@ function AlbumPage() {
         )}
 
         {/* Tracklist */}
-        {album.tracks && album.tracks.length > 0 && (
+        {loadingTracklist && (
+          <section className="tracklist-section">
+            <h2>Tracklist</h2>
+            <div className="loading">Loading tracklist...</div>
+          </section>
+        )}
+        {!loadingTracklist && album.tracks && album.tracks.length > 0 && (
           <section className="tracklist-section">
             <h2>Tracklist</h2>
             <ol className="tracklist">
@@ -361,6 +453,12 @@ function AlbumPage() {
         <section className="credits-section">
           <h2>Credits</h2>
           
+          {loadingCredits && (
+            <div className="loading">Loading credits...</div>
+          )}
+          
+          {!loadingCredits && (
+            <>
           {/* Album-level credits */}
           {albumCredits.length > 0 && (
             <div className="credits-group">
@@ -551,6 +649,8 @@ function AlbumPage() {
             <div className="no-credits">
               Credits not documented for this album.
             </div>
+          )}
+            </>
           )}
         </section>
       </div>

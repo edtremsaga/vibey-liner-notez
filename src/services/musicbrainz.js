@@ -150,7 +150,7 @@ async function fetchRecordingWithPlaces(recordingId) {
 }
 
 // Fetch cover art for release group or release
-async function fetchCoverArt(releaseGroupId, releaseId = null) {
+export async function fetchCoverArt(releaseGroupId, releaseId = null) {
   // Try release group first
   try {
     const response = await rateLimitedFetch(`${COVER_ART_BASE}/release-group/${releaseGroupId}`, {
@@ -433,11 +433,8 @@ function extractRecordingInfo(recording) {
   }
 }
 
-// Transform MusicBrainz data to album.v1.json schema
-export async function fetchAlbumData(releaseGroupId) {
-  const retrievedAt = new Date().toISOString()
-  
-  // Fetch release group
+// Fetch basic album info (title, artist, year, cover art) - Stage 1
+export async function fetchAlbumBasicInfo(releaseGroupId) {
   const rg = await fetchReleaseGroup(releaseGroupId)
   
   // Extract basic info
@@ -450,7 +447,7 @@ export async function fetchAlbumData(releaseGroupId) {
     ? parseInt(rg['first-release-date'].substring(0, 4)) 
     : null
   
-  // Get selected release ID first (needed for cover art fallback)
+  // Get selected release ID for cover art
   const releases = rg.releases || []
   const officialReleases = releases.filter(r => r.status === 'Official')
   const sortedReleases = officialReleases.length > 0 
@@ -467,8 +464,73 @@ export async function fetchAlbumData(releaseGroupId) {
   
   const selectedReleaseId = sortedReleases[0]?.id || releases[0]?.id
   
-  // Fetch cover art (try release group, then specific release)
-  const coverArtUrl = await fetchCoverArt(releaseGroupId, selectedReleaseId)
+  // Don't fetch cover art here - it will be loaded in parallel (non-blocking)
+  
+  return {
+    releaseGroup: rg,
+    releases: releases,
+    sortedReleases: sortedReleases,
+    selectedReleaseId: selectedReleaseId,
+    basicInfo: {
+      albumId: releaseGroupId,
+      title: rg.title || '',
+      artistName: artistName,
+      releaseYear: releaseYear,
+      coverArtUrl: null // Will be loaded separately
+    }
+  }
+}
+
+// Transform MusicBrainz data to album.v1.json schema
+// If basicData is provided, reuse it to avoid duplicate API calls
+export async function fetchAlbumData(releaseGroupId, basicData = null) {
+  const retrievedAt = new Date().toISOString()
+  
+  let rg, releases, sortedReleases, selectedReleaseId, artistName, releaseYear, coverArtUrl
+  
+  if (basicData) {
+    // Reuse data from fetchAlbumBasicInfo
+    rg = basicData.releaseGroup
+    releases = basicData.releases
+    sortedReleases = basicData.sortedReleases
+    selectedReleaseId = basicData.selectedReleaseId
+    artistName = basicData.basicInfo.artistName
+    releaseYear = basicData.basicInfo.releaseYear
+    coverArtUrl = null // Cover art is loaded separately in parallel, will be updated by component
+  } else {
+    // Fetch release group (fallback if basicData not provided)
+    rg = await fetchReleaseGroup(releaseGroupId)
+    
+    // Extract basic info
+    artistName = extractArtistName(rg['artist-credit'])
+    if (!artistName) {
+      throw new Error('Could not extract artist name from MusicBrainz data - required field missing')
+    }
+    
+    releaseYear = rg['first-release-date'] 
+      ? parseInt(rg['first-release-date'].substring(0, 4)) 
+      : null
+    
+    // Get selected release ID first (needed for cover art fallback)
+    releases = rg.releases || []
+    const officialReleases = releases.filter(r => r.status === 'Official')
+    sortedReleases = officialReleases.length > 0 
+      ? officialReleases.sort((a, b) => {
+          const dateA = a.date || '9999'
+          const dateB = b.date || '9999'
+          return dateA.localeCompare(dateB)
+        })
+      : releases.sort((a, b) => {
+          const dateA = a.date || '9999'
+          const dateB = b.date || '9999'
+          return dateA.localeCompare(dateB)
+        })
+    
+    selectedReleaseId = sortedReleases[0]?.id || releases[0]?.id
+    
+    // Fetch cover art (try release group, then specific release)
+    coverArtUrl = await fetchCoverArt(releaseGroupId, selectedReleaseId)
+  }
   
   // Get releases and find official + earliest (already done above for cover art)
   if (!selectedReleaseId) {
@@ -558,13 +620,9 @@ export async function fetchAlbumData(releaseGroupId) {
           // First try from the recording in the release response
           let recInfo = extractRecordingInfo(recording)
           
-          // If not found, fetch recording individually to get place relations
-          if (!recInfo) {
-            const recordingWithPlaces = await fetchRecordingWithPlaces(trackId)
-            if (recordingWithPlaces) {
-              recInfo = extractRecordingInfo(recordingWithPlaces)
-            }
-          }
+          // Skip individual recording fetches for place relations - too slow (10+ seconds for 10 tracks)
+          // This is optional data (studios/locations) and can be deferred or skipped for performance
+          // If we want this data later, we can lazy-load it when user expands track credits
           
           if (recInfo) {
             recordingInfoMap[trackId] = recInfo
