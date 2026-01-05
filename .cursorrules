@@ -1,0 +1,21 @@
+# Cursor Rules for vibey liner notez
+
+## Primary Workflow Rule
+
+**Before writing any code:**
+1. Explain back to the user what you understand from their request
+2. Wait for explicit confirmation/agreement before implementing
+3. Only proceed with code changes after the user agrees
+
+This ensures we're aligned on what will happen before any code gets written.
+
+## Project Context
+
+- **Project**: liner notez v1
+- **Authoritative PRD**: The PRD provided defines the product requirements
+- **Authoritative Schema**: `album.v1.json` defines the data contract
+- **Hard Rules**: 
+  - Do not add features outside the PRD
+  - Do not invent fields not defined in the schema
+  - Missing data = "not documented", not errors
+

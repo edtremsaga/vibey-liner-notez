@@ -65,6 +65,174 @@
   background-color: #333;
 }
 
+/* Search Section */
+.search-section {
+  max-width: 500px;
+  margin: 4rem auto;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-title {
+  font-size: 2rem;
+  font-weight: 300;
+  color: #1a1a1a;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.search-field label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.search-field input {
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  transition: border-color 0.2s;
+}
+
+.search-field input:focus {
+  outline: none;
+  border-color: #666;
+}
+
+.search-field input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.search-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background-color: #1a1a1a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-button:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.search-button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
+
+.search-error {
+  padding: 0.75rem;
+  background-color: #ffe6e6;
+  color: #c33;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+/* Search Results */
+.search-results-section {
+  padding: 2rem 0;
+}
+
+.search-results-section h2 {
+  font-size: 2rem;
+  font-weight: 300;
+  color: #1a1a1a;
+  margin-bottom: 1rem;
+}
+
+.results-count {
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.results-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.result-item {
+  margin: 0;
+}
+
+.result-button {
+  width: 100%;
+  padding: 1rem;
+  text-align: left;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.result-button:hover {
+  background-color: #f9f9f9;
+  border-color: #999;
+}
+
+.result-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.result-artist {
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.result-year {
+  font-size: 0.9rem;
+  color: #999;
+}
+
+.new-search-button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background-color: #1a1a1a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-decoration: none;
+}
+
+.new-search-button:hover {
+  background-color: #333;
+}
+
 /* Album Identity */
 .album-identity {
   margin-bottom: 3rem;
@@ -133,6 +301,38 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.editions-toggle {
+  margin-top: 1rem;
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.2s;
+}
+
+.editions-toggle:hover {
+  color: #1a1a1a;
+}
+
+.editions-toggle-text {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.editions-toggle-icon {
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.editions-toggle-icon.expanded {
+  transform: rotate(180deg);
 }
 
 .edition-button {
@@ -276,11 +476,43 @@
   border-left: 2px solid #e0e0e0;
 }
 
-.track-credit-title {
+.track-credit-title-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  color: #333;
   font-size: 1.1rem;
   font-weight: 500;
-  margin-bottom: 0.75rem;
-  color: #333;
+  transition: color 0.2s;
+}
+
+.track-credit-title-button:hover {
+  color: #1a1a1a;
+}
+
+.track-credit-title-text {
+  flex: 1;
+}
+
+.track-credit-chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s;
+  color: #666;
+}
+
+.track-credit-chevron.expanded {
+  transform: rotate(180deg);
+}
+
+.track-credit-details {
+  /* Container for all track credit details */
 }
 
 .credit-category {

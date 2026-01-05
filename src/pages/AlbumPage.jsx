@@ -1,69 +1,258 @@
-import { useState, useEffect } from 'react'
-import { fetchAlbumData } from '../services/musicbrainz'
+import { useState } from 'react'
+import { fetchAlbumData, searchReleaseGroups } from '../services/musicbrainz'
 import { formatDuration } from '../utils/formatDuration'
 import './AlbumPage.css'
 
-// Hardcoded Release Group MBID for Aladdin Sane
-const ALADDIN_SANE_MBID = '50f8710f-3ae6-319b-85a7-afe783f13449'
-
 function AlbumPage() {
+  // Search state
+  const [searchArtist, setSearchArtist] = useState('')
+  const [searchAlbum, setSearchAlbum] = useState('')
+  const [searching, setSearching] = useState(false)
+  const [searchResults, setSearchResults] = useState(null)
+  const [searchError, setSearchError] = useState(null)
+  
+  // Album state
   const [album, setAlbum] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [loadingAlbum, setLoadingAlbum] = useState(false)
+  const [albumError, setAlbumError] = useState(null)
+  
+  // Editions collapse state
+  const [editionsExpanded, setEditionsExpanded] = useState(false)
+  
+  // Track credits collapse state (Set of track IDs that are expanded)
+  const [expandedTracks, setExpandedTracks] = useState(new Set())
 
-  useEffect(() => {
-    async function loadAlbum() {
-      setLoading(true)
-      setError(null)
-      
-      try {
-        const albumData = await fetchAlbumData(ALADDIN_SANE_MBID)
-        setAlbum(albumData)
-      } catch (err) {
-        console.error('Error fetching album data:', err)
-        setError(err.message || 'Failed to load album data from MusicBrainz')
-      } finally {
-        setLoading(false)
-      }
+  // Handle search form submission
+  async function handleSearch(e) {
+    e.preventDefault()
+    
+    if (!searchArtist.trim() || !searchAlbum.trim()) {
+      setSearchError('Please enter both artist name and album name')
+      return
     }
-
-    loadAlbum()
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="album-page">
-        <div className="loading">Loading album from MusicBrainz...</div>
-      </div>
-    )
+    
+    setSearching(true)
+    setSearchError(null)
+    setSearchResults(null)
+    setAlbum(null)
+    setAlbumError(null)
+    
+    try {
+      const results = await searchReleaseGroups(searchArtist.trim(), searchAlbum.trim())
+      
+      if (results.length === 0) {
+        setSearchError('No album found. Please check spelling and try again.')
+      } else if (results.length === 1) {
+        // Single result - automatically load full album
+        await loadAlbum(results[0].releaseGroupId)
+      } else {
+        // Multiple results - show list
+        setSearchResults(results)
+      }
+    } catch (err) {
+      console.error('Error searching albums:', err)
+      setSearchError(err.message || 'Failed to search albums. Please try again.')
+    } finally {
+      setSearching(false)
+    }
   }
-
-  if (error) {
+  
+  // Load full album details
+  async function loadAlbum(releaseGroupId) {
+    setLoadingAlbum(true)
+    setAlbumError(null)
+    setAlbum(null)
+    setSearchResults(null)
+    setEditionsExpanded(false) // Reset editions collapse state when loading new album
+    
+    try {
+      const albumData = await fetchAlbumData(releaseGroupId)
+      setAlbum(albumData)
+    } catch (err) {
+      console.error('Error fetching album data:', err)
+      setAlbumError(err.message || 'Failed to load album data from MusicBrainz')
+    } finally {
+      setLoadingAlbum(false)
+    }
+  }
+  
+  // Return to search form
+  function handleNewSearch() {
+    setAlbum(null)
+    setAlbumError(null)
+    setSearchResults(null)
+    setSearchError(null)
+    setSearchArtist('')
+    setSearchAlbum('')
+    setExpandedTracks(new Set())
+    setEditionsExpanded(false)
+  }
+  
+  // Toggle track expanded state
+  function toggleTrackExpanded(trackId) {
+    setExpandedTracks(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(trackId)) {
+        newSet.delete(trackId)
+      } else {
+        newSet.add(trackId)
+      }
+      return newSet
+    })
+  }
+  
+  // Show search form (initial state or after "New Search")
+  if (!album && !searchResults && !loadingAlbum) {
     return (
       <div className="album-page">
-        <div className="error">
-          <h2>Error Loading Album</h2>
-          <p>{error}</p>
-          <p>Please check your internet connection and try again.</p>
+        <div className="album-container">
+          <section className="search-section">
+            <h1 className="search-title">Search for an Album</h1>
+            <form onSubmit={handleSearch} className="search-form">
+              <div className="search-field">
+                <label htmlFor="artist-name">Artist Name</label>
+                <input
+                  id="artist-name"
+                  type="text"
+                  value={searchArtist}
+                  onChange={(e) => setSearchArtist(e.target.value)}
+                  placeholder="e.g., David Bowie"
+                  disabled={searching}
+                  required
+                />
+              </div>
+              <div className="search-field">
+                <label htmlFor="album-name">Album Name</label>
+                <input
+                  id="album-name"
+                  type="text"
+                  value={searchAlbum}
+                  onChange={(e) => setSearchAlbum(e.target.value)}
+                  placeholder="e.g., Aladdin Sane"
+                  disabled={searching}
+                  required
+                />
+              </div>
+              <button 
+                type="submit" 
+                className="search-button"
+                disabled={searching}
+              >
+                {searching ? 'Searching...' : 'Search'}
+              </button>
+              {searchError && (
+                <div className="search-error">{searchError}</div>
+              )}
+            </form>
+          </section>
         </div>
       </div>
     )
   }
-
-  if (!album) {
+  
+  // Show loading state (searching or loading album)
+  if (searching || loadingAlbum) {
     return (
       <div className="album-page">
-        <div className="error">No album data available</div>
+        <div className="loading">
+          {searching ? 'Searching for albums...' : 'Loading album from MusicBrainz...'}
+        </div>
       </div>
     )
   }
-
+  
+  // Show search results list (multiple results)
+  if (searchResults && searchResults.length > 1) {
+    return (
+      <div className="album-page">
+        <div className="album-container">
+          <section className="search-results-section">
+            <h2>Multiple Albums Found</h2>
+            <p className="results-count">Found {searchResults.length} matching albums. Please select one:</p>
+            <ul className="results-list">
+              {searchResults.map((result) => (
+                <li key={result.releaseGroupId} className="result-item">
+                  <button
+                    className="result-button"
+                    onClick={() => loadAlbum(result.releaseGroupId)}
+                  >
+                    <span className="result-title">{result.title}</span>
+                    <span className="result-artist">{result.artistName}</span>
+                    {result.releaseYear && (
+                      <span className="result-year">{result.releaseYear}</span>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button 
+              className="new-search-button"
+              onClick={handleNewSearch}
+            >
+              New Search
+            </button>
+          </section>
+        </div>
+      </div>
+    )
+  }
+  
+  // Show album error
+  if (albumError) {
+    return (
+      <div className="album-page">
+        <div className="album-container">
+          <div className="error">
+            <h2>Error Loading Album</h2>
+            <p>{albumError}</p>
+            <p>Please check your internet connection and try again.</p>
+            <button 
+              className="new-search-button"
+              onClick={handleNewSearch}
+            >
+              New Search
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  
+  // Show album (full details)
+  if (!album) {
+    return (
+      <div className="album-page">
+        <div className="album-container">
+          <div className="error">No album data available</div>
+          <button 
+            className="new-search-button"
+            onClick={handleNewSearch}
+          >
+            New Search
+          </button>
+        </div>
+      </div>
+    )
+  }
+  
   const albumCredits = album.credits?.albumCredits || []
   const trackCredits = album.credits?.trackCredits || {}
-
+  
+  // Debug: Log album credits to console
+  console.log('Album credits data:', albumCredits)
+  console.log('Album credits object:', album.credits)
+  
   return (
     <div className="album-page">
       <div className="album-container">
+        <button 
+          className="new-search-button"
+          onClick={handleNewSearch}
+          style={{ marginBottom: '2rem' }}
+        >
+          New Search
+        </button>
+        
         {/* Album Identity */}
         <section className="album-identity">
           {album.coverArtUrl && (
@@ -92,7 +281,7 @@ function AlbumPage() {
           <section className="editions-section">
             <h2>Editions</h2>
             <div className="editions-list">
-              {album.editions.map((edition) => (
+              {(editionsExpanded ? album.editions : album.editions.slice(0, 1)).map((edition) => (
                 <div key={edition.editionId} className="edition-info">
                   <div className="edition-details">
                     {edition.date && (
@@ -117,6 +306,36 @@ function AlbumPage() {
                 </div>
               ))}
             </div>
+            {album.editions.length > 1 && (
+              <button
+                className="editions-toggle"
+                onClick={() => setEditionsExpanded(!editionsExpanded)}
+                aria-expanded={editionsExpanded}
+              >
+                <span className="editions-toggle-text">
+                  {editionsExpanded 
+                    ? 'Show less' 
+                    : `Show all ${album.editions.length} editions`}
+                </span>
+                <svg
+                  className={`editions-toggle-icon ${editionsExpanded ? 'expanded' : ''}`}
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M4 6L8 10L12 6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            )}
           </section>
         )}
 
@@ -187,11 +406,38 @@ function AlbumPage() {
                   !production.includes(c)
                 )
 
+                const isExpanded = expandedTracks.has(track.trackId)
+                
                 return (
                   <div key={track.trackId} className="track-credits">
-                    <h4 className="track-credit-title">{track.title}</h4>
+                    <button
+                      className="track-credit-title-button"
+                      onClick={() => toggleTrackExpanded(track.trackId)}
+                      aria-expanded={isExpanded}
+                    >
+                      <span className="track-credit-title-text">{track.title}</span>
+                      <svg
+                        className={`track-credit-chevron ${isExpanded ? 'expanded' : ''}`}
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M4 6L8 10L12 6"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
                     
-                    {/* Songwriting info */}
+                    {isExpanded && (
+                      <div className="track-credit-details">
+                        {/* Songwriting info */}
                     {track.songwriting && (
                       <div className="credit-category">
                         <span className="category-label">Songwriting</span>
@@ -282,15 +528,17 @@ function AlbumPage() {
                       </div>
                     )}
 
-                    {other.length > 0 && (
-                      <ul className="credits-list">
-                        {other.map((credit, idx) => (
-                          <li key={idx} className="credit-item">
-                            <span className="credit-name">{credit.personName}</span>
-                            <span className="credit-role">{credit.role}</span>
-                          </li>
-                        ))}
-                      </ul>
+                        {other.length > 0 && (
+                          <ul className="credits-list">
+                            {other.map((credit, idx) => (
+                              <li key={idx} className="credit-item">
+                                <span className="credit-name">{credit.personName}</span>
+                                <span className="credit-role">{credit.role}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     )}
                   </div>
                 )

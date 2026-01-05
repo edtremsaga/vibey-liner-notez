@@ -53,9 +53,49 @@ function parsePosition(track, medium) {
   return track.number.toString()
 }
 
+// Search for release groups by artist name and album name
+export async function searchReleaseGroups(artistName, albumName) {
+  if (!artistName || !albumName) {
+    throw new Error('Both artist name and album name are required')
+  }
+  
+  // Construct query: artist:"name" AND release:"name"
+  const query = `artist:"${artistName}" AND release:"${albumName}"`
+  const url = `${MB_API_BASE}/release-group?query=${encodeURIComponent(query)}&limit=20&fmt=json`
+  
+  try {
+    const response = await rateLimitedFetch(url, {
+      headers: {
+        'User-Agent': 'liner-notez/1.0 (https://github.com/yourusername/liner-notez)',
+        'Accept': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`MusicBrainz API error: ${response.status} ${response.statusText}`)
+    }
+    
+    const data = await response.json()
+    const releaseGroups = data['release-groups'] || []
+    
+    // Transform to simple result format
+    return releaseGroups.map(rg => ({
+      releaseGroupId: rg.id,
+      title: rg.title,
+      artistName: extractArtistName(rg['artist-credit']),
+      releaseYear: rg['first-release-date'] 
+        ? parseInt(rg['first-release-date'].substring(0, 4)) 
+        : null
+    }))
+  } catch (error) {
+    console.error('Error searching release groups:', error)
+    throw error
+  }
+}
+
 // Fetch release group by MBID
 async function fetchReleaseGroup(releaseGroupId) {
-  const url = `${MB_API_BASE}/release-group/${releaseGroupId}?inc=releases+artist-credits&fmt=json`
+  const url = `${MB_API_BASE}/release-group/${releaseGroupId}?inc=releases+artist-credits+release-group-rels+artist-rels&fmt=json`
   
   const response = await rateLimitedFetch(url, {
     headers: {
@@ -287,16 +327,33 @@ function extractTrackCredits(recording) {
 function extractAlbumCredits(release) {
   const credits = []
   
+  // Debug: Log release structure to understand what we're working with
+  console.log('Release object for album credits:', release)
+  console.log('Release relations:', release.relations)
+  
   if (release.relations) {
-    for (const relation of release.relations) {
+    console.log(`Processing ${release.relations.length} relations`)
+    for (let i = 0; i < release.relations.length; i++) {
+      const relation = release.relations[i]
+      console.log(`Relation ${i}:`, relation)
+      console.log(`  - type: ${relation.type}`)
+      console.log(`  - target-type: ${relation['target-type']}`)
+      console.log(`  - artist:`, relation.artist)
+      console.log(`  - attributes:`, relation.attributes)
+      
       if (relation.type && relation['target-type'] === 'artist') {
         const name = relation.artist?.name || relation['target-credit'] || null
-        if (!name) continue
+        console.log(`  - extracted name: ${name}`)
+        if (!name) {
+          console.log(`  - Skipping: no name found`)
+          continue
+        }
         
         const relationType = relation.type
         
         // Handle instrument relations - attributes contain instrument names
         if (relationType === 'instrument' && relation.attributes && relation.attributes.length > 0) {
+          console.log(`  - Processing instrument relation with attributes:`, relation.attributes)
           // Create one credit per instrument
           for (const instrument of relation.attributes) {
             credits.push({
@@ -319,6 +376,7 @@ function extractAlbumCredits(release) {
           })
         } else {
           // Other relation types (producer, engineer, etc.)
+          console.log(`  - Processing other relation type: ${relationType}`)
           credits.push({
             personName: name,
             role: relationType,
@@ -326,10 +384,15 @@ function extractAlbumCredits(release) {
             notes: null
           })
         }
+      } else {
+        console.log(`  - Skipping: type=${relation.type}, target-type=${relation['target-type']}`)
       }
     }
+  } else {
+    console.log('No relations array found in release object')
   }
   
+  console.log('Extracted album credits:', credits)
   return credits
 }
 
@@ -438,6 +501,34 @@ export async function fetchAlbumData(releaseGroupId) {
     selectedEdition.packaging = release.packaging || null
   }
   
+  // Try to find a release with album credits
+  // Start with the selected release, then try up to 3 more if needed
+  let releaseWithCredits = release
+  let albumCredits = extractAlbumCredits(release)
+  
+  if (albumCredits.length === 0 && sortedReleases.length > 1) {
+    console.log('Selected release has no album credits, trying other releases...')
+    // Try up to 3 more releases (limit to avoid too many API calls)
+    const releasesToTry = sortedReleases.slice(1, 4) // Skip first (already tried), try next 3
+    
+    for (const releaseInfo of releasesToTry) {
+      console.log(`Trying release ${releaseInfo.id} for album credits...`)
+      const candidateRelease = await fetchRelease(releaseInfo.id)
+      const candidateCredits = extractAlbumCredits(candidateRelease)
+      
+      if (candidateCredits.length > 0) {
+        console.log(`Found album credits in release ${releaseInfo.id}`)
+        releaseWithCredits = candidateRelease
+        albumCredits = candidateCredits
+        break // Found credits, stop searching
+      }
+    }
+    
+    if (albumCredits.length === 0) {
+      console.log('No album credits found in any of the checked releases')
+    }
+  }
+  
   // Build tracks array
   const tracks = []
   const trackCreditsMap = {}
@@ -492,8 +583,8 @@ export async function fetchAlbumData(releaseGroupId) {
     }
   }
   
-  // Extract album credits
-  const albumCredits = extractAlbumCredits(release)
+  // Note: albumCredits was already extracted above (trying multiple releases if needed)
+  // Release-group relations are typically release-group-to-release-group, not artist credits
   
   // Build the album object conforming to album.v1.json
   return {
