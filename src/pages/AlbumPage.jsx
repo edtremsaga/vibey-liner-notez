@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, fetchCoverArt } from '../services/musicbrainz'
+import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, fetchCoverArt, fetchAllAlbumArt } from '../services/musicbrainz'
 import { formatDuration } from '../utils/formatDuration'
 import './AlbumPage.css'
 
@@ -17,6 +17,7 @@ function AlbumPage() {
   const [sortOption, setSortOption] = useState('newest') // 'newest', 'oldest', 'title-az', 'title-za'
   const [loadingPage, setLoadingPage] = useState(false) // Loading state for pagination
   const [fetchedCount, setFetchedCount] = useState(0) // Track how many results have been fetched from API
+  const [hideBootlegs, setHideBootlegs] = useState(false) // Filter to hide bootleg records
   const RESULTS_PER_PAGE = 20
   
   // Available release types for filtering
@@ -44,6 +45,12 @@ function AlbumPage() {
   
   // Track credits collapse state (Set of track IDs that are expanded)
   const [expandedTracks, setExpandedTracks] = useState(new Set())
+  
+  // Album art gallery state
+  const [galleryImages, setGalleryImages] = useState([])
+  const [loadingGallery, setLoadingGallery] = useState(false)
+  const [galleryExpanded, setGalleryExpanded] = useState(false)
+  const [selectedImage, setSelectedImage] = useState(null) // For lightbox view
   
   // Get heading text based on release type
   function getResultsHeading(releaseType) {
@@ -145,15 +152,34 @@ function AlbumPage() {
     return sorted
   }
   
+  // Filter results to exclude bootlegs if hideBootlegs is enabled
+  function filterBootlegs(results) {
+    if (!hideBootlegs) return results
+    return results.filter(result => !result.isBootleg)
+  }
+  
   // Handle sort option change
   function handleSortChange(newSortOption) {
     setSortOption(newSortOption)
     if (searchResults) {
       const sorted = sortResults(searchResults, newSortOption)
       setSearchResults(sorted)
-      // Reset to first page and show first page of results
+      // Apply bootleg filter and reset to first page
+      const filtered = filterBootlegs(sorted)
       setResultsPage(1)
-      setDisplayedResults(sorted.slice(0, RESULTS_PER_PAGE))
+      setDisplayedResults(filtered.slice(0, RESULTS_PER_PAGE))
+    }
+  }
+  
+  // Handle bootleg filter toggle
+  function handleBootlegFilterChange() {
+    setHideBootlegs(!hideBootlegs)
+    if (searchResults) {
+      // Re-apply sorting and filtering
+      const sorted = sortResults(searchResults, sortOption)
+      const filtered = filterBootlegs(sorted)
+      setResultsPage(1)
+      setDisplayedResults(filtered.slice(0, RESULTS_PER_PAGE))
     }
   }
 
@@ -214,8 +240,9 @@ function AlbumPage() {
         setSearchResults(sortedResults)
         setSearchMeta({ totalCount, isArtistOnly, releaseType: typeFilter || 'Album' })
         setFetchedCount(results.length) // Track how many we've fetched
-        // Show first page of results
-        setDisplayedResults(sortedResults.slice(0, RESULTS_PER_PAGE))
+        // Apply bootleg filter and show first page of results
+        const filteredResults = filterBootlegs(sortedResults)
+        setDisplayedResults(filteredResults.slice(0, RESULTS_PER_PAGE))
         setResultsPage(1) // Reset pagination
         
         // Push browser history entry when showing search results
@@ -234,11 +261,20 @@ function AlbumPage() {
     }
   }
   
-  // Calculate total pages based on total count
+  // Calculate total pages based on filtered count
   function getTotalPages() {
-    if (!searchMeta || !searchMeta.totalCount || searchMeta.totalCount <= 0) return 1
-    const total = Math.ceil(searchMeta.totalCount / RESULTS_PER_PAGE)
+    if (!searchResults || !searchMeta || !searchMeta.totalCount || searchMeta.totalCount <= 0) return 1
+    const filteredResults = filterBootlegs(searchResults)
+    const filteredCount = hideBootlegs ? filteredResults.length : searchMeta.totalCount
+    const total = Math.ceil(filteredCount / RESULTS_PER_PAGE)
     return Math.max(1, total) // Ensure at least 1 page
+  }
+  
+  function getFilteredCount() {
+    if (!searchResults || !searchMeta) return searchMeta?.totalCount || 0
+    if (!hideBootlegs) return searchMeta.totalCount
+    const filteredResults = filterBootlegs(searchResults)
+    return filteredResults.length
   }
   
   // Navigate to a specific page (handles both Previous and Next)
@@ -258,8 +294,11 @@ function AlbumPage() {
       return
     }
     
+    // Calculate end index based on filtered results
+    const filteredResults = filterBootlegs(searchResults)
+    const filteredCount = hideBootlegs ? filteredResults.length : searchMeta.totalCount
     const startIndex = (targetPage - 1) * RESULTS_PER_PAGE
-    const endIndex = Math.min(startIndex + RESULTS_PER_PAGE, searchMeta.totalCount)
+    const endIndex = Math.min(startIndex + RESULTS_PER_PAGE, filteredCount)
     
     // Check if we need to fetch more from API
     if (endIndex > searchResults.length) {
@@ -287,10 +326,11 @@ function AlbumPage() {
           setSearchResults(sortedResults)
           setFetchedCount(fetchedCount + newResults.length)
           
-          // Now display the target page from the newly sorted results
+          // Apply bootleg filter and display the target page
+          const filteredResults = filterBootlegs(sortedResults)
           const pageStart = (targetPage - 1) * RESULTS_PER_PAGE
-          const pageEnd = Math.min(pageStart + RESULTS_PER_PAGE, sortedResults.length)
-          const pageResults = sortedResults.slice(pageStart, pageEnd)
+          const pageEnd = Math.min(pageStart + RESULTS_PER_PAGE, filteredResults.length)
+          const pageResults = filteredResults.slice(pageStart, pageEnd)
           
           setDisplayedResults(pageResults)
           setResultsPage(targetPage)
@@ -302,10 +342,11 @@ function AlbumPage() {
         setLoadingPage(false)
       }
     } else {
-      // Results already in memory, just display the page
+      // Results already in memory, apply bootleg filter and display the page
+      const filteredResults = filterBootlegs(searchResults)
       const pageStart = (targetPage - 1) * RESULTS_PER_PAGE
-      const pageEnd = Math.min(pageStart + RESULTS_PER_PAGE, searchResults.length)
-      const pageResults = searchResults.slice(pageStart, pageEnd)
+      const pageEnd = Math.min(pageStart + RESULTS_PER_PAGE, filteredResults.length)
+      const pageResults = filteredResults.slice(pageStart, pageEnd)
       
       setDisplayedResults(pageResults)
       setResultsPage(targetPage)
@@ -474,6 +515,35 @@ function AlbumPage() {
     }
   }, [searchResults, album]) // Re-run when searchResults or album changes
   
+  // Fetch gallery images in background after album loads
+  useEffect(() => {
+    if (album && album.albumId) {
+      // Reset gallery state when new album loads
+      setGalleryImages([])
+      setGalleryExpanded(false)
+      setSelectedImage(null)
+      
+      // Fetch gallery images in background
+      setLoadingGallery(true)
+      fetchAllAlbumArt(album.albumId)
+        .then(images => {
+          setGalleryImages(images)
+        })
+        .catch(err => {
+          console.warn('Error loading gallery images:', err)
+          // Gallery is optional, so don't show error to user
+        })
+        .finally(() => {
+          setLoadingGallery(false)
+        })
+    } else {
+      // Clear gallery when no album is loaded
+      setGalleryImages([])
+      setGalleryExpanded(false)
+      setSelectedImage(null)
+    }
+  }, [album?.albumId]) // Only re-run when album ID changes
+  
   // Toggle track expanded state
   function toggleTrackExpanded(trackId) {
     setExpandedTracks(prev => {
@@ -587,7 +657,12 @@ function AlbumPage() {
               <div className="results-meta">
                 <div className="results-meta-row">
                   <p className="results-count">
-                    Showing {displayedResults.length} of {searchMeta.totalCount} {getReleaseTypePlural(searchMeta.releaseType || 'Album')}
+                    Showing {displayedResults.length} of {getFilteredCount()} {getReleaseTypePlural(searchMeta.releaseType || 'Album')}
+                    {hideBootlegs && searchMeta.totalCount > getFilteredCount() && (
+                      <span className="filter-note">
+                        {' '}({searchMeta.totalCount - getFilteredCount()} bootlegs hidden)
+                      </span>
+                    )}
                     {searchMeta.isArtistOnly && (
                       <span className="refine-suggestion">
                         {' '}• Enter an album name to narrow your search
@@ -608,6 +683,17 @@ function AlbumPage() {
                       <option value="title-za">Title Z-A</option>
                     </select>
                   </div>
+                </div>
+                <div className="filter-control">
+                  <label className="filter-checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={hideBootlegs}
+                      onChange={handleBootlegFilterChange}
+                      className="filter-checkbox"
+                    />
+                    <span>Hide bootlegs</span>
+                  </label>
                 </div>
               </div>
             )}
@@ -732,6 +818,121 @@ function AlbumPage() {
             )}
           </div>
         </section>
+
+        {/* Album Art Gallery - Only show if we have images or are loading */}
+        {(galleryImages.length > 0 || loadingGallery) && (
+          <section className="album-art-gallery-section">
+            <div className="gallery-header">
+              <h2>Album Art Gallery</h2>
+              <button
+                className="gallery-toggle-button"
+                onClick={() => setGalleryExpanded(!galleryExpanded)}
+                type="button"
+              >
+                <span>
+                  {galleryExpanded 
+                    ? 'Hide gallery' 
+                    : loadingGallery 
+                      ? 'Loading album art...' 
+                      : `View all album art (${galleryImages.length} image${galleryImages.length !== 1 ? 's' : ''})`
+                  }
+                </span>
+                <svg
+                  className={`gallery-chevron ${galleryExpanded ? 'expanded' : ''}`}
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4 6L8 10L12 6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+            
+            {galleryExpanded && (
+              <div className="gallery-content">
+                {loadingGallery ? (
+                  <div className="gallery-loading">Loading album art...</div>
+                ) : galleryImages.length === 0 ? (
+                  <div className="gallery-empty">No additional album art available.</div>
+                ) : (
+                  <div className="gallery-grid">
+                    {galleryImages.map((img, index) => {
+                      // Use 500px thumbnail if available, fallback to 250px, then small, then full image
+                      const thumbnailUrl = img.thumbnails?.['500'] || 
+                                         img.thumbnails?.['250'] || 
+                                         img.thumbnails?.small || 
+                                         img.image
+                      
+                      const imageTypes = img.types && img.types.length > 0 
+                        ? img.types.join(', ') 
+                        : (img.front ? 'Front' : img.back ? 'Back' : 'Image')
+                      
+                      return (
+                        <div 
+                          key={img.id || index} 
+                          className="gallery-item"
+                          onClick={() => setSelectedImage(img)}
+                        >
+                          <img
+                            src={thumbnailUrl}
+                            alt={`${imageTypes} - ${album.title}`}
+                            loading="lazy"
+                            onError={(e) => {
+                              console.error('Failed to load gallery thumbnail:', thumbnailUrl)
+                              e.target.style.display = 'none'
+                            }}
+                          />
+                          <div className="gallery-item-overlay">
+                            <span className="gallery-item-type">{imageTypes}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Image Lightbox Modal */}
+        {selectedImage && (
+          <div 
+            className="image-lightbox"
+            onClick={() => setSelectedImage(null)}
+          >
+            <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+              <button 
+                className="lightbox-close"
+                onClick={() => setSelectedImage(null)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              <img
+                src={selectedImage.image}
+                alt={selectedImage.types?.join(', ') || 'Album art'}
+                onError={(e) => {
+                  console.error('Failed to load full-size image:', selectedImage.image)
+                  e.target.style.display = 'none'
+                }}
+              />
+              {selectedImage.types && selectedImage.types.length > 0 && (
+                <div className="lightbox-caption">
+                  {selectedImage.types.join(', ')}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Editions */}
         {album.editions && album.editions.length > 0 && (

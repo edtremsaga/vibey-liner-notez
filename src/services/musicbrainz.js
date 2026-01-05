@@ -101,7 +101,8 @@ export async function searchReleaseGroups(artistName, albumName = null, releaseT
     limit = 100 // Increase limit for artist-only searches
   }
   
-  const url = `${MB_API_BASE}/release-group?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}&fmt=json`
+  // Include releases in search to check for bootleg status
+  const url = `${MB_API_BASE}/release-group?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}&inc=releases&fmt=json`
   
   try {
     const response = await rateLimitedFetch(url, {
@@ -120,14 +121,33 @@ export async function searchReleaseGroups(artistName, albumName = null, releaseT
     const totalCount = data.count || releaseGroups.length
     
     // Transform to simple result format
-    let results = releaseGroups.map(rg => ({
-      releaseGroupId: rg.id,
-      title: rg.title,
-      artistName: extractArtistName(rg['artist-credit']),
-      releaseYear: rg['first-release-date'] 
-        ? parseInt(rg['first-release-date'].substring(0, 4)) 
-        : null
-    }))
+    let results = releaseGroups.map(rg => {
+      // Check if all releases are bootlegs
+      // A release group is considered bootleg if ALL its releases are bootlegs
+      const releases = rg.releases || []
+      let isBootleg = false
+      
+      if (releases.length > 0) {
+        // Check if all releases have bootleg status
+        // Bootleg status-id: 1156806e-d06a-38bd-83f0-cf2284a808b9
+        const bootlegStatusId = '1156806e-d06a-38bd-83f0-cf2284a808b9'
+        isBootleg = releases.every(release => {
+          const statusId = release['status-id']
+          return statusId === bootlegStatusId
+        })
+      }
+      // If no releases, default to false (not bootleg)
+      
+      return {
+        releaseGroupId: rg.id,
+        title: rg.title,
+        artistName: extractArtistName(rg['artist-credit']),
+        releaseYear: rg['first-release-date'] 
+          ? parseInt(rg['first-release-date'].substring(0, 4)) 
+          : null,
+        isBootleg: isBootleg
+      }
+    })
     
     // For artist-only searches, sort by year (newest first), then by title
     if (!albumName) {
@@ -274,6 +294,50 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
   }
   
   return null // Cover art is optional
+}
+
+// Fetch all album art images for a release group
+// Returns array of image objects with metadata, limited to 20 images
+export async function fetchAllAlbumArt(releaseGroupId) {
+  try {
+    const response = await rateLimitedFetch(`${COVER_ART_BASE}/release-group/${releaseGroupId}`, {
+      headers: {
+        'User-Agent': 'liner-notez/1.0'
+      }
+    })
+    
+    if (response.ok) {
+      const contentType = response.headers.get('content-type') || ''
+      if (contentType.includes('application/json')) {
+        const data = await response.json()
+        const images = data.images || []
+        
+        // Limit to first 20 images
+        const limitedImages = images.slice(0, 20).map(img => ({
+          id: img.id || null,
+          image: img.image ? img.image.replace('http://', 'https://') : null,
+          thumbnails: img.thumbnails ? {
+            small: img.thumbnails.small ? img.thumbnails.small.replace('http://', 'https://') : null,
+            large: img.thumbnails.large ? img.thumbnails.large.replace('http://', 'https://') : null,
+            '250': img.thumbnails['250'] ? img.thumbnails['250'].replace('http://', 'https://') : null,
+            '500': img.thumbnails['500'] ? img.thumbnails['500'].replace('http://', 'https://') : null,
+            '1200': img.thumbnails['1200'] ? img.thumbnails['1200'].replace('http://', 'https://') : null
+          } : null,
+          front: img.front || false,
+          back: img.back || false,
+          types: img.types || [],
+          approved: img.approved || false
+        }))
+        
+        return limitedImages
+      }
+    }
+  } catch (e) {
+    console.warn('Error fetching all album art from release group:', e)
+    // Return empty array on error - gallery is optional
+  }
+  
+  return [] // Return empty array if no images found
 }
 
 // Extract songwriting info from recording relations
