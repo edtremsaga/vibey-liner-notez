@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, fetchCoverArt } from '../services/musicbrainz'
 import { formatDuration } from '../utils/formatDuration'
 import './AlbumPage.css'
@@ -385,6 +385,16 @@ function AlbumPage() {
       setLoadingTracklist(false)
       setLoadingCredits(false)
     }
+    
+    // Push browser history entry if we came from search results
+    // This allows back button to return to search results
+    if (searchResults && searchResults.length > 0) {
+      window.history.pushState(
+        { fromSearchResults: true, albumId: releaseGroupId },
+        '',
+        window.location.href
+      )
+    }
   }
   
   // Return to search form
@@ -417,6 +427,30 @@ function AlbumPage() {
     setExpandedTracks(new Set())
     setEditionsExpanded(false)
   }
+  
+  // Handle browser back/forward button
+  useEffect(() => {
+    const handlePopState = (event) => {
+      // When back button is pressed and we're on album page with search results,
+      // return to search results page
+      // We only push history when coming from search results, so if we have
+      // searchResults and are on album page, we should return to results
+      if (album && searchResults && searchResults.length > 0) {
+        // Return to search results
+        setAlbum(null)
+        setAlbumError(null)
+        setDisplayedResults(searchResults.slice(0, RESULTS_PER_PAGE))
+        setResultsPage(1)
+      }
+      // If no search results, let browser handle navigation normally
+    }
+    
+    window.addEventListener('popstate', handlePopState)
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [searchResults, album]) // Re-run when searchResults or album changes
   
   // Toggle track expanded state
   function toggleTrackExpanded(trackId) {
