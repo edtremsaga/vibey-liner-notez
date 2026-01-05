@@ -217,6 +217,14 @@ function AlbumPage() {
         // Show first page of results
         setDisplayedResults(sortedResults.slice(0, RESULTS_PER_PAGE))
         setResultsPage(1) // Reset pagination
+        
+        // Push browser history entry when showing search results
+        // This allows back button to return to main search page
+        window.history.pushState(
+          { fromSearch: true },
+          '',
+          window.location.href
+        )
       }
     } catch (err) {
       console.error('Error searching albums:', err)
@@ -431,18 +439,32 @@ function AlbumPage() {
   // Handle browser back/forward button
   useEffect(() => {
     const handlePopState = (event) => {
-      // When back button is pressed and we're on album page with search results,
-      // return to search results page
-      // We only push history when coming from search results, so if we have
-      // searchResults and are on album page, we should return to results
+      // Handle back button navigation based on current state
+      
+      // Case 1: On album page with search results → return to search results
       if (album && searchResults && searchResults.length > 0) {
-        // Return to search results
         setAlbum(null)
         setAlbumError(null)
         setDisplayedResults(searchResults.slice(0, RESULTS_PER_PAGE))
         setResultsPage(1)
+        return
       }
-      // If no search results, let browser handle navigation normally
+      
+      // Case 2: On search results page (no album) → return to main search page
+      if (!album && searchResults && searchResults.length > 0) {
+        // Clear search results and return to main search form
+        setSearchResults(null)
+        setSearchMeta(null)
+        setDisplayedResults([])
+        setResultsPage(1)
+        setFetchedCount(0)
+        setSearchError(null)
+        // Keep search form values so user can see what they searched for
+        // (Don't clear searchArtist, searchAlbum, releaseType)
+        return
+      }
+      
+      // Case 3: No special handling needed, let browser handle normally
     }
     
     window.addEventListener('popstate', handlePopState)
