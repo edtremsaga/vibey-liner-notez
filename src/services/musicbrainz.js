@@ -57,7 +57,7 @@ function parsePosition(track, medium) {
 // If albumName is provided, searches for specific album
 // If only artistName, returns releases by that artist (filtered by releaseType if provided)
 // releaseType: Album, EP, Single, Live, Compilation, Soundtrack, or null for all types
-export async function searchReleaseGroups(artistName, albumName = null, releaseType = null) {
+export async function searchReleaseGroups(artistName, albumName = null, releaseType = null, offset = 0) {
   if (!artistName) {
     throw new Error('Artist name is required')
   }
@@ -101,7 +101,7 @@ export async function searchReleaseGroups(artistName, albumName = null, releaseT
     limit = 100 // Increase limit for artist-only searches
   }
   
-  const url = `${MB_API_BASE}/release-group?query=${encodeURIComponent(query)}&limit=${limit}&fmt=json`
+  const url = `${MB_API_BASE}/release-group?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}&fmt=json`
   
   try {
     const response = await rateLimitedFetch(url, {

@@ -15,6 +15,8 @@ function AlbumPage() {
   const [displayedResults, setDisplayedResults] = useState([])
   const [resultsPage, setResultsPage] = useState(1)
   const [sortOption, setSortOption] = useState('newest') // 'newest', 'oldest', 'title-az', 'title-za'
+  const [loadingPage, setLoadingPage] = useState(false) // Loading state for pagination
+  const [fetchedCount, setFetchedCount] = useState(0) // Track how many results have been fetched from API
   const RESULTS_PER_PAGE = 20
   
   // Available release types for filtering
@@ -126,8 +128,9 @@ function AlbumPage() {
     if (searchResults) {
       const sorted = sortResults(searchResults, newSortOption)
       setSearchResults(sorted)
+      // Reset to first page and show first page of results
+      setResultsPage(1)
       setDisplayedResults(sorted.slice(0, RESULTS_PER_PAGE))
-      setResultsPage(1) // Reset to first page
     }
   }
 
@@ -148,12 +151,14 @@ function AlbumPage() {
     setAlbumError(null)
     setDisplayedResults([])
     setResultsPage(1)
+    setFetchedCount(0)
+    setLoadingPage(false)
     
     try {
       const albumName = searchAlbum.trim() || null
       // Only use release type filter for artist-only searches (when album name is not provided)
       const typeFilter = albumName ? null : releaseType
-      const searchResponse = await searchReleaseGroups(searchArtist.trim(), albumName, typeFilter)
+      const searchResponse = await searchReleaseGroups(searchArtist.trim(), albumName, typeFilter, 0)
       
       const { results, totalCount, isArtistOnly } = searchResponse
       
@@ -185,6 +190,7 @@ function AlbumPage() {
         const sortedResults = sortResults(results, sortOption)
         setSearchResults(sortedResults)
         setSearchMeta({ totalCount, isArtistOnly, releaseType: typeFilter || 'Album' })
+        setFetchedCount(results.length) // Track how many we've fetched
         // Show first page of results
         setDisplayedResults(sortedResults.slice(0, RESULTS_PER_PAGE))
         setResultsPage(1) // Reset pagination
@@ -197,29 +203,81 @@ function AlbumPage() {
     }
   }
   
-  // Load more results (pagination)
-  function handleLoadMore() {
-    if (!searchResults) return
+  // Calculate total pages based on total count
+  function getTotalPages() {
+    if (!searchMeta || !searchMeta.totalCount || searchMeta.totalCount <= 0) return 1
+    const total = Math.ceil(searchMeta.totalCount / RESULTS_PER_PAGE)
+    return Math.max(1, total) // Ensure at least 1 page
+  }
+  
+  // Navigate to a specific page (handles both Previous and Next)
+  async function handlePageChange(direction) {
+    if (!searchResults || !searchMeta || loadingPage) return
     
-    // Check if we've already displayed all results
-    if (displayedResults.length >= searchResults.length) {
-      return // Already showing all results, nothing to load
+    const calculatedTotalPages = getTotalPages()
+    let targetPage
+    
+    if (direction === 'next') {
+      if (resultsPage >= calculatedTotalPages) return
+      targetPage = resultsPage + 1
+    } else if (direction === 'prev') {
+      if (resultsPage <= 1) return
+      targetPage = resultsPage - 1
+    } else {
+      return
     }
     
-    const nextPage = resultsPage + 1
-    const startIndex = nextPage * RESULTS_PER_PAGE
+    const startIndex = (targetPage - 1) * RESULTS_PER_PAGE
+    const endIndex = Math.min(startIndex + RESULTS_PER_PAGE, searchMeta.totalCount)
     
-    // Ensure we don't go beyond the array bounds
-    if (startIndex >= searchResults.length) {
-      return // Already at or beyond the end
-    }
-    
-    const endIndex = Math.min(startIndex + RESULTS_PER_PAGE, searchResults.length)
-    const newResults = searchResults.slice(startIndex, endIndex)
-    
-    if (newResults.length > 0) {
-      setDisplayedResults(prev => [...prev, ...newResults])
-      setResultsPage(nextPage)
+    // Check if we need to fetch more from API
+    if (endIndex > searchResults.length) {
+      setLoadingPage(true)
+      
+      try {
+        const albumName = searchAlbum.trim() || null
+        const typeFilter = albumName ? null : releaseType
+        const nextOffset = fetchedCount
+        
+        const searchResponse = await searchReleaseGroups(
+          searchArtist.trim(), 
+          albumName, 
+          typeFilter, 
+          nextOffset
+        )
+        
+        const { results: newResults } = searchResponse
+        
+        if (newResults.length > 0) {
+          const mergedResults = [...searchResults, ...newResults]
+          const sortedResults = sortResults(mergedResults, sortOption)
+          
+          // Update state with merged and sorted results
+          setSearchResults(sortedResults)
+          setFetchedCount(fetchedCount + newResults.length)
+          
+          // Now display the target page from the newly sorted results
+          const pageStart = (targetPage - 1) * RESULTS_PER_PAGE
+          const pageEnd = Math.min(pageStart + RESULTS_PER_PAGE, sortedResults.length)
+          const pageResults = sortedResults.slice(pageStart, pageEnd)
+          
+          setDisplayedResults(pageResults)
+          setResultsPage(targetPage)
+        }
+      } catch (err) {
+        console.error('Error loading page:', err)
+        setSearchError(err.message || 'Failed to load page. Please try again.')
+      } finally {
+        setLoadingPage(false)
+      }
+    } else {
+      // Results already in memory, just display the page
+      const pageStart = (targetPage - 1) * RESULTS_PER_PAGE
+      const pageEnd = Math.min(pageStart + RESULTS_PER_PAGE, searchResults.length)
+      const pageResults = searchResults.slice(pageStart, pageEnd)
+      
+      setDisplayedResults(pageResults)
+      setResultsPage(targetPage)
     }
   }
   
@@ -472,13 +530,26 @@ function AlbumPage() {
                 </li>
               ))}
             </ul>
-            {searchResults && displayedResults.length < searchResults.length && (
-              <button 
-                className="load-more-button"
-                onClick={handleLoadMore}
-              >
-                Load More ({searchResults.length - displayedResults.length} remaining)
-              </button>
+            {searchResults && searchMeta && searchResults.length > 0 && displayedResults.length > 0 && (
+              <div className="pagination-controls">
+                <button
+                  className="pagination-button pagination-prev"
+                  onClick={() => handlePageChange('prev')}
+                  disabled={resultsPage <= 1 || loadingPage}
+                >
+                  Previous
+                </button>
+                <span className="pagination-info">
+                  Page {resultsPage} of {getTotalPages()}
+                </span>
+                <button
+                  className="pagination-button pagination-next"
+                  onClick={() => handlePageChange('next')}
+                  disabled={resultsPage >= getTotalPages() || loadingPage}
+                >
+                  {loadingPage ? 'Loading...' : 'Next'}
+                </button>
+              </div>
             )}
           </section>
         </div>

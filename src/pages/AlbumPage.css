@@ -399,8 +399,71 @@
   transition: background-color 0.2s;
 }
 
-.load-more-button:hover {
+.load-more-button:hover:not(:disabled) {
   background-color: #555;
+}
+
+.load-more-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Pagination Controls */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+}
+
+.pagination-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background-color: #666;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  min-width: 100px;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background-color: #555;
+}
+
+.pagination-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 0.95rem;
+  color: #333;
+  font-weight: 500;
+  min-width: 120px;
+  text-align: center;
+}
+
+/* Mobile responsive pagination */
+@media (max-width: 768px) {
+  .pagination-controls {
+    gap: 0.75rem;
+  }
+  
+  .pagination-button {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    min-width: 80px;
+  }
+  
+  .pagination-info {
+    font-size: 0.9rem;
+    min-width: 100px;
+  }
 }
 
 /* Album Identity */
