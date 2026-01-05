@@ -389,12 +389,15 @@ function AlbumPage() {
   
   // Return to search form
   function handleNewSearch() {
+    // Check if we're on album page BEFORE clearing album state
+    const wasOnAlbumPage = !!album
+    
     setAlbum(null)
     setAlbumError(null)
     
-    // If search results exist, just clear album to return to results
-    // Otherwise, clear everything to start fresh
-    if (searchResults && searchResults.length > 0) {
+    // If we were on album page and search results exist, return to results
+    // Otherwise, clear everything for fresh search
+    if (wasOnAlbumPage && searchResults && searchResults.length > 0) {
       // Return to search results - reset to first page
       setSearchError(null)
       setDisplayedResults(searchResults.slice(0, RESULTS_PER_PAGE))
@@ -410,7 +413,6 @@ function AlbumPage() {
       setDisplayedResults([])
       setResultsPage(1)
     }
-    setResultsPage(1)
     setSortOption('newest') // Reset to default sort
     setExpandedTracks(new Set())
     setEditionsExpanded(false)
