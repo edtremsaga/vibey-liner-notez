@@ -180,7 +180,7 @@ export async function searchReleaseGroups(artistName, albumName = null, releaseT
 
 // Fetch release group by MBID
 async function fetchReleaseGroup(releaseGroupId) {
-  const url = `${MB_API_BASE}/release-group/${releaseGroupId}?inc=releases+artist-credits+release-group-rels+artist-rels&fmt=json`
+  const url = `${MB_API_BASE}/release-group/${releaseGroupId}?inc=releases+artist-credits+release-group-rels+artist-rels+url-rels&fmt=json`
   
   const response = await rateLimitedFetch(url, {
     headers: {
@@ -562,6 +562,153 @@ function extractRecordingInfo(recording) {
   }
 }
 
+// Extract Wikidata URL from release group relations
+function extractWikidataUrl(releaseGroup) {
+  // Check url-rels first (most common)
+  if (releaseGroup['url-rels']) {
+    for (const relation of releaseGroup['url-rels']) {
+      if (relation.type === 'wikidata' && relation.url) {
+        return relation.url.resource || null
+      }
+    }
+  }
+  
+  // Fallback to relations array
+  if (releaseGroup.relations) {
+    for (const relation of releaseGroup.relations) {
+      // Look for Wikidata relation
+      if (relation.type === 'wikidata' && relation.url) {
+        return relation.url.resource || null
+      }
+      // Also check for target-type wikidata
+      if (relation['target-type'] === 'url' && relation.url) {
+        const url = relation.url.resource || ''
+        if (url.includes('wikidata.org')) {
+          return url
+        }
+      }
+    }
+  }
+  
+  return null
+}
+
+// Extract Wikidata ID from Wikidata URL
+function extractWikidataId(wikidataUrl) {
+  if (!wikidataUrl) return null
+  // Extract Q-number from URLs like https://www.wikidata.org/wiki/Q123456
+  const match = wikidataUrl.match(/\/Q(\d+)/)
+  return match ? `Q${match[1]}` : null
+}
+
+// Fetch Wikipedia page title from Wikidata ID
+async function fetchWikipediaTitleFromWikidata(wikidataId) {
+  if (!wikidataId) return null
+  
+  try {
+    // Wikidata API: Get sitelinks to find Wikipedia article
+    const url = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${wikidataId}&props=sitelinks&format=json&origin=*`
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'liner-notez/1.0 (https://github.com/yourusername/liner-notez)',
+        'Accept': 'application/json'
+      }
+    })
+    
+    if (!response.ok) return null
+    
+    const data = await response.json()
+    const entities = data.entities || {}
+    const entity = entities[wikidataId]
+    
+    if (entity && entity.sitelinks && entity.sitelinks.enwiki) {
+      // Extract page title from sitelink
+      return entity.sitelinks.enwiki.title || null
+    }
+  } catch (error) {
+    console.warn('Error fetching Wikipedia title from Wikidata:', error)
+  }
+  
+  return null
+}
+
+// Fetch Wikipedia content (intro/summary) for a page title
+export async function fetchWikipediaContent(pageTitle) {
+  if (!pageTitle) return null
+  
+  try {
+    // Wikipedia API: Get page extract (intro text)
+    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle)}`
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'liner-notez/1.0 (https://github.com/yourusername/liner-notez)',
+        'Accept': 'application/json'
+      }
+    })
+    
+    if (!response.ok) return null
+    
+    const data = await response.json()
+    
+    // Return extract (intro text) and full URL
+    return {
+      extract: data.extract || null,
+      title: data.title || pageTitle,
+      url: data.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(pageTitle)}`
+    }
+  } catch (error) {
+    console.warn('Error fetching Wikipedia content:', error)
+    return null
+  }
+}
+
+// Fetch Wikipedia content via MusicBrainz → Wikidata → Wikipedia
+export async function fetchWikipediaContentFromMusicBrainz(releaseGroupId) {
+  try {
+    // Fetch release group to get relations
+    const releaseGroup = await fetchReleaseGroup(releaseGroupId)
+    
+    // Step 1: Extract Wikidata URL from release group
+    const wikidataUrl = extractWikidataUrl(releaseGroup)
+    if (!wikidataUrl) {
+      console.log('No Wikidata URL found in MusicBrainz relations')
+      return null
+    }
+    
+    // Step 2: Extract Wikidata ID
+    const wikidataId = extractWikidataId(wikidataUrl)
+    if (!wikidataId) {
+      console.log('Could not extract Wikidata ID from URL:', wikidataUrl)
+      return null
+    }
+    
+    // Step 3: Fetch Wikipedia page title from Wikidata
+    const wikipediaTitle = await fetchWikipediaTitleFromWikidata(wikidataId)
+    if (!wikipediaTitle) {
+      console.log('Could not find Wikipedia page for Wikidata ID:', wikidataId)
+      return null
+    }
+    
+    // Step 4: Fetch Wikipedia content
+    const wikipediaContent = await fetchWikipediaContent(wikipediaTitle)
+    if (!wikipediaContent) {
+      console.log('Could not fetch Wikipedia content for:', wikipediaTitle)
+      return null
+    }
+    
+    return {
+      ...wikipediaContent,
+      wikidataUrl: wikidataUrl,
+      wikidataId: wikidataId
+    }
+  } catch (error) {
+    console.warn('Error fetching Wikipedia content from MusicBrainz:', error)
+    return null
+  }
+}
+
 // Fetch basic album info (title, artist, year, cover art) - Stage 1
 export async function fetchAlbumBasicInfo(releaseGroupId) {
   const rg = await fetchReleaseGroup(releaseGroupId)
@@ -773,6 +920,9 @@ export async function fetchAlbumData(releaseGroupId, basicData = null) {
   // Note: albumCredits was already extracted above (trying multiple releases if needed)
   // Release-group relations are typically release-group-to-release-group, not artist credits
   
+  // Extract Wikidata URL from release group relations
+  const wikidataUrl = extractWikidataUrl(rg)
+  
   // Build the album object conforming to album.v1.json
   return {
     albumId: releaseGroupId,
@@ -791,7 +941,7 @@ export async function fetchAlbumData(releaseGroupId, basicData = null) {
     externalLinks: {
       musicbrainzReleaseGroupUrl: `https://musicbrainz.org/release-group/${releaseGroupId}`,
       musicbrainzSelectedReleaseUrl: `https://musicbrainz.org/release/${selectedReleaseId}`,
-      wikidataUrl: null,
+      wikidataUrl: wikidataUrl,
       discogsUrl: null
     },
     sources: [

@@ -1,13 +1,17 @@
 .album-page {
-  min-height: 100vh;
+  /* Remove min-height: 100vh - let content determine height */
   background-color: var(--bg);
   padding: 2rem 0;
+  /* Ensure sticky positioning works */
+  position: relative;
 }
 
 .album-container {
   max-width: 800px;
   margin: 0 auto;
   padding: 0 2rem;
+  /* Ensure sticky children work properly */
+  position: relative;
 }
 
 .back-link {
@@ -497,12 +501,68 @@
   }
 }
 
+/* Wikipedia Section */
+.wikipedia-section {
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background-color: var(--card);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+}
+
+.wikipedia-heading {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+.wikipedia-content {
+  color: var(--text);
+}
+
+.wikipedia-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.wikipedia-link {
+  display: inline-block;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: color 0.2s;
+}
+
+.wikipedia-link:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.wikipedia-loading {
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
 /* Album Identity */
 .album-identity {
   margin-bottom: 3rem;
   display: flex;
   gap: 2rem;
   align-items: flex-start;
+  position: -webkit-sticky; /* Safari support */
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background-color: var(--bg);
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  margin-top: -1rem; /* Offset the padding-top to maintain spacing */
+  /* Add a border or shadow to make it more visible when stuck */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .cover-art {
@@ -771,6 +831,11 @@
 
 .track-credit-title-text {
   flex: 1;
+}
+
+/* Make "Album" text green in album credits section only */
+.credits-group:first-of-type .track-credit-title-text {
+  color: var(--accent);
 }
 
 .track-credit-chevron {

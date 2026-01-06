@@ -1,9 +1,10 @@
 .app-shell {
   display: flex;
-  min-height: 100vh;
+  height: 100vh; /* Use full viewport height */
   max-width: 1400px;
   margin: 0 auto;
   background-color: var(--bg);
+  overflow: hidden; /* Prevent shell-level scrolling */
 }
 
 .app-main {
@@ -36,5 +37,8 @@
   flex: 1;
   padding: var(--gap-4);
   overflow-y: auto;
+  /* Ensure it has a defined height for sticky positioning */
+  height: 0; /* This allows flex: 1 to work properly */
+  min-height: 0; /* Prevents flex item from overflowing */
 }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, fetchCoverArt, fetchAllAlbumArt } from '../services/musicbrainz'
+import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, fetchCoverArt, fetchAllAlbumArt, fetchWikipediaContentFromMusicBrainz } from '../services/musicbrainz'
 import { formatDuration } from '../utils/formatDuration'
 import './AlbumPage.css'
 
@@ -54,6 +54,10 @@ function AlbumPage() {
   const [loadingGallery, setLoadingGallery] = useState(false)
   const [galleryExpanded, setGalleryExpanded] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null) // For lightbox view
+  
+  // Wikipedia content state
+  const [wikipediaContent, setWikipediaContent] = useState(null)
+  const [loadingWikipedia, setLoadingWikipedia] = useState(false)
   
   // Get heading text based on release type
   function getResultsHeading(releaseType) {
@@ -480,6 +484,10 @@ function AlbumPage() {
     setExpandedTracks(new Set())
     setEditionsExpanded(false)
     setAlbumCreditsExpanded(true) // Reset album credits to expanded
+    setGalleryExpanded(false) // Reset gallery to collapsed
+    setSelectedImage(null) // Clear selected image
+    setWikipediaContent(null) // Clear Wikipedia content
+    setLoadingWikipedia(false) // Reset Wikipedia loading state
   }
   
   // Handle browser back/forward button
@@ -546,8 +554,37 @@ function AlbumPage() {
       setGalleryImages([])
       setGalleryExpanded(false)
       setSelectedImage(null)
+      setLoadingGallery(false)
     }
-  }, [album?.albumId]) // Only re-run when album ID changes
+  }, [album])
+  
+  // Fetch Wikipedia content in background after album loads
+  useEffect(() => {
+    if (album && album.albumId) {
+      // Reset Wikipedia state when new album loads
+      setWikipediaContent(null)
+      
+      // Fetch Wikipedia content in background
+      setLoadingWikipedia(true)
+      fetchWikipediaContentFromMusicBrainz(album.albumId)
+        .then(content => {
+          if (content) {
+            setWikipediaContent(content)
+          }
+        })
+        .catch(err => {
+          console.warn('Error loading Wikipedia content:', err)
+          // Wikipedia is optional, so don't show error to user
+        })
+        .finally(() => {
+          setLoadingWikipedia(false)
+        })
+    } else {
+      // Clear Wikipedia when no album is loaded
+      setWikipediaContent(null)
+      setLoadingWikipedia(false)
+    }
+  }, [album])
   
   // Toggle track expanded state
   function toggleTrackExpanded(trackId) {
@@ -805,6 +842,30 @@ function AlbumPage() {
         >
           {searchResults && searchResults.length > 0 ? 'Back to Results' : 'New Search'}
         </button>
+        
+        {/* Wikipedia Content */}
+        {(wikipediaContent || loadingWikipedia) && (
+          <section className="wikipedia-section">
+            <h2 className="wikipedia-heading">Wikipedia</h2>
+            {loadingWikipedia ? (
+              <div className="wikipedia-loading">Loading Wikipedia content...</div>
+            ) : wikipediaContent && wikipediaContent.extract ? (
+              <div className="wikipedia-content">
+                <p className="wikipedia-text">{wikipediaContent.extract}</p>
+                {wikipediaContent.url && (
+                  <a 
+                    href={wikipediaContent.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="wikipedia-link"
+                  >
+                    Continue reading at Wikipedia...
+                  </a>
+                )}
+              </div>
+            ) : null}
+          </section>
+        )}
         
         {/* Album Identity */}
         <section className="album-identity">
