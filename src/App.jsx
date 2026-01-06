@@ -17,7 +17,7 @@ function App() {
       <AppShell header={header}>
         <AlbumPage />
       </AppShell>
-      <Analytics />
+      <Analytics /> {/* Vercel Analytics tracking */}
     </ErrorBoundary>
   )
 }
