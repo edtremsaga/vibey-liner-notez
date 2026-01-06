@@ -1,6 +1,6 @@
 .album-page {
   min-height: 100vh;
-  background-color: #fafafa;
+  background-color: var(--bg);
   padding: 2rem 0;
 }
 
@@ -13,7 +13,7 @@
 .back-link {
   display: inline-block;
   margin-bottom: 2rem;
-  color: #666;
+  color: var(--muted);
   text-decoration: none;
   font-size: 0.95rem;
   transition: color 0.2s;
@@ -24,14 +24,14 @@
 }
 
 .back-link:hover {
-  color: #1a1a1a;
+  color: var(--text);
 }
 
 .loading,
 .error {
   text-align: center;
   padding: 4rem 2rem;
-  color: #666;
+  color: var(--muted);
   max-width: 600px;
   margin: 0 auto;
 }
@@ -53,16 +53,17 @@
   display: block;
   margin: 2rem auto;
   padding: 0.75rem 1.5rem;
-  background-color: #1a1a1a;
-  color: white;
+  background-color: var(--card);
+  color: var(--text);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--r-md);
   cursor: pointer;
   font-size: 1rem;
+  transition: background-color 0.2s;
 }
 
 .back-button:hover {
-  background-color: #333;
+  background-color: var(--cardHover);
 }
 
 /* Search Section */
@@ -242,7 +243,7 @@
 .search-results-section h2 {
   font-size: 2rem;
   font-weight: 300;
-  color: #1a1a1a;
+  color: var(--text);
   margin: 0;
 }
 
@@ -259,7 +260,7 @@
 }
 
 .results-count {
-  color: #666;
+  color: var(--muted);
   margin: 0;
 }
 
@@ -272,27 +273,27 @@
 .sort-control label {
   font-size: 0.95rem;
   font-weight: 500;
-  color: #333;
+  color: var(--text);
 }
 
 .sort-select {
   padding: 0.5rem 0.75rem;
   font-size: 0.95rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: white;
-  color: #333;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background-color: var(--card);
+  color: var(--text);
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background-color 0.2s;
 }
 
 .sort-select:focus {
   outline: none;
-  border-color: #666;
+  border-color: var(--accent);
 }
 
 .sort-select:hover {
-  border-color: #999;
+  background-color: var(--cardHover);
 }
 
 /* Mobile responsive for sort control */
@@ -313,7 +314,7 @@
 }
 
 .refine-suggestion {
-  color: #999;
+  color: var(--muted2);
   font-size: 0.9rem;
   font-style: italic;
 }
@@ -335,9 +336,9 @@
   width: 100%;
   padding: 1rem;
   text-align: left;
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
   display: flex;
@@ -346,24 +347,24 @@
 }
 
 .result-button:hover {
-  background-color: #f9f9f9;
-  border-color: #999;
+  background-color: var(--cardHover);
+  border-color: var(--accent);
 }
 
 .result-title {
   font-size: 1.1rem;
   font-weight: 500;
-  color: #1a1a1a;
+  color: var(--text);
 }
 
 .result-artist {
   font-size: 0.95rem;
-  color: #666;
+  color: var(--muted);
 }
 
 .result-year {
   font-size: 0.9rem;
-  color: #999;
+  color: var(--muted2);
 }
 
 .new-search-button {
@@ -371,17 +372,17 @@
   padding: 0.75rem 1.5rem;
   font-size: 0.95rem;
   font-weight: 500;
-  background-color: #1a1a1a;
-  color: white;
+  background-color: var(--card);
+  color: var(--text);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--r-md);
   cursor: pointer;
   transition: background-color 0.2s;
   text-decoration: none;
 }
 
 .new-search-button:hover {
-  background-color: #333;
+  background-color: var(--cardHover);
 }
 
 .load-more-button {
@@ -422,17 +423,17 @@
   padding: 0.75rem 1.5rem;
   font-size: 0.95rem;
   font-weight: 500;
-  background-color: #666;
-  color: white;
+  background-color: var(--card);
+  color: var(--text);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--r-md);
   cursor: pointer;
   transition: background-color 0.2s;
   min-width: 100px;
 }
 
 .pagination-button:hover:not(:disabled) {
-  background-color: #555;
+  background-color: var(--cardHover);
 }
 
 .pagination-button:disabled {
@@ -442,7 +443,7 @@
 
 .pagination-info {
   font-size: 0.95rem;
-  color: #333;
+  color: var(--text);
   font-weight: 500;
   min-width: 120px;
   text-align: center;
@@ -452,7 +453,7 @@
 .filter-control {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--border);
 }
 
 .filter-checkbox-label {
@@ -461,7 +462,7 @@
   gap: 0.5rem;
   cursor: pointer;
   font-size: 0.95rem;
-  color: #333;
+  color: var(--text);
   user-select: none;
 }
 
@@ -469,11 +470,11 @@
   width: 18px;
   height: 18px;
   cursor: pointer;
-  accent-color: #666;
+  accent-color: var(--accent);
 }
 
 .filter-note {
-  color: #666;
+  color: var(--muted);
   font-size: 0.9rem;
   font-style: italic;
 }
@@ -508,10 +509,10 @@
   flex-shrink: 0;
   width: 300px;
   height: 300px;
-  background-color: #e0e0e0;
-  border-radius: 4px;
+  background-color: var(--card);
+  border-radius: var(--r-md);
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .cover-art img {
@@ -528,21 +529,21 @@
 .album-title {
   font-size: 2.5rem;
   font-weight: 300;
-  color: #1a1a1a;
+  color: var(--text);
   margin-bottom: 0.5rem;
   line-height: 1.2;
 }
 
 .album-artist {
   font-size: 1.5rem;
-  color: #666;
+  color: var(--muted);
   margin-bottom: 0.5rem;
   font-weight: 400;
 }
 
 .album-year {
   font-size: 1rem;
-  color: #999;
+  color: var(--muted2);
   font-weight: 300;
 }
 
@@ -550,14 +551,14 @@
 .editions-section {
   margin-bottom: 3rem;
   padding-bottom: 2rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border);
 }
 
 .editions-section h2 {
   font-size: 1.5rem;
   font-weight: 400;
   margin-bottom: 1rem;
-  color: #333;
+  color: var(--accent);
 }
 
 .editions-list {
@@ -571,7 +572,7 @@
   padding: 0.5rem 0;
   background: none;
   border: none;
-  color: #666;
+  color: var(--muted);
   font-size: 0.95rem;
   cursor: pointer;
   display: inline-flex;
@@ -581,7 +582,7 @@
 }
 
 .editions-toggle:hover {
-  color: #1a1a1a;
+  color: var(--text);
 }
 
 .editions-toggle-text {
@@ -600,9 +601,9 @@
 
 .edition-button {
   padding: 0.75rem 1.25rem;
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
@@ -613,37 +614,38 @@
 }
 
 .edition-button:hover {
-  border-color: #999;
+  background-color: var(--cardHover);
+  border-color: var(--accent);
 }
 
 .edition-button.active {
-  border-color: #1a1a1a;
-  background-color: #f5f5f5;
+  border-color: var(--accent);
+  background-color: var(--cardHover);
 }
 
 .edition-title {
   font-weight: 500;
-  color: #1a1a1a;
+  color: var(--text);
 }
 
 .edition-date,
 .edition-format {
   font-size: 0.85rem;
-  color: #666;
+  color: var(--muted);
 }
 
 /* Tracklist */
 .tracklist-section {
   margin-bottom: 3rem;
   padding-bottom: 2rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border);
 }
 
 .tracklist-section h2 {
   font-size: 1.5rem;
   font-weight: 400;
   margin-bottom: 1.5rem;
-  color: #333;
+  color: var(--accent);
 }
 
 .tracklist {
@@ -656,8 +658,14 @@
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border);
   counter-increment: track-counter;
+  transition: color 0.2s;
+  cursor: pointer;
+}
+
+.track-item:hover .track-title {
+  color: var(--accent);
 }
 
 .track-item:last-child {
@@ -667,19 +675,20 @@
 .track-position {
   min-width: 3rem;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 
 .track-title {
   flex: 1;
   font-size: 1rem;
-  color: #1a1a1a;
+  color: var(--text);
+  transition: color 0.2s;
 }
 
 .track-duration {
   font-size: 0.9rem;
-  color: #999;
+  color: var(--muted2);
   font-variant-numeric: tabular-nums;
 }
 
@@ -692,7 +701,7 @@
   font-size: 1.5rem;
   font-weight: 400;
   margin-bottom: 2rem;
-  color: #333;
+  color: var(--accent);
 }
 
 .credits-group {
@@ -703,7 +712,7 @@
   font-size: 1.25rem;
   font-weight: 400;
   margin-bottom: 1rem;
-  color: #444;
+  color: var(--accent);
 }
 
 .credits-list {
@@ -715,7 +724,7 @@
   display: flex;
   justify-content: space-between;
   padding: 0.5rem 0;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid var(--border);
   font-size: 0.95rem;
 }
 
@@ -724,19 +733,19 @@
 }
 
 .credit-name {
-  color: #1a1a1a;
+  color: var(--text);
   font-weight: 400;
 }
 
 .credit-role {
-  color: #666;
+  color: var(--muted);
   text-transform: capitalize;
 }
 
 .track-credits {
   margin-bottom: 2rem;
   padding-left: 1rem;
-  border-left: 2px solid #e0e0e0;
+  border-left: 2px solid var(--border);
 }
 
 .track-credit-title-button {
@@ -750,14 +759,14 @@
   padding: 0;
   margin-bottom: 0.75rem;
   cursor: pointer;
-  color: #333;
+  color: var(--text);
   font-size: 1.1rem;
   font-weight: 500;
   transition: color 0.2s;
 }
 
 .track-credit-title-button:hover {
-  color: #1a1a1a;
+  color: var(--accent);
 }
 
 .track-credit-title-text {
@@ -767,7 +776,7 @@
 .track-credit-chevron {
   flex-shrink: 0;
   transition: transform 0.2s;
-  color: #666;
+  color: var(--muted);
 }
 
 .track-credit-chevron.expanded {
@@ -785,7 +794,7 @@
 .category-label {
   display: block;
   font-size: 0.85rem;
-  color: #999;
+  color: var(--muted2);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.5rem;
@@ -793,7 +802,7 @@
 }
 
 .no-credits {
-  color: #999;
+  color: var(--muted2);
   font-style: italic;
   padding: 2rem 0;
   text-align: center;
@@ -803,9 +812,9 @@
 .album-art-gallery-section {
   margin-bottom: 3rem;
   padding: 1.5rem;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .gallery-header {
@@ -818,7 +827,7 @@
 .gallery-header h2 {
   margin: 0;
   font-size: 1.5rem;
-  color: #1a1a1a;
+  color: var(--accent);
 }
 
 .gallery-toggle-button {
@@ -826,17 +835,18 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background-color: #666;
-  color: white;
+  background-color: var(--cardHover);
+  color: var(--text);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--r-md);
   cursor: pointer;
   font-size: 0.95rem;
   transition: background-color 0.2s;
 }
 
 .gallery-toggle-button:hover {
-  background-color: #555;
+  background-color: var(--accent);
+  color: #000000;
 }
 
 .gallery-chevron {
@@ -855,7 +865,7 @@
 .gallery-empty {
   text-align: center;
   padding: 2rem;
-  color: #666;
+  color: var(--muted);
 }
 
 .gallery-grid {
@@ -869,9 +879,9 @@
   position: relative;
   aspect-ratio: 1;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: var(--r-md);
   cursor: pointer;
-  background-color: #f0f0f0;
+  background-color: var(--card);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 

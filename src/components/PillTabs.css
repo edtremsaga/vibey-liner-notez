@@ -1,0 +1,32 @@
+.pill-tabs {
+  display: flex;
+  gap: var(--gap-1);
+  flex-wrap: wrap;
+}
+
+.pill-tab {
+  padding: 0.5rem 1rem;
+  border-radius: var(--r-pill);
+  border: none;
+  background-color: var(--card);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.pill-tab:hover {
+  background-color: var(--cardHover);
+  transform: scale(1.02);
+}
+
+.pill-tab.selected {
+  background-color: var(--accent);
+  color: #000000;
+}
+
+.pill-tab.selected:hover {
+  background-color: #1ed760;
+}
+

@@ -1,0 +1,21 @@
+.card {
+  background-color: var(--card);
+  border-radius: var(--r-md);
+  padding: var(--gap-2);
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.card:hover {
+  background-color: var(--cardHover);
+  transform: translateY(-2px);
+}
+
+.card[role="button"] {
+  cursor: pointer;
+}
+
+.card[role="button"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+

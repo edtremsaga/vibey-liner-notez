@@ -1,0 +1,64 @@
+.row-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+  padding: var(--gap-1) var(--gap-2);
+  border-radius: var(--r-md);
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.row-list-item:hover {
+  background-color: var(--cardHover);
+}
+
+.row-list-item[role="button"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.row-list-item-image {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background-color: var(--card);
+}
+
+.row-list-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.row-list-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-list-item-primary {
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row-list-item-secondary {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row-list-item-meta {
+  color: var(--muted2);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
