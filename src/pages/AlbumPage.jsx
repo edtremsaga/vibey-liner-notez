@@ -174,6 +174,7 @@ function AlbumPage() {
   
   // Handle sort option change
   function handleSortChange(newSortOption) {
+    setSearchError(null) // Clear any previous errors
     setSortOption(newSortOption)
     if (searchResults) {
       const sorted = sortResults(searchResults, newSortOption)
@@ -187,6 +188,7 @@ function AlbumPage() {
   
   // Handle bootleg filter toggle
   function handleBootlegFilterChange() {
+    setSearchError(null) // Clear any previous errors
     setHideBootlegs(!hideBootlegs)
     if (searchResults) {
       // Re-apply sorting and filtering
