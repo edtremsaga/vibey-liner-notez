@@ -7,7 +7,7 @@ function App() {
     // Placeholder header content
     const header = (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
-        <h1 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--text)', fontWeight: 600 }}>liner notez</h1>
+        <h1 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--text)', fontWeight: 600, fontStyle: 'italic' }}>liner notez</h1>
       </div>
     )
 

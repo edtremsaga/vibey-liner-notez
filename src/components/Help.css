@@ -1,0 +1,157 @@
+.help-page {
+  min-height: 100vh;
+  background-color: var(--bg);
+  padding: 2rem 0;
+}
+
+.help-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  color: var(--text);
+}
+
+.help-close-button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  margin-bottom: 2rem;
+  transition: color 0.2s;
+}
+
+.help-close-button:hover {
+  color: var(--text);
+}
+
+.help-title {
+  font-size: 2.5rem;
+  font-weight: 300;
+  color: var(--text);
+  margin-bottom: 3rem;
+  font-style: italic;
+}
+
+.help-section {
+  margin-bottom: 3rem;
+}
+
+.help-section h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  margin-top: 2rem;
+}
+
+.help-section h2:first-of-type {
+  margin-top: 0;
+}
+
+.help-section h3 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.help-section p {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.help-section ul,
+.help-section ol {
+  margin-bottom: 1.5rem;
+  padding-left: 2rem;
+}
+
+.help-section li {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.help-section ul ul,
+.help-section ol ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.help-section ul ul li,
+.help-section ol ul li {
+  font-size: 0.95rem;
+  color: var(--muted2);
+}
+
+.help-section strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.help-note {
+  background-color: var(--card);
+  padding: 1rem;
+  border-radius: var(--r-md);
+  border-left: 3px solid var(--accent);
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.help-note strong {
+  color: var(--text);
+}
+
+.help-faq {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.help-faq:last-child {
+  border-bottom: none;
+}
+
+.help-faq p {
+  margin-bottom: 0.5rem;
+}
+
+.help-faq p:first-child {
+  color: var(--text);
+}
+
+.help-faq p:last-child {
+  color: var(--muted);
+  margin-left: 1rem;
+}
+
+.help-section a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.help-section a:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.help-footer {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.help-footer p {
+  color: var(--muted2);
+  font-style: italic;
+  margin: 0;
+}
+

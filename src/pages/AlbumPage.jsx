@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, fetchCoverArt, fetchAllAlbumArt, fetchWikipediaContentFromMusicBrainz } from '../services/musicbrainz'
 import { formatDuration } from '../utils/formatDuration'
+import { getCachedAlbum, setCachedAlbum } from '../utils/albumCache'
+import Help from '../components/Help'
 import './AlbumPage.css'
 
 function AlbumPage() {
@@ -58,6 +60,9 @@ function AlbumPage() {
   // Wikipedia content state
   const [wikipediaContent, setWikipediaContent] = useState(null)
   const [loadingWikipedia, setLoadingWikipedia] = useState(false)
+  
+  // Help section state
+  const [showHelp, setShowHelp] = useState(false)
   
   // Get heading text based on release type
   function getResultsHeading(releaseType) {
@@ -379,6 +384,46 @@ function AlbumPage() {
     setLoadingCredits(false)
     
     try {
+      // Check cache first
+      const cachedAlbum = getCachedAlbum(releaseGroupId)
+      
+      if (cachedAlbum) {
+        // Cache hit - use cached data
+        console.log(`Loading album from cache: ${releaseGroupId}`)
+        
+        // Update album with cached data
+        if (hasBasicInfo) {
+          setAlbum(prev => ({
+            ...prev,
+            ...cachedAlbum
+          }))
+        } else {
+          setAlbum(cachedAlbum)
+        }
+        
+        setLoadingTracklist(false)
+        setLoadingCredits(false)
+        setLoadingAlbum(false)
+        
+        // Still fetch cover art in background (it's not cached)
+        if (cachedAlbum.albumId) {
+          fetchCoverArt(cachedAlbum.albumId, null)
+            .then(coverArtUrl => {
+              if (coverArtUrl) {
+                setAlbum(prev => prev ? { ...prev, coverArtUrl } : null)
+              }
+            })
+            .catch(err => {
+              console.warn('Failed to load cover art:', err)
+            })
+        }
+        
+        return // Exit early, we have cached data
+      }
+      
+      // Cache miss - fetch from API
+      console.log(`Cache miss, fetching album from API: ${releaseGroupId}`)
+      
       // Fetch basic info (without waiting for cover art)
       const basicData = await fetchAlbumBasicInfo(releaseGroupId)
       
@@ -433,6 +478,9 @@ function AlbumPage() {
       })
       setLoadingTracklist(false)
       setLoadingCredits(false)
+      
+      // Cache the fetched album data
+      setCachedAlbum(releaseGroupId, albumData)
     } catch (err) {
       console.error('Error fetching album data:', err)
       setAlbumError(err.message || 'Failed to load album data from MusicBrainz')
@@ -495,7 +543,13 @@ function AlbumPage() {
     const handlePopState = (event) => {
       // Handle back button navigation based on current state
       
-      // Case 1: On album page with search results → return to search results
+      // Case 1: Coming back from help section → close help
+      if (showHelp) {
+        setShowHelp(false)
+        return
+      }
+      
+      // Case 2: On album page with search results → return to search results
       if (album && searchResults && searchResults.length > 0) {
         setAlbum(null)
         setAlbumError(null)
@@ -504,7 +558,7 @@ function AlbumPage() {
         return
       }
       
-      // Case 2: On search results page (no album) → return to main search page
+      // Case 3: On search results page (no album) → return to main search page
       if (!album && searchResults && searchResults.length > 0) {
         // Clear search results and return to main search form
         setSearchResults(null)
@@ -518,7 +572,7 @@ function AlbumPage() {
         return
       }
       
-      // Case 3: No special handling needed, let browser handle normally
+      // Case 4: No special handling needed, let browser handle normally
     }
     
     window.addEventListener('popstate', handlePopState)
@@ -526,7 +580,7 @@ function AlbumPage() {
     return () => {
       window.removeEventListener('popstate', handlePopState)
     }
-  }, [searchResults, album]) // Re-run when searchResults or album changes
+  }, [searchResults, album, showHelp]) // Re-run when searchResults, album, or showHelp changes
   
   // Fetch gallery images in background after album loads
   useEffect(() => {
@@ -604,11 +658,35 @@ function AlbumPage() {
     setAlbumCreditsExpanded(prev => !prev)
   }
   
+  // Function to open help section
+  function handleOpenHelp() {
+    setShowHelp(true)
+    // Push browser history entry so back button works
+    window.history.pushState(
+      { fromHelp: true },
+      '',
+      window.location.href
+    )
+  }
+  
+  // Function to close help section
+  function handleCloseHelp() {
+    setShowHelp(false)
+  }
+  
+  // Show help section (replaces all other views)
+  if (showHelp) {
+    return <Help onClose={handleCloseHelp} />
+  }
+  
   // Show search form (initial state or after "New Search")
   if (!album && !searchResults && !loadingAlbum) {
     return (
       <div className="album-page">
         <div className="album-container">
+          <div className="search-description">
+            <p className="search-description-main">Search by artist to explore album focused liner note information — personnel, recording details, album art, and historical facts all sourced from documented music archives.</p>
+          </div>
           <section className="search-section">
             <h1 className="search-title">Search for an Album</h1>
             <form onSubmit={handleSearch} className="search-form">
@@ -665,6 +743,12 @@ function AlbumPage() {
               )}
             </form>
           </section>
+          <p className="search-description-note">ⓘ Album information only — no audio playback or streaming</p>
+          <div className="help-link-container">
+            <button className="help-link" onClick={handleOpenHelp}>
+              Help
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -782,6 +866,11 @@ function AlbumPage() {
               </div>
             )}
           </section>
+          <div className="help-link-container">
+            <button className="help-link" onClick={handleOpenHelp}>
+              Help
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -1322,6 +1411,11 @@ function AlbumPage() {
             </>
           )}
         </section>
+        <div className="help-link-container">
+          <button className="help-link" onClick={() => setShowHelp(true)}>
+            Help
+          </button>
+        </div>
       </div>
     </div>
   )
