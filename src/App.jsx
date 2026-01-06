@@ -2,6 +2,7 @@ import AlbumPage from './pages/AlbumPage'
 import AppShell from './layout/AppShell'
 import ErrorBoundary from './components/ErrorBoundary'
 import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import './App.css'
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <AlbumPage />
       </AppShell>
       <Analytics />
+      <SpeedInsights />
     </ErrorBoundary>
   )
 }
