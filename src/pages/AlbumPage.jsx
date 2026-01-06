@@ -547,13 +547,22 @@ function AlbumPage() {
     const handlePopState = (event) => {
       // Handle back button navigation based on current state
       
-      // Case 1: Coming back from help section → close help
+      // Case 1: Lightbox is open → close lightbox and stay on album details page
+      if (selectedImage !== null) {
+        setSelectedImage(null)
+        // Don't push a new state - we're already on the album details page
+        // The history stack is: search results → album details → lightbox open
+        // After closing lightbox, we're back to album details page
+        return
+      }
+      
+      // Case 2: Coming back from help section → close help
       if (showHelp) {
         setShowHelp(false)
         return
       }
       
-      // Case 2: On album page with search results → return to search results
+      // Case 3: On album page with search results → return to search results
       if (album && searchResults && searchResults.length > 0) {
         setAlbum(null)
         setAlbumError(null)
@@ -562,7 +571,7 @@ function AlbumPage() {
         return
       }
       
-      // Case 3: On search results page (no album) → return to main search page
+      // Case 4: On search results page (no album) → return to main search page
       if (!album && searchResults && searchResults.length > 0) {
         // Clear search results and return to main search form
         setSearchResults(null)
@@ -576,7 +585,7 @@ function AlbumPage() {
         return
       }
       
-      // Case 4: No special handling needed, let browser handle normally
+      // Case 5: No special handling needed, let browser handle normally
     }
     
     window.addEventListener('popstate', handlePopState)
@@ -584,7 +593,7 @@ function AlbumPage() {
     return () => {
       window.removeEventListener('popstate', handlePopState)
     }
-  }, [searchResults, album, showHelp]) // Re-run when searchResults, album, or showHelp changes
+  }, [searchResults, album, showHelp, selectedImage]) // Re-run when searchResults, album, showHelp, or selectedImage changes
   
   // Fetch gallery images in background after album loads
   useEffect(() => {
@@ -1202,7 +1211,15 @@ function AlbumPage() {
                         <div 
                           key={img.id || index} 
                           className="gallery-item"
-                          onClick={() => setSelectedImage(img)}
+                          onClick={() => {
+                            setSelectedImage(img)
+                            // Push history state when lightbox opens so back button closes it first
+                            window.history.pushState(
+                              { lightboxOpen: true, albumId: album?.albumId },
+                              '',
+                              window.location.href
+                            )
+                          }}
                         >
                           <img
                             src={thumbnailUrl}
