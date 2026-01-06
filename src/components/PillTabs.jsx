@@ -19,3 +19,4 @@ function PillTabs({ tabs, selected, onSelect }) {
 
 export default PillTabs
 
+

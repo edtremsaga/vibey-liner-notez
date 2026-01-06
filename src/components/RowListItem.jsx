@@ -30,3 +30,4 @@ function RowListItem({ image, primaryText, secondaryText, meta, onClick }) {
 
 export default RowListItem
 
+

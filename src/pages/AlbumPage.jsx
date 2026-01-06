@@ -46,6 +46,9 @@ function AlbumPage() {
   // Track credits collapse state (Set of track IDs that are expanded)
   const [expandedTracks, setExpandedTracks] = useState(new Set())
   
+  // Album credits collapse state (default to true - expanded)
+  const [albumCreditsExpanded, setAlbumCreditsExpanded] = useState(true)
+  
   // Album art gallery state
   const [galleryImages, setGalleryImages] = useState([])
   const [loadingGallery, setLoadingGallery] = useState(false)
@@ -366,6 +369,7 @@ function AlbumPage() {
     
     // Don't clear searchResults - we need it for "Back to Results" button
     setEditionsExpanded(false) // Reset editions collapse state when loading new album
+    setAlbumCreditsExpanded(true) // Reset album credits to expanded when loading new album
     setLoadingBasicInfo(false) // Basic info already shown from search results
     setLoadingTracklist(true)
     setLoadingCredits(false)
@@ -475,6 +479,7 @@ function AlbumPage() {
     setSortOption('newest') // Reset to default sort
     setExpandedTracks(new Set())
     setEditionsExpanded(false)
+    setAlbumCreditsExpanded(true) // Reset album credits to expanded
   }
   
   // Handle browser back/forward button
@@ -555,6 +560,11 @@ function AlbumPage() {
       }
       return newSet
     })
+  }
+  
+  // Toggle album credits expanded state
+  function toggleAlbumCreditsExpanded() {
+    setAlbumCreditsExpanded(prev => !prev)
   }
   
   // Show search form (initial state or after "New Search")
@@ -1034,15 +1044,41 @@ function AlbumPage() {
           {/* Album-level credits */}
           {albumCredits.length > 0 && (
             <div className="credits-group">
-              <h3>Album</h3>
-              <ul className="credits-list">
-                {albumCredits.map((credit, idx) => (
-                  <li key={idx} className="credit-item">
-                    <span className="credit-name">{credit.personName}</span>
-                    <span className="credit-role">{credit.role}</span>
-                  </li>
-                ))}
-              </ul>
+              <button
+                className="track-credit-title-button"
+                onClick={toggleAlbumCreditsExpanded}
+                aria-expanded={albumCreditsExpanded}
+              >
+                <span className="track-credit-title-text">Album</span>
+                <svg
+                  className={`track-credit-chevron ${albumCreditsExpanded ? 'expanded' : ''}`}
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M4 6L8 10L12 6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              
+              {albumCreditsExpanded && (
+                <ul className="credits-list">
+                  {albumCredits.map((credit, idx) => (
+                    <li key={idx} className="credit-item">
+                      <span className="credit-name">{credit.personName}</span>
+                      <span className="credit-role">{credit.role}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
 
