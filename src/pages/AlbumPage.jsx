@@ -54,12 +54,14 @@ function AlbumPage() {
   // Album art gallery state
   const [galleryImages, setGalleryImages] = useState([])
   const [loadingGallery, setLoadingGallery] = useState(false)
+  const [galleryError, setGalleryError] = useState(null) // Error state for gallery
   const [galleryExpanded, setGalleryExpanded] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null) // For lightbox view
   
   // Wikipedia content state
   const [wikipediaContent, setWikipediaContent] = useState(null)
   const [loadingWikipedia, setLoadingWikipedia] = useState(false)
+  const [wikipediaError, setWikipediaError] = useState(null) // Error state for Wikipedia
   
   // Help section state
   const [showHelp, setShowHelp] = useState(false)
@@ -589,26 +591,61 @@ function AlbumPage() {
       setGalleryImages([])
       setGalleryExpanded(false)
       setSelectedImage(null)
+      setGalleryError(null) // Clear previous errors
       
-      // Fetch gallery images in background
+      // Create AbortController for this request
+      const abortController = new AbortController()
+      const TIMEOUT_MS = 10000 // 10 second timeout
+      
+      // Set timeout to abort request
+      const timeoutId = setTimeout(() => {
+        abortController.abort()
+      }, TIMEOUT_MS)
+      
+      // Fetch gallery images in background with timeout
       setLoadingGallery(true)
-      fetchAllAlbumArt(album.albumId)
+      setGalleryError(null)
+      
+      fetchAllAlbumArt(album.albumId, abortController.signal)
         .then(images => {
-          setGalleryImages(images)
+          // Only update if this request hasn't been cancelled
+          if (!abortController.signal.aborted) {
+            clearTimeout(timeoutId)
+            setGalleryImages(images)
+            setGalleryError(null)
+          }
         })
         .catch(err => {
-          console.warn('Error loading gallery images:', err)
-          // Gallery is optional, so don't show error to user
+          // Only update if this request hasn't been cancelled
+          if (!abortController.signal.aborted) {
+            clearTimeout(timeoutId)
+            console.warn('Error loading gallery images:', err)
+            const errorMessage = err.message || 'Failed to load album art gallery'
+            setGalleryError(errorMessage.includes('timeout') 
+              ? 'Gallery loading timed out. Please try again.' 
+              : errorMessage)
+          }
         })
         .finally(() => {
-          setLoadingGallery(false)
+          // Only update if this request hasn't been cancelled
+          if (!abortController.signal.aborted) {
+            clearTimeout(timeoutId)
+            setLoadingGallery(false)
+          }
         })
+      
+      // Cleanup: abort request if component unmounts or album changes
+      return () => {
+        clearTimeout(timeoutId)
+        abortController.abort()
+      }
     } else {
       // Clear gallery when no album is loaded
       setGalleryImages([])
       setGalleryExpanded(false)
       setSelectedImage(null)
       setLoadingGallery(false)
+      setGalleryError(null)
     }
   }, [album])
   
@@ -617,26 +654,64 @@ function AlbumPage() {
     if (album && album.albumId) {
       // Reset Wikipedia state when new album loads
       setWikipediaContent(null)
+      setWikipediaError(null) // Clear previous errors
       
-      // Fetch Wikipedia content in background
+      // Create AbortController for this request
+      const abortController = new AbortController()
+      const TIMEOUT_MS = 10000 // 10 second timeout
+      
+      // Set timeout to abort request
+      const timeoutId = setTimeout(() => {
+        abortController.abort()
+      }, TIMEOUT_MS)
+      
+      // Fetch Wikipedia content in background with timeout
       setLoadingWikipedia(true)
-      fetchWikipediaContentFromMusicBrainz(album.albumId)
+      setWikipediaError(null)
+      
+      fetchWikipediaContentFromMusicBrainz(album.albumId, abortController.signal)
         .then(content => {
-          if (content) {
-            setWikipediaContent(content)
+          // Only update if this request hasn't been cancelled
+          if (!abortController.signal.aborted) {
+            clearTimeout(timeoutId)
+            if (content) {
+              setWikipediaContent(content)
+              setWikipediaError(null)
+            } else {
+              // No content available (not an error, just no data)
+              setWikipediaError(null)
+            }
           }
         })
         .catch(err => {
-          console.warn('Error loading Wikipedia content:', err)
-          // Wikipedia is optional, so don't show error to user
+          // Only update if this request hasn't been cancelled
+          if (!abortController.signal.aborted) {
+            clearTimeout(timeoutId)
+            console.warn('Error loading Wikipedia content:', err)
+            const errorMessage = err.message || 'Failed to load Wikipedia content'
+            setWikipediaError(errorMessage.includes('timeout') 
+              ? 'Wikipedia loading timed out. Please try again.' 
+              : errorMessage)
+          }
         })
         .finally(() => {
-          setLoadingWikipedia(false)
+          // Only update if this request hasn't been cancelled
+          if (!abortController.signal.aborted) {
+            clearTimeout(timeoutId)
+            setLoadingWikipedia(false)
+          }
         })
+      
+      // Cleanup: abort request if component unmounts or album changes
+      return () => {
+        clearTimeout(timeoutId)
+        abortController.abort()
+      }
     } else {
       // Clear Wikipedia when no album is loaded
       setWikipediaContent(null)
       setLoadingWikipedia(false)
+      setWikipediaError(null)
     }
   }, [album])
   
@@ -656,6 +731,66 @@ function AlbumPage() {
   // Toggle album credits expanded state
   function toggleAlbumCreditsExpanded() {
     setAlbumCreditsExpanded(prev => !prev)
+  }
+  
+  // Retry gallery fetch
+  function retryGallery() {
+    if (album && album.albumId) {
+      setGalleryError(null)
+      setLoadingGallery(true)
+      const abortController = new AbortController()
+      
+      fetchAllAlbumArt(album.albumId, abortController.signal)
+        .then(images => {
+          if (!abortController.signal.aborted) {
+            setGalleryImages(images)
+            setGalleryError(null)
+          }
+        })
+        .catch(err => {
+          if (!abortController.signal.aborted) {
+            console.warn('Error loading gallery images:', err)
+            setGalleryError(err.message || 'Failed to load album art gallery')
+          }
+        })
+        .finally(() => {
+          if (!abortController.signal.aborted) {
+            setLoadingGallery(false)
+          }
+        })
+    }
+  }
+  
+  // Retry Wikipedia fetch
+  function retryWikipedia() {
+    if (album && album.albumId) {
+      setWikipediaError(null)
+      setLoadingWikipedia(true)
+      const abortController = new AbortController()
+      
+      fetchWikipediaContentFromMusicBrainz(album.albumId, abortController.signal)
+        .then(content => {
+          if (!abortController.signal.aborted) {
+            if (content) {
+              setWikipediaContent(content)
+              setWikipediaError(null)
+            } else {
+              setWikipediaError(null)
+            }
+          }
+        })
+        .catch(err => {
+          if (!abortController.signal.aborted) {
+            console.warn('Error loading Wikipedia content:', err)
+            setWikipediaError(err.message || 'Failed to load Wikipedia content')
+          }
+        })
+        .finally(() => {
+          if (!abortController.signal.aborted) {
+            setLoadingWikipedia(false)
+          }
+        })
+    }
   }
   
   // Function to open help section
@@ -933,11 +1068,23 @@ function AlbumPage() {
         </button>
         
         {/* Wikipedia Content */}
-        {(wikipediaContent || loadingWikipedia) && (
+        {(wikipediaContent || loadingWikipedia || wikipediaError) && (
           <section className="wikipedia-section">
             <h2 className="wikipedia-heading">Wikipedia</h2>
             {loadingWikipedia ? (
               <div className="wikipedia-loading">Loading Wikipedia content...</div>
+            ) : wikipediaError ? (
+              <div className="wikipedia-error">
+                <span className="error-indicator">⚠️</span>
+                <span className="error-message">{wikipediaError}</span>
+                <button 
+                  className="error-retry-button"
+                  onClick={retryWikipedia}
+                  type="button"
+                >
+                  Retry
+                </button>
+              </div>
             ) : wikipediaContent && wikipediaContent.extract ? (
               <div className="wikipedia-content">
                 <p className="wikipedia-text">{wikipediaContent.extract}</p>
@@ -979,24 +1126,25 @@ function AlbumPage() {
           </div>
         </section>
 
-        {/* Album Art Gallery - Only show if we have images or are loading */}
-        {(galleryImages.length > 0 || loadingGallery) && (
+        {/* Album Art Gallery - Show if we have images, are loading, or have error */}
+        {(galleryImages.length > 0 || loadingGallery || galleryError) && (
           <section className="album-art-gallery-section">
             <div className="gallery-header">
               <h2>Album Art Gallery</h2>
-              <button
-                className="gallery-toggle-button"
-                onClick={() => setGalleryExpanded(!galleryExpanded)}
-                type="button"
-              >
-                <span>
-                  {galleryExpanded 
-                    ? 'Hide gallery' 
-                    : loadingGallery 
-                      ? 'Loading album art...' 
-                      : `View all album art (${galleryImages.length} image${galleryImages.length !== 1 ? 's' : ''})`
-                  }
-                </span>
+              {!galleryError && (
+                <button
+                  className="gallery-toggle-button"
+                  onClick={() => setGalleryExpanded(!galleryExpanded)}
+                  type="button"
+                >
+                  <span>
+                    {galleryExpanded 
+                      ? 'Hide gallery' 
+                      : loadingGallery 
+                        ? 'Loading album art...' 
+                        : `View all album art (${galleryImages.length} image${galleryImages.length !== 1 ? 's' : ''})`
+                    }
+                  </span>
                 <svg
                   className={`gallery-chevron ${galleryExpanded ? 'expanded' : ''}`}
                   width="16"
@@ -1014,9 +1162,22 @@ function AlbumPage() {
                   />
                 </svg>
               </button>
+              )}
             </div>
             
-            {galleryExpanded && (
+            {galleryError ? (
+              <div className="gallery-error">
+                <span className="error-indicator">⚠️</span>
+                <span className="error-message">{galleryError}</span>
+                <button 
+                  className="error-retry-button"
+                  onClick={retryGallery}
+                  type="button"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : galleryExpanded && (
               <div className="gallery-content">
                 {loadingGallery ? (
                   <div className="gallery-loading">Loading album art...</div>

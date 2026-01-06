@@ -7,11 +7,19 @@ const COVER_ART_BASE = 'https://coverartarchive.org'
 
 // Rate limiter: MusicBrainz requires max 1 request per second
 let lastRequestTime = 0
-async function rateLimitedFetch(url, options) {
+async function rateLimitedFetch(url, options = {}) {
   const now = Date.now()
   const timeSinceLastRequest = now - lastRequestTime
   if (timeSinceLastRequest < 1000) {
+    // Check if request was aborted during delay
+    if (options.signal && options.signal.aborted) {
+      throw new Error('Request aborted')
+    }
     await new Promise(resolve => setTimeout(resolve, 1000 - timeSinceLastRequest))
+    // Check again after delay
+    if (options.signal && options.signal.aborted) {
+      throw new Error('Request aborted')
+    }
   }
   lastRequestTime = Date.now()
   return fetch(url, options)
@@ -179,14 +187,17 @@ export async function searchReleaseGroups(artistName, albumName = null, releaseT
 }
 
 // Fetch release group by MBID
-async function fetchReleaseGroup(releaseGroupId) {
+// @param {string} releaseGroupId - MusicBrainz release group ID
+// @param {AbortSignal} signal - Optional AbortSignal for request cancellation
+async function fetchReleaseGroup(releaseGroupId, signal = null) {
   const url = `${MB_API_BASE}/release-group/${releaseGroupId}?inc=releases+artist-credits+release-group-rels+artist-rels+url-rels&fmt=json`
   
   const response = await rateLimitedFetch(url, {
     headers: {
       'User-Agent': 'liner-notez/1.0 (https://github.com/yourusername/liner-notez)',
       'Accept': 'application/json'
-    }
+    },
+    signal: signal || undefined
   })
   
   if (!response.ok) {
@@ -298,12 +309,15 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
 
 // Fetch all album art images for a release group
 // Returns array of image objects with metadata, limited to 20 images
-export async function fetchAllAlbumArt(releaseGroupId) {
+// @param {string} releaseGroupId - MusicBrainz release group ID
+// @param {AbortSignal} signal - Optional AbortSignal for request cancellation
+export async function fetchAllAlbumArt(releaseGroupId, signal = null) {
   try {
     const response = await rateLimitedFetch(`${COVER_ART_BASE}/release-group/${releaseGroupId}`, {
       headers: {
         'User-Agent': 'liner-notez/1.0'
-      }
+      },
+      signal: signal || undefined
     })
     
     if (response.ok) {
@@ -602,7 +616,9 @@ function extractWikidataId(wikidataUrl) {
 }
 
 // Fetch Wikipedia page title from Wikidata ID
-async function fetchWikipediaTitleFromWikidata(wikidataId) {
+// @param {string} wikidataId - Wikidata entity ID
+// @param {AbortSignal} signal - Optional AbortSignal for request cancellation
+async function fetchWikipediaTitleFromWikidata(wikidataId, signal = null) {
   if (!wikidataId) return null
   
   try {
@@ -613,7 +629,8 @@ async function fetchWikipediaTitleFromWikidata(wikidataId) {
       headers: {
         'User-Agent': 'liner-notez/1.0 (https://github.com/yourusername/liner-notez)',
         'Accept': 'application/json'
-      }
+      },
+      signal: signal || undefined
     })
     
     if (!response.ok) return null
@@ -634,7 +651,9 @@ async function fetchWikipediaTitleFromWikidata(wikidataId) {
 }
 
 // Fetch Wikipedia content (intro/summary) for a page title
-export async function fetchWikipediaContent(pageTitle) {
+// @param {string} pageTitle - Wikipedia page title
+// @param {AbortSignal} signal - Optional AbortSignal for request cancellation
+export async function fetchWikipediaContent(pageTitle, signal = null) {
   if (!pageTitle) return null
   
   try {
@@ -645,7 +664,8 @@ export async function fetchWikipediaContent(pageTitle) {
       headers: {
         'User-Agent': 'liner-notez/1.0 (https://github.com/yourusername/liner-notez)',
         'Accept': 'application/json'
-      }
+      },
+      signal: signal || undefined
     })
     
     if (!response.ok) return null
@@ -665,10 +685,12 @@ export async function fetchWikipediaContent(pageTitle) {
 }
 
 // Fetch Wikipedia content via MusicBrainz → Wikidata → Wikipedia
-export async function fetchWikipediaContentFromMusicBrainz(releaseGroupId) {
+// @param {string} releaseGroupId - MusicBrainz release group ID
+// @param {AbortSignal} signal - Optional AbortSignal for request cancellation
+export async function fetchWikipediaContentFromMusicBrainz(releaseGroupId, signal = null) {
   try {
     // Fetch release group to get relations
-    const releaseGroup = await fetchReleaseGroup(releaseGroupId)
+    const releaseGroup = await fetchReleaseGroup(releaseGroupId, signal)
     
     // Step 1: Extract Wikidata URL from release group
     const wikidataUrl = extractWikidataUrl(releaseGroup)
@@ -685,14 +707,14 @@ export async function fetchWikipediaContentFromMusicBrainz(releaseGroupId) {
     }
     
     // Step 3: Fetch Wikipedia page title from Wikidata
-    const wikipediaTitle = await fetchWikipediaTitleFromWikidata(wikidataId)
+    const wikipediaTitle = await fetchWikipediaTitleFromWikidata(wikidataId, signal)
     if (!wikipediaTitle) {
       console.log('Could not find Wikipedia page for Wikidata ID:', wikidataId)
       return null
     }
     
     // Step 4: Fetch Wikipedia content
-    const wikipediaContent = await fetchWikipediaContent(wikipediaTitle)
+    const wikipediaContent = await fetchWikipediaContent(wikipediaTitle, signal)
     if (!wikipediaContent) {
       console.log('Could not fetch Wikipedia content for:', wikipediaTitle)
       return null

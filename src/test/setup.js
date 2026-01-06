@@ -3,9 +3,31 @@ import { afterEach, beforeEach } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
+// Suppress React error boundary warnings in tests
+// These are expected when testing error boundaries
+const originalError = console.error
+
 // Cleanup after each test
 afterEach(() => {
   cleanup()
+  // Restore console.error after each test
+  console.error = originalError
+})
+
+// Suppress expected error boundary warnings
+beforeEach(() => {
+  console.error = (...args) => {
+    // Suppress React error boundary warnings
+    if (
+      typeof args[0] === 'string' &&
+      (args[0].includes('ErrorBoundary') || 
+       args[0].includes('componentDidCatch') ||
+       args[0].includes('getDerivedStateFromError'))
+    ) {
+      return
+    }
+    originalError.call(console, ...args)
+  }
 })
 
 // Mock localStorage

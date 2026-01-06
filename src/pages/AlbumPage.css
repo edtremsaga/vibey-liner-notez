@@ -569,6 +569,51 @@
 .wikipedia-heading {
   font-size: 1.5rem;
   font-weight: 600;
+}
+
+/* Error indicators for background operations */
+.wikipedia-error,
+.gallery-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: rgba(204, 51, 51, 0.1);
+  border: 1px solid rgba(204, 51, 51, 0.3);
+  border-radius: var(--r-md);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.error-indicator {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.error-message {
+  flex: 1;
+  color: var(--muted);
+}
+
+.error-retry-button {
+  padding: 0.5rem 1rem;
+  background-color: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: var(--r-md);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.error-retry-button:hover {
+  opacity: 0.9;
+}
+
+.error-retry-button:active {
+  opacity: 0.8;
   color: var(--accent);
   margin-bottom: 1rem;
 }
