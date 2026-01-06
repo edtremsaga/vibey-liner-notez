@@ -1,6 +1,7 @@
 import AlbumPage from './pages/AlbumPage'
 import AppShell from './layout/AppShell'
 import ErrorBoundary from './components/ErrorBoundary'
+import { Analytics } from '@vercel/analytics/react'
 import './App.css'
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
       <AppShell header={header}>
         <AlbumPage />
       </AppShell>
+      <Analytics />
     </ErrorBoundary>
   )
 }
