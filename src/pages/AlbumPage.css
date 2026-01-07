@@ -13,6 +13,14 @@
   margin-bottom: 2rem;
 }
 
+/* Move help link closer to "album information only" text on mobile */
+@media (max-width: 480px) {
+  .help-link-container {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+  }
+}
+
 .help-link {
   background: none;
   border: none;
@@ -100,10 +108,22 @@
   text-align: center;
 }
 
-/* Reduce horizontal padding on mobile for search page */
+/* Mobile optimizations for search page */
 @media (max-width: 480px) {
+  /* Hide search description text on mobile to save vertical space */
   .search-description {
-    padding: 0 0.25rem;
+    display: none;
+  }
+  
+  /* Make "Search for an Album" title same size as "liner notez" header on mobile */
+  .search-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem; /* Reduced from 1.5rem */
+  }
+  
+  /* Reduce form field gaps on mobile */
+  .search-form {
+    gap: 1rem; /* Reduced from 1.5rem */
   }
 }
 
@@ -155,6 +175,7 @@
     max-width: calc(100% - 0.5rem); /* Nearly full width minus small margin */
     margin-left: 0.25rem;
     margin-right: 0.25rem;
+    margin-top: 1rem; /* Reduced from 2rem to save vertical space */
     padding: 1.5rem 1rem; /* Restore reasonable internal padding */
   }
 }
@@ -258,6 +279,15 @@
     /* Slightly larger gap on mobile */
     gap: 0.75rem;
     padding: 0.75rem;
+  }
+  
+  /* Center text in Compilations and Soundtracks buttons on mobile */
+  .release-type-button:nth-child(5),
+  .release-type-button:nth-child(6) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
   }
 }
 
@@ -1173,6 +1203,11 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  /* Hide "Back to Results" button on mobile to save vertical space */
+  .new-search-button {
+    display: none;
+  }
+
   .album-identity {
     flex-direction: column;
   }
@@ -1201,6 +1236,7 @@
   .cover-art {
     width: 100%;
     max-width: 300px;
+    height: 300px;
     margin: 0 auto;
   }
 
