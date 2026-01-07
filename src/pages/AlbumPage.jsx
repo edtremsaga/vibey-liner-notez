@@ -20,6 +20,7 @@ function AlbumPage() {
   const [loadingPage, setLoadingPage] = useState(false) // Loading state for pagination
   const [fetchedCount, setFetchedCount] = useState(0) // Track how many results have been fetched from API
   const [hideBootlegs, setHideBootlegs] = useState(false) // Filter to hide bootleg records
+  const [albumPlaceholder, setAlbumPlaceholder] = useState('e.g., Aladdin Sane (leave blank to see all albums)')
   const RESULTS_PER_PAGE = 20
   
   // Available release types for filtering
@@ -820,6 +821,21 @@ function AlbumPage() {
     setShowHelp(false)
   }
   
+  // Set mobile-responsive placeholder for album name input
+  useEffect(() => {
+    const updatePlaceholder = () => {
+      if (window.innerWidth <= 480) {
+        setAlbumPlaceholder('e.g., Aladdin Sane (optional)')
+      } else {
+        setAlbumPlaceholder('e.g., Aladdin Sane (leave blank to see all albums)')
+      }
+    }
+    
+    updatePlaceholder()
+    window.addEventListener('resize', updatePlaceholder)
+    return () => window.removeEventListener('resize', updatePlaceholder)
+  }, [])
+  
   // Show help section (replaces all other views)
   if (showHelp) {
     return <Help onClose={handleCloseHelp} />
@@ -858,7 +874,7 @@ function AlbumPage() {
                   type="text"
                   value={searchAlbum}
                   onChange={(e) => setSearchAlbum(e.target.value)}
-                  placeholder="e.g., Aladdin Sane (leave blank to see all albums)"
+                  placeholder={albumPlaceholder}
                   disabled={searching}
                 />
               </div>
