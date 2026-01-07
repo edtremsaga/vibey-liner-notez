@@ -1,17 +1,14 @@
 {
   "name": "liner-notez",
   "version": "1.0.0",
+  "description": "Vibey liner notes app",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@vercel/analytics": "^1.6.1",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "react": "^18.2.0",
