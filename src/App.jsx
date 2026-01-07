@@ -4,6 +4,8 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { Analytics } from '@vercel/analytics/react'
 import './App.css'
 
+// Trigger Vercel deployment for mobile UI optimization
+
 function App() {
   // Placeholder header content
   const header = (
