@@ -10,19 +10,62 @@ let lastRequestTime = 0
 async function rateLimitedFetch(url, options = {}) {
   const now = Date.now()
   const timeSinceLastRequest = now - lastRequestTime
+  
+  // Add timeout for iOS compatibility (15 seconds)
+  const timeoutMs = 15000
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  
+  // Merge signals if both exist
+  const signal = options.signal 
+    ? (() => {
+        const combinedController = new AbortController()
+        const abort = () => combinedController.abort()
+        controller.signal.addEventListener('abort', abort)
+        options.signal.addEventListener('abort', abort)
+        return combinedController.signal
+      })()
+    : controller.signal
+  
   if (timeSinceLastRequest < 1000) {
     // Check if request was aborted during delay
-    if (options.signal && options.signal.aborted) {
+    if (signal.aborted) {
+      clearTimeout(timeoutId)
       throw new Error('Request aborted')
     }
     await new Promise(resolve => setTimeout(resolve, 1000 - timeSinceLastRequest))
     // Check again after delay
-    if (options.signal && options.signal.aborted) {
+    if (signal.aborted) {
+      clearTimeout(timeoutId)
       throw new Error('Request aborted')
     }
   }
   lastRequestTime = Date.now()
-  return fetch(url, options)
+  
+  try {
+    // iOS Safari fix: Ensure proper fetch options
+    const fetchOptions = {
+      ...options,
+      signal,
+      mode: 'cors', // Explicitly request CORS
+      credentials: 'omit', // Don't send credentials
+      cache: 'default' // Use default cache
+    }
+    
+    const response = await fetch(url, fetchOptions)
+    clearTimeout(timeoutId)
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error.name === 'AbortError') {
+      throw new Error(`Request timeout after ${timeoutMs}ms`)
+    }
+    // iOS Safari specific: "Load failed" usually means network/CORS issue
+    if (error.message?.includes('Load failed') || error.message?.includes('Failed to fetch')) {
+      throw new Error(`Network request failed on iOS: ${error.message}. URL: ${url}`)
+    }
+    throw error
+  }
 }
 
 // Helper to extract artist name from artist-credit array
@@ -245,13 +288,48 @@ async function fetchRecordingWithPlaces(recordingId) {
   return await response.json()
 }
 
+// Helper function to test if an image URL loads (iOS Safari workaround)
+function testImageUrl(url) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => resolve(true)
+    img.onerror = () => resolve(false)
+    img.src = url
+    // Timeout after 5 seconds
+    setTimeout(() => resolve(false), 5000)
+  })
+}
+
 // Fetch cover art for release group or release
 export async function fetchCoverArt(releaseGroupId, releaseId = null) {
-  // Try release group first
+  // iOS Safari workaround: Try direct image URLs first (they often work when fetch() doesn't)
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  
+  if (isIOS) {
+    // Try release-level direct image URL first (more specific)
+    if (releaseId) {
+      const directReleaseUrl = `${COVER_ART_BASE}/release/${releaseId}/front`
+      const releaseImageWorks = await testImageUrl(directReleaseUrl)
+      if (releaseImageWorks) {
+        return directReleaseUrl
+      }
+    }
+    
+    // Try release-group direct image URL
+    const directReleaseGroupUrl = `${COVER_ART_BASE}/release-group/${releaseGroupId}/front`
+    const releaseGroupImageWorks = await testImageUrl(directReleaseGroupUrl)
+    if (releaseGroupImageWorks) {
+      return directReleaseGroupUrl
+    }
+  }
+  
+  // Try release group first (standard API approach)
   try {
-    const response = await rateLimitedFetch(`${COVER_ART_BASE}/release-group/${releaseGroupId}`, {
+    const releaseGroupUrl = `${COVER_ART_BASE}/release-group/${releaseGroupId}`
+    const response = await rateLimitedFetch(releaseGroupUrl, {
       headers: {
-        'User-Agent': 'liner-notez/1.0'
+        'User-Agent': 'liner-notez/1.0',
+        'Accept': 'application/json'
       }
     })
     
@@ -261,7 +339,6 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
         const data = await response.json()
         const frontImage = data.images?.find(img => img.front === true)
         if (frontImage && frontImage.image) {
-          // Convert HTTP to HTTPS to avoid mixed content issues
           return frontImage.image.replace('http://', 'https://')
         }
         // If no front image, try first image
@@ -278,7 +355,8 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
   // If release group doesn't have cover art, try the specific release
   if (releaseId) {
     try {
-      const response = await rateLimitedFetch(`${COVER_ART_BASE}/release/${releaseId}`, {
+      const releaseUrl = `${COVER_ART_BASE}/release/${releaseId}`
+      const response = await rateLimitedFetch(releaseUrl, {
         headers: {
           'User-Agent': 'liner-notez/1.0'
         }
@@ -625,7 +703,8 @@ async function fetchWikipediaTitleFromWikidata(wikidataId, signal = null) {
     // Wikidata API: Get sitelinks to find Wikipedia article
     const url = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${wikidataId}&props=sitelinks&format=json&origin=*`
     
-    const response = await fetch(url, {
+    // Use rateLimitedFetch for iOS Safari compatibility (better error handling and timeout)
+    const response = await rateLimitedFetch(url, {
       headers: {
         'User-Agent': 'liner-notez/1.0 (https://github.com/yourusername/liner-notez)',
         'Accept': 'application/json'
@@ -656,11 +735,16 @@ async function fetchWikipediaTitleFromWikidata(wikidataId, signal = null) {
 export async function fetchWikipediaContent(pageTitle, signal = null) {
   if (!pageTitle) return null
   
+  // iOS Safari workaround: Try alternative API endpoints if the REST API fails
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  
+  // Try REST API first (standard approach)
   try {
-    // Wikipedia API: Get page extract (intro text)
+    // Wikipedia REST API: Get page extract (intro text)
     const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle)}`
     
-    const response = await fetch(url, {
+    // Use rateLimitedFetch for iOS Safari compatibility (better error handling and timeout)
+    const response = await rateLimitedFetch(url, {
       headers: {
         'User-Agent': 'liner-notez/1.0 (https://github.com/yourusername/liner-notez)',
         'Accept': 'application/json'
@@ -668,7 +752,9 @@ export async function fetchWikipediaContent(pageTitle, signal = null) {
       signal: signal || undefined
     })
     
-    if (!response.ok) return null
+    if (!response.ok) {
+      throw new Error(`REST API returned ${response.status}`)
+    }
     
     const data = await response.json()
     
@@ -679,6 +765,38 @@ export async function fetchWikipediaContent(pageTitle, signal = null) {
       url: data.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(pageTitle)}`
     }
   } catch (error) {
+    // iOS Safari fallback: Try older Wikipedia API format (might have different CORS settings)
+    if (isIOS && error.message?.includes('Load failed')) {
+      try {
+        // Try the older Wikipedia API format with JSONP-style origin parameter
+        const oldApiUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=true&explaintext=true&titles=${encodeURIComponent(pageTitle)}&origin=*`
+        
+        const oldResponse = await rateLimitedFetch(oldApiUrl, {
+          headers: {
+            'User-Agent': 'liner-notez/1.0 (https://github.com/yourusername/liner-notez)',
+            'Accept': 'application/json'
+          },
+          signal: signal || undefined
+        })
+        
+        if (oldResponse.ok) {
+          const oldData = await oldResponse.json()
+          const pages = oldData.query?.pages || {}
+          const page = Object.values(pages)[0]
+          
+          if (page && page.extract) {
+            return {
+              extract: page.extract || null,
+              title: page.title || pageTitle,
+              url: `https://en.wikipedia.org/wiki/${encodeURIComponent(page.title || pageTitle)}`
+            }
+          }
+        }
+      } catch (oldError) {
+        // Old API also failed, continue to return null
+      }
+    }
+    
     console.warn('Error fetching Wikipedia content:', error)
     return null
   }

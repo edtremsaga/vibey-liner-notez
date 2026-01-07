@@ -724,16 +724,28 @@
   flex-shrink: 0;
   width: 300px;
   height: 300px;
+  min-height: 300px; /* Ensure height on iOS */
   background-color: var(--card);
   border-radius: var(--r-md);
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  display: block; /* Fix for iOS Safari */
+  position: relative; /* Help with image positioning on iOS */
 }
 
 .cover-art img {
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: cover;
+  -webkit-object-fit: cover; /* iOS Safari support */
+  display: block; /* Fix for iOS Safari */
+  position: absolute; /* Force positioning on iOS */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .album-header {
@@ -1234,10 +1246,30 @@
   }
 
   .cover-art {
-    width: 100%;
-    max-width: 300px;
-    height: 300px;
+    width: 100% !important;
+    max-width: 300px !important;
+    height: 300px !important;
+    min-height: 300px !important; /* Ensure height on iOS */
     margin: 0 auto;
+    display: block !important; /* Fix for iOS Safari */
+    position: relative !important; /* Help with image positioning on iOS */
+    overflow: hidden !important;
+    background-color: var(--card) !important; /* Show container even if image fails */
+  }
+  
+  .cover-art img {
+    display: block !important; /* Fix for iOS Safari */
+    -webkit-object-fit: cover !important; /* iOS Safari support */
+    object-fit: cover !important;
+    width: 100% !important; /* Force width on iOS */
+    height: 100% !important; /* Force height on iOS */
+    max-width: 100% !important;
+    max-height: 100% !important;
+    position: absolute !important; /* Force positioning on iOS */
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
   }
 
   .album-title {

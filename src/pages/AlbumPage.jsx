@@ -410,12 +410,29 @@ function AlbumPage() {
         setLoadingCredits(false)
         setLoadingAlbum(false)
         
-        // Still fetch cover art in background (it's not cached)
-        if (cachedAlbum.albumId) {
-          fetchCoverArt(cachedAlbum.albumId, null)
+        // Use cached cover art URL if available (already set via setAlbum above)
+        // Otherwise fetch it in background
+        if (cachedAlbum.coverArtUrl) {
+          // Cached URL exists - use it immediately (already set via setAlbum above)
+          // Browser HTTP cache will handle loading the image - no API call needed
+          console.log(`Using cached cover art URL: ${cachedAlbum.coverArtUrl}`)
+        } else if (cachedAlbum.albumId) {
+          // No cached URL - fetch it in background
+          console.log(`No cached cover art URL, fetching from API...`)
+          // Try to get selectedReleaseId from cached album if available
+          const selectedReleaseId = cachedAlbum.selectedReleaseId || 
+                                    cachedAlbum.editions?.[0]?.id || 
+                                    cachedAlbum.releases?.[0]?.id || 
+                                    null
+          fetchCoverArt(cachedAlbum.albumId, selectedReleaseId)
             .then(coverArtUrl => {
               if (coverArtUrl) {
+                console.log(`Fetched cover art URL: ${coverArtUrl}`)
                 setAlbum(prev => prev ? { ...prev, coverArtUrl } : null)
+                // Update cache with the new cover art URL for future use
+                setCachedAlbum(cachedAlbum.albumId, { ...cachedAlbum, coverArtUrl })
+              } else {
+                console.log(`No cover art URL found from API`)
               }
             })
             .catch(err => {
@@ -472,6 +489,9 @@ function AlbumPage() {
       // Pass basic data to avoid duplicate API calls
       const albumData = await fetchAlbumData(releaseGroupId, basicData)
       
+      // Store selectedReleaseId in albumData for cache (so we can use it when loading from cache)
+      albumData.selectedReleaseId = basicData.selectedReleaseId
+      
       // Update with full data, preserving cover art if it was already loaded
       setAlbum(prev => {
         const updated = { ...albumData }
@@ -484,7 +504,7 @@ function AlbumPage() {
       setLoadingTracklist(false)
       setLoadingCredits(false)
       
-      // Cache the fetched album data
+      // Cache the fetched album data (now includes selectedReleaseId)
       setCachedAlbum(releaseGroupId, albumData)
     } catch (err) {
       console.error('Error fetching album data:', err)
@@ -1136,10 +1156,17 @@ function AlbumPage() {
         {/* Album Identity */}
         <section className="album-identity">
           {album.coverArtUrl && (
-            <div className="cover-art">
+            <div className="cover-art" style={{ backgroundColor: 'var(--card)' }}>
               <img 
                 src={album.coverArtUrl} 
                 alt={`${album.title} cover`}
+                loading="eager"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block'
+                }}
                 onError={(e) => {
                   console.error('Failed to load cover art:', album.coverArtUrl)
                   e.target.style.display = 'none'
