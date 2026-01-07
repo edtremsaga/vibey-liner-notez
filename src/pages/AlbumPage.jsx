@@ -262,13 +262,28 @@ function AlbumPage() {
         setDisplayedResults(filteredResults.slice(0, RESULTS_PER_PAGE))
         setResultsPage(1) // Reset pagination
         
-        // Push browser history entry when showing search results
-        // This allows back button to return to main search page
-        window.history.pushState(
-          { fromSearch: true },
-          '',
-          window.location.href
-        )
+        // Mobile browser fix: Use replaceState on iOS to preserve history
+        // Desktop browsers: Use pushState (works fine on desktop)
+        const isMobile = /iPad|iPhone|iPod/.test(navigator.userAgent)
+        
+        if (isMobile) {
+          // Mobile iOS fix: Replace current history entry instead of pushing new one
+          // This preserves the initial page in history so back button works correctly
+          console.log('[History] Mobile iOS detected - using replaceState for search results')
+          window.history.replaceState(
+            { fromSearch: true },
+            '',
+            window.location.href
+          )
+        } else {
+          // Desktop: Push new history entry (current behavior works fine)
+          console.log('[History] Desktop detected - using pushState for search results')
+          window.history.pushState(
+            { fromSearch: true },
+            '',
+            window.location.href
+          )
+        }
       }
     } catch (err) {
       console.error('Error searching albums:', err)
