@@ -1271,6 +1271,13 @@
     right: 0 !important;
     bottom: 0 !important;
   }
+  
+  /* Remove sticky positioning on mobile - allows normal scrolling */
+  .album-identity {
+    position: static !important; /* Remove sticky on mobile */
+    box-shadow: none !important; /* Remove shadow when not sticky */
+    margin-top: 0 !important; /* Remove negative margin offset */
+  }
 
   .album-title {
     font-size: 2rem;
