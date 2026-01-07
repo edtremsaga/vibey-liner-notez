@@ -4,7 +4,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { Analytics } from '@vercel/analytics/react'
 import './App.css'
 
-// Test commit to trigger Vercel deployment - 2025-01-07
+// Test commit to verify Vercel auto-deployment with correct email - 2025-01-07
 
 function App() {
   // Placeholder header content
