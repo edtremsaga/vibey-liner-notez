@@ -100,6 +100,13 @@
   text-align: center;
 }
 
+/* Reduce horizontal padding on mobile for search page */
+@media (max-width: 480px) {
+  .search-description {
+    padding: 0 0.25rem;
+  }
+}
+
 .search-description-intro {
   font-size: 1.1rem;
   font-weight: 500;
@@ -113,6 +120,13 @@
   color: #d0d0d0;
   margin-bottom: 0.75rem;
   line-height: 1.6;
+}
+
+/* Hide long description text on mobile */
+@media (max-width: 480px) {
+  .search-description-long {
+    display: none;
+  }
 }
 
 .search-description-note {
@@ -133,6 +147,16 @@
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Make search form wider on mobile by reducing margins and increasing max-width */
+@media (max-width: 480px) {
+  .search-section {
+    max-width: calc(100% - 0.5rem); /* Nearly full width minus small margin */
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+    padding: 1.5rem 1rem; /* Restore reasonable internal padding */
+  }
 }
 
 .search-title {

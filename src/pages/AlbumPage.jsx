@@ -831,7 +831,10 @@ function AlbumPage() {
       <div className="album-page">
         <div className="album-container">
           <div className="search-description">
-            <p className="search-description-main">Search by artist to explore album focused liner note information — personnel, recording details, album art, and historical facts all sourced from documented music archives.</p>
+            <p className="search-description-main">
+              <span className="search-description-short">Search by artist to explore album focused liner note information</span>
+              <span className="search-description-long"> — personnel, recording details, album art, and historical facts all sourced from documented music archives.</span>
+            </p>
           </div>
           <section className="search-section">
             <h1 className="search-title">Search for an Album</h1>
