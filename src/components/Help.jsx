@@ -205,7 +205,7 @@ function Help({ onClose }) {
 
         <section className="help-section">
           <h2>Need More Help?</h2>
-          <p>For technical issues or questions about the data:</p>
+          <p>For questions about the data:</p>
           <ul>
             <li><strong>MusicBrainz</strong>: <a href="https://musicbrainz.org" target="_blank" rel="noopener noreferrer">musicbrainz.org</a></li>
             <li><strong>Cover Art Archive</strong>: <a href="https://coverartarchive.org" target="_blank" rel="noopener noreferrer">coverartarchive.org</a></li>

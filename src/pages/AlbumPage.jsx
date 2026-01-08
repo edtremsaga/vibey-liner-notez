@@ -3,6 +3,7 @@ import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, fetchCoverArt
 import { formatDuration } from '../utils/formatDuration'
 import { getCachedAlbum, setCachedAlbum } from '../utils/albumCache'
 import Help from '../components/Help'
+import { useHelp } from '../contexts/HelpContext'
 import './AlbumPage.css'
 
 function AlbumPage() {
@@ -64,8 +65,8 @@ function AlbumPage() {
   const [loadingWikipedia, setLoadingWikipedia] = useState(false)
   const [wikipediaError, setWikipediaError] = useState(null) // Error state for Wikipedia
   
-  // Help section state
-  const [showHelp, setShowHelp] = useState(false)
+  // Help section state (from context)
+  const { showHelp, openHelp, closeHelp } = useHelp()
   
   // Mobile detection state for responsive UI
   const [isMobile, setIsMobile] = useState(false)
@@ -79,6 +80,20 @@ function AlbumPage() {
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+  
+  // Initialize browser history on page load (safety measure for back button)
+  // This ensures the initial search page is a distinct history entry
+  useEffect(() => {
+    // Only initialize if no history state exists (first load or page refresh)
+    if (window.history.state === null) {
+      window.history.replaceState(
+        { page: 'search', initialized: true },
+        '',
+        window.location.href
+      )
+      console.log('[History] Initialized history state for search page')
+    }
   }, [])
   
   // Get heading text based on release type
@@ -276,28 +291,14 @@ function AlbumPage() {
         setDisplayedResults(filteredResults.slice(0, RESULTS_PER_PAGE))
         setResultsPage(1) // Reset pagination
         
-        // Mobile browser fix: Use replaceState on iOS to preserve history
-        // Desktop browsers: Use pushState (works fine on desktop)
-        const isMobile = /iPad|iPhone|iPod/.test(navigator.userAgent)
-        
-        if (isMobile) {
-          // Mobile iOS fix: Replace current history entry instead of pushing new one
-          // This preserves the initial page in history so back button works correctly
-          console.log('[History] Mobile iOS detected - using replaceState for search results')
-          window.history.replaceState(
-            { fromSearch: true },
-            '',
-            window.location.href
-          )
-        } else {
-          // Desktop: Push new history entry (current behavior works fine)
-          console.log('[History] Desktop detected - using pushState for search results')
-          window.history.pushState(
-            { fromSearch: true },
-            '',
-            window.location.href
-          )
-        }
+        // Push new history entry for search results (unified for mobile and desktop)
+        // Initial history state is now guaranteed to exist from component mount
+        window.history.pushState(
+          { fromSearch: true, page: 'results' },
+          '',
+          window.location.href
+        )
+        console.log('[History] Pushed search results state')
       }
     } catch (err) {
       console.error('Error searching albums:', err)
@@ -596,6 +597,7 @@ function AlbumPage() {
   useEffect(() => {
     const handlePopState = (event) => {
       // Handle back button navigation based on current state
+      const historyState = event.state
       
       // Case 1: Lightbox is open → close lightbox and stay on album details page
       if (selectedImage !== null) {
@@ -621,7 +623,24 @@ function AlbumPage() {
         return
       }
       
-      // Case 4: On search results page (no album) → return to main search page
+      // Case 4: Returning to initial search page (check history state)
+      // This handles going back from search results to the initial search page
+      if (historyState && (historyState.page === 'search' || historyState.initialized === true)) {
+        // Clear search results and return to main search form
+        setSearchResults(null)
+        setSearchMeta(null)
+        setDisplayedResults([])
+        setResultsPage(1)
+        setFetchedCount(0)
+        setSearchError(null)
+        // Keep search form values so user can see what they searched for
+        // (Don't clear searchArtist, searchAlbum, releaseType)
+        console.log('[History] Returning to initial search page')
+        return
+      }
+      
+      // Case 5: On search results page (no album) → return to main search page
+      // Fallback: Check React state if history state doesn't match
       if (!album && searchResults && searchResults.length > 0) {
         // Clear search results and return to main search form
         setSearchResults(null)
@@ -632,10 +651,11 @@ function AlbumPage() {
         setSearchError(null)
         // Keep search form values so user can see what they searched for
         // (Don't clear searchArtist, searchAlbum, releaseType)
+        console.log('[History] Returning to search page (fallback)')
         return
       }
       
-      // Case 5: No special handling needed, let browser handle normally
+      // Case 6: No special handling needed, let browser handle normally
     }
     
     window.addEventListener('popstate', handlePopState)
@@ -856,7 +876,7 @@ function AlbumPage() {
   
   // Function to open help section
   function handleOpenHelp() {
-    setShowHelp(true)
+    openHelp()
     // Push browser history entry so back button works
     window.history.pushState(
       { fromHelp: true },
@@ -867,7 +887,7 @@ function AlbumPage() {
   
   // Function to close help section
   function handleCloseHelp() {
-    setShowHelp(false)
+    closeHelp()
   }
   
   // Set mobile-responsive placeholder for album name input
@@ -976,11 +996,13 @@ function AlbumPage() {
             </form>
           </section>
           <p className="search-description-note">ⓘ Album information only — no audio playback or streaming</p>
-          <div className="help-link-container">
-            <button className="help-link" onClick={handleOpenHelp}>
-              Help
-            </button>
-          </div>
+          {!isMobile && (
+            <div className="help-link-container">
+              <button className="help-link" onClick={handleOpenHelp}>
+                Help
+              </button>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -1098,11 +1120,13 @@ function AlbumPage() {
               </div>
             )}
           </section>
-          <div className="help-link-container">
-            <button className="help-link" onClick={handleOpenHelp}>
-              Help
-            </button>
-          </div>
+          {!isMobile && (
+            <div className="help-link-container">
+              <button className="help-link" onClick={handleOpenHelp}>
+                Help
+              </button>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -1684,11 +1708,13 @@ function AlbumPage() {
             </>
           )}
         </section>
-        <div className="help-link-container">
-          <button className="help-link" onClick={() => setShowHelp(true)}>
-            Help
-          </button>
-        </div>
+        {!isMobile && (
+          <div className="help-link-container">
+            <button className="help-link" onClick={handleOpenHelp}>
+              Help
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
