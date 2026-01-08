@@ -1304,8 +1304,23 @@
   }
 
   .lightbox-close {
-    top: -2rem;
+    top: 0.5rem; /* Position inside viewport on mobile */
+    right: 0.5rem; /* Position inside viewport on mobile */
     font-size: 2rem;
+    background-color: rgba(0, 0, 0, 0.5); /* Add background for visibility */
+    border-radius: 50%; /* Make it circular */
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  /* Ensure lightbox is on top on mobile */
+  .image-lightbox {
+    z-index: 9999 !important; /* Higher z-index on mobile */
+    padding: 0.5rem; /* Reduce padding on mobile */
+  }
+  
+  .lightbox-content img {
+    max-height: 80vh; /* Slightly smaller on mobile to account for close button */
   }
 
   .cover-art {
