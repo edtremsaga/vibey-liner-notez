@@ -398,38 +398,58 @@ export async function fetchAllAlbumArt(releaseGroupId, signal = null) {
       signal: signal || undefined
     })
     
-    if (response.ok) {
-      const contentType = response.headers.get('content-type') || ''
-      if (contentType.includes('application/json')) {
-        const data = await response.json()
-        const images = data.images || []
-        
-        // Limit to first 20 images
-        const limitedImages = images.slice(0, 20).map(img => ({
-          id: img.id || null,
-          image: img.image ? img.image.replace('http://', 'https://') : null,
-          thumbnails: img.thumbnails ? {
-            small: img.thumbnails.small ? img.thumbnails.small.replace('http://', 'https://') : null,
-            large: img.thumbnails.large ? img.thumbnails.large.replace('http://', 'https://') : null,
-            '250': img.thumbnails['250'] ? img.thumbnails['250'].replace('http://', 'https://') : null,
-            '500': img.thumbnails['500'] ? img.thumbnails['500'].replace('http://', 'https://') : null,
-            '1200': img.thumbnails['1200'] ? img.thumbnails['1200'].replace('http://', 'https://') : null
-          } : null,
-          front: img.front || false,
-          back: img.back || false,
-          types: img.types || [],
-          approved: img.approved || false
-        }))
-        
-        return limitedImages
-      }
+    // Check if request was aborted (timeout or manual abort)
+    if (signal && signal.aborted) {
+      throw new Error('Request aborted')
     }
+    
+    // If response is not ok, throw error
+    if (!response.ok) {
+      throw new Error(`Failed to fetch album art: ${response.status} ${response.statusText}`)
+    }
+    
+    const contentType = response.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) {
+      throw new Error('Invalid response format from album art API')
+    }
+    
+    const data = await response.json()
+    const images = data.images || []
+    
+    // Limit to first 20 images and return (even if empty - this is valid)
+    const limitedImages = images.slice(0, 20).map(img => ({
+      id: img.id || null,
+      image: img.image ? img.image.replace('http://', 'https://') : null,
+      thumbnails: img.thumbnails ? {
+        small: img.thumbnails.small ? img.thumbnails.small.replace('http://', 'https://') : null,
+        large: img.thumbnails.large ? img.thumbnails.large.replace('http://', 'https://') : null,
+        '250': img.thumbnails['250'] ? img.thumbnails['250'].replace('http://', 'https://') : null,
+        '500': img.thumbnails['500'] ? img.thumbnails['500'].replace('http://', 'https://') : null,
+        '1200': img.thumbnails['1200'] ? img.thumbnails['1200'].replace('http://', 'https://') : null
+      } : null,
+      front: img.front || false,
+      back: img.back || false,
+      types: img.types || [],
+      approved: img.approved || false
+    }))
+    
+    // Return empty array only if API returned valid response with no images
+    return limitedImages
   } catch (e) {
+    // Re-throw abort errors (timeout or manual abort)
+    if (e.name === 'AbortError' || e.message === 'Request aborted' || (signal && signal.aborted)) {
+      throw new Error('Gallery loading timed out. Please try again.')
+    }
+    
+    // Re-throw network errors
+    if (e.message && (e.message.includes('Failed to fetch') || e.message.includes('Network'))) {
+      throw new Error('Network error: Failed to load album art gallery. Please check your connection.')
+    }
+    
+    // Re-throw all other errors
     console.warn('Error fetching all album art from release group:', e)
-    // Return empty array on error - gallery is optional
+    throw e
   }
-  
-  return [] // Return empty array if no images found
 }
 
 // Extract songwriting info from recording relations
