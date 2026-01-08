@@ -902,7 +902,7 @@ function AlbumPage() {
             </p>
           </div>
           <section className="search-section">
-            <h1 className="search-title">Search for an Album</h1>
+            <h1 className="search-title">{isMobile ? 'Search Albums' : 'Search for an Album'}</h1>
             <form onSubmit={handleSearch} className="search-form">
               <div className="search-field">
                 <label htmlFor="artist-name">Artist Name</label>

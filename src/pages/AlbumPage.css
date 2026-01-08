@@ -117,8 +117,10 @@
   
   /* Make "Search for an Album" title same size as "liner notez" header on mobile */
   .search-title {
-    font-size: 1.3rem; /* Phase 3: Reduced from 1.5rem to save space */
+    font-size: 1.2rem; /* Reduced to fit on one line on mobile */
     margin-bottom: 0.75rem; /* Phase 2: Further reduced from 1rem */
+    letter-spacing: -0.01em; /* Slightly tighter letter spacing to help fit */
+    line-height: 1.2; /* Tighter line height */
   }
   
   /* Reduce form field gaps on mobile */
