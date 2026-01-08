@@ -668,6 +668,8 @@ function AlbumPage() {
   // Fetch gallery images in background after album loads
   useEffect(() => {
     if (album && album.albumId) {
+      console.log('[Gallery Debug] useEffect triggered - album.albumId:', album.albumId)
+      
       // Reset gallery state when new album loads
       setGalleryImages([])
       setGalleryExpanded(false)
@@ -680,38 +682,63 @@ function AlbumPage() {
       
       // Set timeout to abort request
       const timeoutId = setTimeout(() => {
+        console.log('[Gallery Debug] Timeout reached - aborting request')
         abortController.abort()
       }, TIMEOUT_MS)
       
       // Fetch gallery images in background with timeout
+      console.log('[Gallery Debug] Setting loadingGallery to true, clearing error')
       setLoadingGallery(true)
       setGalleryError(null)
       
+      console.log('[Gallery Debug] Calling fetchAllAlbumArt with albumId:', album.albumId)
       fetchAllAlbumArt(album.albumId, abortController.signal)
         .then(images => {
+          console.log('[Gallery Debug] fetchAllAlbumArt SUCCESS - images received:', images.length)
+          console.log('[Gallery Debug] Aborted?', abortController.signal.aborted)
+          
           // Only update if this request hasn't been cancelled
           if (!abortController.signal.aborted) {
             clearTimeout(timeoutId)
+            console.log('[Gallery Debug] Setting galleryImages to:', images.length, 'images')
             setGalleryImages(images)
             setGalleryError(null)
+            console.log('[Gallery Debug] State after success - images:', images.length, 'error:', null)
+          } else {
+            console.log('[Gallery Debug] Request was aborted - not updating state')
           }
         })
         .catch(err => {
+          console.log('[Gallery Debug] fetchAllAlbumArt ERROR caught:', err)
+          console.log('[Gallery Debug] Error name:', err.name)
+          console.log('[Gallery Debug] Error message:', err.message)
+          console.log('[Gallery Debug] Aborted?', abortController.signal.aborted)
+          
           // Only update if this request hasn't been cancelled
           if (!abortController.signal.aborted) {
             clearTimeout(timeoutId)
             console.warn('Error loading gallery images:', err)
             const errorMessage = err.message || 'Failed to load album art gallery'
-            setGalleryError(errorMessage.includes('timeout') 
+            const finalError = errorMessage.includes('timeout') 
               ? 'Gallery loading timed out. Please try again.' 
-              : errorMessage)
+              : errorMessage
+            console.log('[Gallery Debug] Setting galleryError to:', finalError)
+            setGalleryError(finalError)
+            console.log('[Gallery Debug] State after error - images: 0, error:', finalError)
+          } else {
+            console.log('[Gallery Debug] Request was aborted - not updating error state')
           }
         })
         .finally(() => {
+          console.log('[Gallery Debug] finally() called - Aborted?', abortController.signal.aborted)
+          
           // Only update if this request hasn't been cancelled
           if (!abortController.signal.aborted) {
             clearTimeout(timeoutId)
+            console.log('[Gallery Debug] Setting loadingGallery to false')
             setLoadingGallery(false)
+          } else {
+            console.log('[Gallery Debug] Request was aborted - not updating loading state')
           }
         })
       
@@ -1276,7 +1303,15 @@ function AlbumPage() {
         </section>
 
         {/* Album Art Gallery - Show if we have images, are loading, or have error */}
-        {(galleryImages.length > 0 || loadingGallery || galleryError) && (
+        {(() => {
+          const shouldRender = galleryImages.length > 0 || loadingGallery || galleryError
+          console.log('[Gallery Debug] Conditional render check:')
+          console.log('[Gallery Debug]   galleryImages.length:', galleryImages.length)
+          console.log('[Gallery Debug]   loadingGallery:', loadingGallery)
+          console.log('[Gallery Debug]   galleryError:', galleryError)
+          console.log('[Gallery Debug]   shouldRender:', shouldRender)
+          return shouldRender
+        })() && (
           <section className="album-art-gallery-section">
             <div className="gallery-header">
               <h2>Album Art Gallery</h2>

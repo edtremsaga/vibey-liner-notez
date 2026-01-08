@@ -390,30 +390,50 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
 // @param {string} releaseGroupId - MusicBrainz release group ID
 // @param {AbortSignal} signal - Optional AbortSignal for request cancellation
 export async function fetchAllAlbumArt(releaseGroupId, signal = null) {
+  const url = `${COVER_ART_BASE}/release-group/${releaseGroupId}`
+  console.log('[Gallery Debug] fetchAllAlbumArt called with releaseGroupId:', releaseGroupId)
+  console.log('[Gallery Debug] URL:', url)
+  console.log('[Gallery Debug] Signal aborted?', signal?.aborted)
+  
   try {
-    const response = await rateLimitedFetch(`${COVER_ART_BASE}/release-group/${releaseGroupId}`, {
+    console.log('[Gallery Debug] Calling rateLimitedFetch...')
+    const response = await rateLimitedFetch(url, {
       headers: {
         'User-Agent': 'liner-notez/1.0'
       },
       signal: signal || undefined
     })
     
+    console.log('[Gallery Debug] rateLimitedFetch completed')
+    console.log('[Gallery Debug] Response ok?', response.ok)
+    console.log('[Gallery Debug] Response status:', response.status)
+    console.log('[Gallery Debug] Response statusText:', response.statusText)
+    
     // Check if request was aborted (timeout or manual abort)
     if (signal && signal.aborted) {
+      console.log('[Gallery Debug] Signal was aborted - throwing error')
       throw new Error('Request aborted')
     }
     
     // If response is not ok, throw error
     if (!response.ok) {
+      console.log('[Gallery Debug] Response not ok - throwing error')
       throw new Error(`Failed to fetch album art: ${response.status} ${response.statusText}`)
     }
     
     const contentType = response.headers.get('content-type') || ''
+    console.log('[Gallery Debug] Content-Type:', contentType)
+    
     if (!contentType.includes('application/json')) {
+      console.log('[Gallery Debug] Invalid content type - throwing error')
       throw new Error('Invalid response format from album art API')
     }
     
+    console.log('[Gallery Debug] Parsing JSON response...')
     const data = await response.json()
+    console.log('[Gallery Debug] JSON parsed successfully')
+    console.log('[Gallery Debug] Data.images length:', data.images?.length || 0)
+    
     const images = data.images || []
     
     // Limit to first 20 images and return (even if empty - this is valid)
@@ -433,21 +453,30 @@ export async function fetchAllAlbumArt(releaseGroupId, signal = null) {
       approved: img.approved || false
     }))
     
+    console.log('[Gallery Debug] Returning', limitedImages.length, 'images')
     // Return empty array only if API returned valid response with no images
     return limitedImages
   } catch (e) {
+    console.log('[Gallery Debug] fetchAllAlbumArt CATCH block - error:', e)
+    console.log('[Gallery Debug] Error name:', e.name)
+    console.log('[Gallery Debug] Error message:', e.message)
+    console.log('[Gallery Debug] Error stack:', e.stack)
+    
     // Re-throw abort errors (timeout or manual abort)
     if (e.name === 'AbortError' || e.message === 'Request aborted' || (signal && signal.aborted)) {
+      console.log('[Gallery Debug] AbortError detected - throwing timeout error')
       throw new Error('Gallery loading timed out. Please try again.')
     }
     
     // Re-throw network errors
     if (e.message && (e.message.includes('Failed to fetch') || e.message.includes('Network'))) {
+      console.log('[Gallery Debug] Network error detected - throwing network error')
       throw new Error('Network error: Failed to load album art gallery. Please check your connection.')
     }
     
     // Re-throw all other errors
     console.warn('Error fetching all album art from release group:', e)
+    console.log('[Gallery Debug] Re-throwing original error')
     throw e
   }
 }
