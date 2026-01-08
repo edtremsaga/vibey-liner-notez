@@ -407,10 +407,11 @@ export async function fetchAllAlbumArt(releaseGroupId, signal = null) {
   
   try {
     console.log('[Gallery Debug] Calling rateLimitedFetch...')
+    // Remove User-Agent header on mobile - causes CORS error: "Request header field User-Agent is not allowed by Access-Control-Allow-Headers"
+    const fetchHeaders = isMobile ? {} : { 'User-Agent': 'liner-notez/1.0' }
+    console.log('[Gallery Debug] Fetch headers:', fetchHeaders)
     const response = await rateLimitedFetch(url, {
-      headers: {
-        'User-Agent': 'liner-notez/1.0'
-      },
+      headers: fetchHeaders,
       signal: useSignal
     })
     
