@@ -865,11 +865,16 @@ function AlbumPage() {
         })
         .catch(err => {
           console.log('[Gallery Debug] Retry ERROR:', err)
+          console.log('[Gallery Debug] Retry ERROR name:', err.name)
+          console.log('[Gallery Debug] Retry ERROR message:', err.message)
+          console.log('[Gallery Debug] Retry ERROR stack:', err.stack)
           if (!abortController.signal.aborted) {
             console.warn('Error loading gallery images:', err)
+            // Show more detailed error message for debugging
             const errorMsg = err.message || 'Failed to load album art gallery'
-            console.log('[Gallery Debug] Retry - Setting galleryError to:', errorMsg)
-            setGalleryError(errorMsg)
+            const detailedError = `${errorMsg} (${err.name || 'Unknown error'})`
+            console.log('[Gallery Debug] Retry - Setting galleryError to:', detailedError)
+            setGalleryError(detailedError)
           } else {
             console.log('[Gallery Debug] Retry - Request was aborted, not setting error')
           }
@@ -1379,6 +1384,18 @@ function AlbumPage() {
               <div className="gallery-error">
                 <span className="error-indicator">⚠️</span>
                 <span className="error-message">{galleryError}</span>
+                {/* Debug info on mobile - show error details */}
+                {isMobile && (
+                  <div style={{ 
+                    marginTop: '0.5rem', 
+                    fontSize: '0.8rem', 
+                    color: 'var(--muted2)',
+                    fontFamily: 'monospace',
+                    wordBreak: 'break-all'
+                  }}>
+                    Debug: Check console for [Gallery Debug] logs
+                  </div>
+                )}
                 <button 
                   className="error-retry-button"
                   onClick={retryGallery}

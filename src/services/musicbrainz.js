@@ -468,10 +468,15 @@ export async function fetchAllAlbumArt(releaseGroupId, signal = null) {
       throw new Error('Gallery loading timed out. Please try again.')
     }
     
-    // Re-throw network errors
-    if (e.message && (e.message.includes('Failed to fetch') || e.message.includes('Network'))) {
-      console.log('[Gallery Debug] Network error detected - throwing network error')
-      throw new Error('Network error: Failed to load album art gallery. Please check your connection.')
+    // Re-throw network errors - preserve more error details for debugging
+    if (e.message && (e.message.includes('Failed to fetch') || e.message.includes('Network') || e.message.includes('Load failed'))) {
+      console.log('[Gallery Debug] Network error detected - original error:', e.message)
+      // Preserve the original error message which may have more details
+      const errorMsg = e.message.includes('Network request failed on iOS') 
+        ? e.message 
+        : `Network error: ${e.message}. Please check your connection.`
+      console.log('[Gallery Debug] Throwing network error:', errorMsg)
+      throw new Error(errorMsg)
     }
     
     // Re-throw all other errors
