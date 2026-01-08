@@ -395,13 +395,23 @@ export async function fetchAllAlbumArt(releaseGroupId, signal = null) {
   console.log('[Gallery Debug] URL:', url)
   console.log('[Gallery Debug] Signal aborted?', signal?.aborted)
   
+  // TEST: On mobile, try without signal parameter to isolate signal merging issue
+  const isMobile = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) || window.innerWidth <= 480
+  const useSignal = !isMobile ? (signal || undefined) : undefined // Skip signal on mobile for testing
+  
+  if (isMobile) {
+    console.log('[Gallery Debug] MOBILE DETECTED - Testing WITHOUT signal parameter')
+  } else {
+    console.log('[Gallery Debug] Desktop - Using signal parameter:', !!signal)
+  }
+  
   try {
     console.log('[Gallery Debug] Calling rateLimitedFetch...')
     const response = await rateLimitedFetch(url, {
       headers: {
         'User-Agent': 'liner-notez/1.0'
       },
-      signal: signal || undefined
+      signal: useSignal
     })
     
     console.log('[Gallery Debug] rateLimitedFetch completed')
