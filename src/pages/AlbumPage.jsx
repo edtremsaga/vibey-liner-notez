@@ -843,29 +843,45 @@ function AlbumPage() {
   
   // Retry gallery fetch
   function retryGallery() {
+    console.log('[Gallery Debug] retryGallery called')
     if (album && album.albumId) {
+      console.log('[Gallery Debug] Retry - Clearing error, setting loading to true')
       setGalleryError(null)
       setLoadingGallery(true)
       const abortController = new AbortController()
       
+      console.log('[Gallery Debug] Retry - Calling fetchAllAlbumArt with albumId:', album.albumId)
       fetchAllAlbumArt(album.albumId, abortController.signal)
         .then(images => {
+          console.log('[Gallery Debug] Retry SUCCESS - images received:', images.length)
           if (!abortController.signal.aborted) {
+            console.log('[Gallery Debug] Retry - Setting galleryImages to:', images.length)
             setGalleryImages(images)
             setGalleryError(null)
+            console.log('[Gallery Debug] Retry - State after success: images:', images.length, 'error:', null)
+          } else {
+            console.log('[Gallery Debug] Retry - Request was aborted')
           }
         })
         .catch(err => {
+          console.log('[Gallery Debug] Retry ERROR:', err)
           if (!abortController.signal.aborted) {
             console.warn('Error loading gallery images:', err)
-            setGalleryError(err.message || 'Failed to load album art gallery')
+            const errorMsg = err.message || 'Failed to load album art gallery'
+            console.log('[Gallery Debug] Retry - Setting galleryError to:', errorMsg)
+            setGalleryError(errorMsg)
+          } else {
+            console.log('[Gallery Debug] Retry - Request was aborted, not setting error')
           }
         })
         .finally(() => {
+          console.log('[Gallery Debug] Retry finally() - Setting loadingGallery to false')
           if (!abortController.signal.aborted) {
             setLoadingGallery(false)
           }
         })
+    } else {
+      console.log('[Gallery Debug] Retry - No album or albumId available')
     }
   }
   
@@ -1315,10 +1331,20 @@ function AlbumPage() {
           <section className="album-art-gallery-section">
             <div className="gallery-header">
               <h2>Album Art Gallery</h2>
-              {!galleryError && (
+              {(() => {
+                const shouldShowButton = !galleryError
+                console.log('[Gallery Debug] Button visibility check:')
+                console.log('[Gallery Debug]   galleryError:', galleryError)
+                console.log('[Gallery Debug]   shouldShowButton:', shouldShowButton)
+                return shouldShowButton
+              })() && (
                 <button
                   className="gallery-toggle-button"
-                  onClick={() => setGalleryExpanded(!galleryExpanded)}
+                  onClick={() => {
+                    console.log('[Gallery Debug] Button clicked - galleryExpanded was:', galleryExpanded)
+                    setGalleryExpanded(!galleryExpanded)
+                    console.log('[Gallery Debug] Button clicked - galleryExpanded now:', !galleryExpanded)
+                  }}
                   type="button"
                 >
                   <span>
@@ -1361,7 +1387,13 @@ function AlbumPage() {
                   Retry
                 </button>
               </div>
-            ) : galleryExpanded && (
+            ) : (() => {
+              console.log('[Gallery Debug] Gallery content render check:')
+              console.log('[Gallery Debug]   galleryError:', galleryError)
+              console.log('[Gallery Debug]   galleryExpanded:', galleryExpanded)
+              console.log('[Gallery Debug]   shouldShowContent:', !galleryError && galleryExpanded)
+              return !galleryError && galleryExpanded
+            })() && (
               <div className="gallery-content">
                 {loadingGallery ? (
                   <div className="gallery-loading">Loading album art...</div>
@@ -1369,7 +1401,9 @@ function AlbumPage() {
                   <div className="gallery-empty">No additional album art available.</div>
                 ) : (
                   <div className="gallery-grid">
-                    {galleryImages.map((img, index) => {
+                    {(() => {
+                      console.log('[Gallery Debug] Rendering gallery grid with', galleryImages.length, 'images')
+                      return galleryImages.map((img, index) => {
                       // Use 500px thumbnail if available, fallback to 250px, then small, then full image
                       const thumbnailUrl = img.thumbnails?.['500'] || 
                                          img.thumbnails?.['250'] || 
@@ -1408,7 +1442,8 @@ function AlbumPage() {
                           </div>
                         </div>
                       )
-                    })}
+                    })
+                    })()}
                   </div>
                 )}
               </div>
