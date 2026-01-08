@@ -67,6 +67,20 @@ function AlbumPage() {
   // Help section state
   const [showHelp, setShowHelp] = useState(false)
   
+  // Mobile detection state for responsive UI
+  const [isMobile, setIsMobile] = useState(false)
+  
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 480)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+  
   // Get heading text based on release type
   function getResultsHeading(releaseType) {
     const headingMap = {
@@ -915,20 +929,38 @@ function AlbumPage() {
               </div>
               {!searchAlbum.trim() && (
                 <div className="search-field">
-                  <label>Release Type</label>
-                  <div className="release-type-button-group">
-                    {RELEASE_TYPES.map(type => (
-                      <button
-                        key={type.value}
-                        type="button"
-                        className={`release-type-button ${releaseType === type.value ? 'active' : ''}`}
-                        onClick={() => setReleaseType(type.value)}
-                        disabled={searching}
-                      >
-                        {type.label}
-                      </button>
-                    ))}
-                  </div>
+                  <label htmlFor="release-type">Release Type</label>
+                  {isMobile ? (
+                    // Mobile: Use dropdown
+                    <select
+                      id="release-type"
+                      value={releaseType}
+                      onChange={(e) => setReleaseType(e.target.value)}
+                      disabled={searching}
+                      className="release-type-select"
+                    >
+                      {RELEASE_TYPES.map(type => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    // Desktop: Use button grid
+                    <div className="release-type-button-group">
+                      {RELEASE_TYPES.map(type => (
+                        <button
+                          key={type.value}
+                          type="button"
+                          className={`release-type-button ${releaseType === type.value ? 'active' : ''}`}
+                          onClick={() => setReleaseType(type.value)}
+                          disabled={searching}
+                        >
+                          {type.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               <button 
