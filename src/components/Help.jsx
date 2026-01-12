@@ -47,6 +47,28 @@ function Help({ onClose }) {
             <li><strong>Click Search</strong> to find albums</li>
           </ol>
 
+          <h3>Searching by Producer</h3>
+          <p>Find all albums produced by a specific producer:</p>
+          <ol>
+            <li><strong>Click the "Search by Producer" tab</strong> at the top of the search page</li>
+            <li><strong>Enter a Producer Name</strong> (required)
+              <ul>
+                <li>Type the name of the producer you want to explore</li>
+                <li>Example: "Quincy Jones", "Rick Rubin", "George Martin"</li>
+              </ul>
+            </li>
+            <li><strong>If multiple producers match your search</strong>:
+              <ul>
+                <li>You'll see a list of matching producers</li>
+                <li>Click on the correct producer to view their albums</li>
+                <li>Producers are distinguished by location, type, or other identifiers</li>
+              </ul>
+            </li>
+            <li><strong>Click Search</strong> to find albums produced by that person</li>
+          </ol>
+          
+          <p className="help-note">ⓘ <strong>Note:</strong> Producer search finds albums where the producer is credited with any producer role (producer, executive producer, co-producer, etc.). Results may vary depending on how producer credits are documented in music archives.</p>
+
           <h3>Viewing Search Results</h3>
           <p>Search results display:</p>
           <ul>

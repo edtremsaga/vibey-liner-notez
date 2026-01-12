@@ -229,6 +229,577 @@ export async function searchReleaseGroups(artistName, albumName = null, releaseT
   }
 }
 
+// Search for producer by name to get MBID(s)
+// Returns array of matching producers with their MBIDs
+// @param {string} producerName - Producer name to search for
+async function findProducerMBIDs(producerName) {
+  if (!producerName || !producerName.trim()) {
+    throw new Error('Producer name is required')
+  }
+  
+  const trimmedName = producerName.trim()
+  const query = `artist:"${trimmedName}"`
+  const url = `${MB_API_BASE}/artist?query=${encodeURIComponent(query)}&limit=25&fmt=json`
+  
+  try {
+    const response = await rateLimitedFetch(url, {
+      headers: {
+        'User-Agent': 'liner-notez/1.0 (https://github.com/yourusername/liner-notez)',
+        'Accept': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`MusicBrainz API error: ${response.status} ${response.statusText}`)
+    }
+    
+    const data = await response.json()
+    const artists = data.artists || []
+    
+    // Return array of matching producers with their MBIDs
+    return artists.map(artist => ({
+      mbid: artist.id,
+      name: artist.name || trimmedName,
+      disambiguation: artist.disambiguation || null, // e.g., "US" vs "UK"
+      type: artist.type || null
+    }))
+  } catch (error) {
+    console.error('Error finding producer MBIDs:', error)
+    throw error
+  }
+}
+
+// ============================================================================
+// Release → RG Cache System (3-layer cache)
+// ============================================================================
+
+// Global cache: releaseId → rgInfo (persists across searches until page refresh)
+const globalReleaseCache = new Map() // releaseId → rgInfo object
+
+// Promise memoization: releaseId → Promise<rgInfo> (prevents duplicate in-flight fetches)
+const fetchPromises = new Map() // releaseId → Promise<rgInfo>
+
+// Per-producer seenRgIds: producerMBID → Set<rgId> (deduplication per search session)
+const producerSeenRgIds = new Map() // producerMBID → Set<rgId>
+
+/**
+ * Get Release Group info for a release ID using 3-layer cache
+ * @param {string} releaseId - MusicBrainz release ID
+ * @returns {Promise<Object|null>} - rgInfo object or null if not found/invalid
+ */
+async function getReleaseGroupInfo(releaseId) {
+  // Layer 1: Check value cache (instant return if already fetched)
+  if (globalReleaseCache.has(releaseId)) {
+    return globalReleaseCache.get(releaseId)
+  }
+  
+  // Layer 2: Check Promise cache (return existing promise if already fetching)
+  if (fetchPromises.has(releaseId)) {
+    return fetchPromises.get(releaseId)
+  }
+  
+  // Layer 3: Start new fetch
+  const promise = (async () => {
+    try {
+      const releaseUrl = `${MB_API_BASE}/release/${releaseId}?inc=release-groups+artist-credits&fmt=json`
+      const releaseResponse = await rateLimitedFetch(releaseUrl, {
+        headers: {
+          'User-Agent': 'liner-notez/1.0 (https://github.com/yourusername/liner-notez)',
+          'Accept': 'application/json'
+        }
+      })
+      
+      if (!releaseResponse.ok) {
+        fetchPromises.delete(releaseId) // Clean up on error
+        return null
+      }
+      
+      const releaseData = await releaseResponse.json()
+      const releaseGroup = releaseData['release-group']
+      
+      if (!releaseGroup || !releaseGroup.id) {
+        fetchPromises.delete(releaseId) // Clean up on invalid data
+        return null
+      }
+      
+      // Build rgInfo object (not just rgId)
+      const rgInfo = {
+        releaseGroupId: releaseGroup.id,
+        title: releaseGroup.title || releaseData.title || '',
+        artistName: extractArtistName(releaseGroup['artist-credit']),
+        releaseYear: releaseGroup['first-release-date']
+          ? parseInt(releaseGroup['first-release-date'].substring(0, 4))
+          : null,
+        isBootleg: releaseData.status === 'Bootleg',
+        primaryType: releaseGroup['primary-type'] || null,
+        releaseId: releaseId // Include release ID for reference
+      }
+      
+      // Store in value cache
+      globalReleaseCache.set(releaseId, rgInfo)
+      fetchPromises.delete(releaseId) // Clean up promise cache
+      
+      return rgInfo
+    } catch (error) {
+      fetchPromises.delete(releaseId) // Clean up on error
+      console.warn(`[Release Cache] Error fetching release ${releaseId}:`, error.message)
+      return null
+    }
+  })()
+  
+  fetchPromises.set(releaseId, promise)
+  return promise
+}
+
+/**
+ * Get or create seenRgIds Set for a producer
+ * @param {string} producerMBID - Producer MBID
+ * @returns {Set<string>} - Set of seen Release Group IDs
+ */
+function getSeenRgIdsForProducer(producerMBID) {
+  if (!producerSeenRgIds.has(producerMBID)) {
+    producerSeenRgIds.set(producerMBID, new Set())
+  }
+  return producerSeenRgIds.get(producerMBID)
+}
+
+/**
+ * Clear seenRgIds for a producer (called when starting new search)
+ * @param {string} producerMBID - Producer MBID
+ */
+export function clearProducerSeenRgIds(producerMBID) {
+  if (producerMBID) {
+    producerSeenRgIds.delete(producerMBID)
+  }
+}
+
+// POC TEST: Check if Release Group IDs are available in relationships payload (cheap, no extra fetches)
+function testReleaseGroupAvailability(artistJson) {
+  const rels = artistJson?.relations ?? [];
+
+  // Relationships that reference a release
+  const releaseRels = rels.filter(r => r && r.release && r.release.id);
+
+  // See if release has nested release-group info
+  const withRgNested = releaseRels.filter(
+    r => r.release && (r.release["release-group"]?.id || r.release.release_group?.id)
+  );
+
+  // Sometimes the relation itself contains RG-ish keys (rare, but worth checking)
+  const withRgOnRelation = releaseRels.filter(
+    r => r["release-group"]?.id || r.release_group?.id
+  );
+
+  const sampleRelease = releaseRels[0]?.release ?? null;
+
+  console.log("[RG Cheap Check]", {
+    totalRelations: rels.length,
+    releaseRelations: releaseRels.length,
+    releaseRelationsWithNestedRG: withRgNested.length,
+    releaseRelationsWithRGOnRelation: withRgOnRelation.length,
+    sampleReleaseKeys: sampleRelease ? Object.keys(sampleRelease) : null,
+    sampleNestedRG: withRgNested[0]?.release?.["release-group"] ?? withRgNested[0]?.release?.release_group ?? null,
+    sampleReleaseId: releaseRels[0]?.release?.id ?? null,
+    sampleReleaseTitle: releaseRels[0]?.release?.title ?? null,
+  });
+
+  // "Cheap" means RG IDs exist in the relationships payload (no extra fetches)
+  return withRgNested.length > 0 || withRgOnRelation.length > 0;
+}
+
+// Search for albums by producer using graph-walk approach via artist relationships
+// KEY INSIGHT: Producer credits are stored as RELATIONSHIPS on the ARTIST entity, not searchable via release search
+// This approach queries the artist's relationships directly (ChatGPT-suggested approach)
+// @param {string} producerName - Producer name to search for
+// @param {string} producerMBID - Optional: specific producer MBID (if multiple matches, user selected one)
+// @param {number} offset - Optional: pagination offset (default 0)
+// @param {Function} onProgress - Optional: progress callback
+// @param {Array} cachedReleaseRelations - Optional: cached release relations to avoid re-fetching (for pagination performance)
+// @param {Set} seenRgIds - Optional: Set of already-seen Release Group IDs (for deduplication)
+export async function searchByProducer(producerName, producerMBID = null, offset = 0, onProgress = null, cachedReleaseRelations = null, seenRgIds = null) {
+  if (!producerName || !producerName.trim()) {
+    throw new Error('Producer name is required')
+  }
+  
+  const trimmedName = producerName.trim()
+  
+  // Step 1: Find producer MBID(s) if not provided
+  let producerMBIDs = []
+  
+  if (producerMBID) {
+    // User selected a specific producer from multiple matches
+    producerMBIDs = [{ mbid: producerMBID, name: trimmedName }]
+  } else {
+    // Search for producers matching the name
+    producerMBIDs = await findProducerMBIDs(trimmedName)
+    
+    if (producerMBIDs.length === 0) {
+      throw new Error('No producer found. Try a different name or check spelling.')
+    }
+    
+    // If multiple matches, return them for user selection
+    if (producerMBIDs.length > 1) {
+      return {
+        multipleMatches: true,
+        matches: producerMBIDs,
+        results: [],
+        totalCount: 0
+      }
+    }
+  }
+  
+  const producer = producerMBIDs[0]
+  const producerMBIDToUse = producer.mbid
+  
+  // Get or create seenRgIds Set for this producer (for deduplication)
+  if (!seenRgIds) {
+    seenRgIds = getSeenRgIdsForProducer(producerMBIDToUse)
+  }
+  
+  // Start total timing
+  const totalStartTime = performance.now()
+  
+  try {
+    // Step 2: Fetch artist with recording-rels and release-rels (or use cached)
+    // KEY INSIGHT: Get ALL relationships where this artist is involved directly from the artist entity
+    // This is a graph-walk approach - MusicBrainz doesn't support direct producer search
+    let releaseRelations
+    let recordingRelations
+    let artistRelsDuration = null // Track actual fetch time, null if cached
+    
+    if (cachedReleaseRelations) {
+      // Use cached release relations (for pagination performance)
+      console.log(`[Producer Search] Using cached release relations (${cachedReleaseRelations.length} releases)`)
+      releaseRelations = cachedReleaseRelations
+      // For pagination, we don't need recording relations (they're slow and we skip them anyway)
+      recordingRelations = []
+    } else {
+      // Fetch artist relationships (initial search only)
+      const artistRelsStartTime = performance.now()
+      console.log(`[Producer Search] Fetching artist relationships for ${producerMBIDToUse}...`)
+      const artistRelsUrl = `${MB_API_BASE}/artist/${producerMBIDToUse}?inc=recording-rels+release-rels&fmt=json`
+      const artistRelsResponse = await rateLimitedFetch(artistRelsUrl, {
+        headers: {
+          'User-Agent': 'liner-notez/1.0 (https://github.com/yourusername/liner-notez)',
+          'Accept': 'application/json'
+        }
+      })
+      
+      if (!artistRelsResponse.ok) {
+        throw new Error(`MusicBrainz API error: ${artistRelsResponse.status} ${artistRelsResponse.statusText}`)
+      }
+      
+      const artistRelsData = await artistRelsResponse.json()
+      const relations = artistRelsData.relations || []
+      artistRelsDuration = ((performance.now() - artistRelsStartTime) / 1000).toFixed(2)
+      
+      console.log(`[Producer Search] Found ${relations.length} total relationships (took ${artistRelsDuration}s)`)
+      
+      // POC TEST: Check if Release Group IDs are available in the relationships payload (cheap, no extra fetches)
+      testReleaseGroupAvailability(artistRelsData)
+      
+      // Step 3: Filter for producer relationships only
+      const producerRelations = relations.filter(rel => {
+        const type = (rel.type || '').toLowerCase()
+        return type.includes('producer')
+      })
+      
+      console.log(`[Producer Search] Found ${producerRelations.length} producer relationships`)
+      
+      if (producerRelations.length === 0) {
+        throw new Error(`No albums found for this producer. The producer exists but no production credits are documented.`)
+      }
+      
+      // Step 4: Split into release-level and recording-level producer credits
+      releaseRelations = producerRelations.filter(r => r['target-type'] === 'release' && r.release)
+      recordingRelations = producerRelations.filter(r => r['target-type'] === 'recording' && r.recording)
+      
+      console.log(`[Producer Search] Release-level: ${releaseRelations.length}, Recording-level: ${recordingRelations.length}`)
+    }
+    
+    // Step 5: Process release-level producer credits (strong signal - prioritize these)
+    // Process releases starting from offset to support pagination
+    // Initial search (offset === 0): Continue until we find 10 albums OR reach 50 releases
+    // Pagination (offset > 0): Process next batch of 10 releases
+    const releaseGroupMap = new Map()
+    const MIN_ALBUMS_TARGET = 10 // Minimum albums to find before stopping (initial search only)
+    const MAX_RELEASES_INITIAL = 50 // Maximum releases to process in initial search
+    const RELEASES_PER_BATCH = 10 // Process 10 releases per batch (for pagination)
+    
+    const isInitialSearch = offset === 0
+    const startIndex = offset || 0
+    
+    // For initial search: process up to MAX_RELEASES_INITIAL or until we find MIN_ALBUMS_TARGET
+    // For pagination: process RELEASES_PER_BATCH releases
+    let endIndex
+    let totalToProcess
+    let releaseRelationsToProcess
+    
+    if (isInitialSearch) {
+      // Initial search: process releases until we find 10 albums or reach 50 releases
+      endIndex = Math.min(startIndex + MAX_RELEASES_INITIAL, releaseRelations.length)
+      releaseRelationsToProcess = releaseRelations.slice(startIndex, endIndex)
+      totalToProcess = releaseRelationsToProcess.length
+    } else {
+      // Pagination: process next batch of 10 releases
+      endIndex = startIndex + RELEASES_PER_BATCH
+      releaseRelationsToProcess = releaseRelations.slice(startIndex, endIndex)
+      totalToProcess = releaseRelationsToProcess.length
+    }
+    
+    const releasesStartTime = performance.now()
+    const maxProgress = isInitialSearch ? MAX_RELEASES_INITIAL : totalToProcess
+    console.log(`[Producer Search] Processing ${totalToProcess} release-level producer credits (out of ${releaseRelations.length} total)...`)
+    if (isInitialSearch) {
+      console.log(`[Producer Search] Initial search: will continue until ${MIN_ALBUMS_TARGET} albums found or ${MAX_RELEASES_INITIAL} releases processed`)
+    }
+    
+    let actuallyProcessed = 0
+    for (let i = 0; i < releaseRelationsToProcess.length; i++) {
+      const rel = releaseRelationsToProcess[i]
+      const current = i + 1
+      actuallyProcessed = current // Track how many we've processed
+      const releaseStartTime = performance.now()
+      
+      // Report progress (show X/50 for initial search, X/10 for pagination)
+      if (onProgress) {
+        onProgress({ current: actuallyProcessed, total: maxProgress })
+      }
+      
+      try {
+        const releaseId = rel.release.id
+        
+        // Use 3-layer cache to get RG info
+        const rgInfo = await getReleaseGroupInfo(releaseId)
+        const releaseDuration = ((performance.now() - releaseStartTime) / 1000).toFixed(2)
+        
+        if (!rgInfo) {
+          console.log(`[Producer Search] Release ${current}/${totalToProcess} skipped (no RG info) - took ${releaseDuration}s`)
+          continue
+        }
+        
+        // Check if it's an Album type
+        if (rgInfo.primaryType !== 'Album') {
+          console.log(`[Producer Search] Release ${current}/${totalToProcess} skipped (not Album type) - took ${releaseDuration}s`)
+          continue
+        }
+        
+        // Check if we've already seen this Release Group (using seenRgIds Set)
+        const releaseGroupId = rgInfo.releaseGroupId
+        if (seenRgIds.has(releaseGroupId)) {
+          console.log(`[Producer Search] Release ${current}/${totalToProcess} skipped (duplicate RG) - took ${releaseDuration}s`)
+          continue
+        }
+        
+        // Mark as seen
+        seenRgIds.add(releaseGroupId)
+        
+        // Add to results map
+        releaseGroupMap.set(releaseGroupId, {
+          releaseGroupId: rgInfo.releaseGroupId,
+          title: rgInfo.title,
+          artistName: rgInfo.artistName,
+          releaseYear: rgInfo.releaseYear,
+          isBootleg: rgInfo.isBootleg
+        })
+        
+        // Log cache hit/miss for debugging
+        const cacheStatus = globalReleaseCache.has(releaseId) ? 'cache hit' : 'cache miss'
+        console.log(`[Producer Search] Release ${current}/${totalToProcess}: Found album "${rgInfo.title}" - took ${releaseDuration}s (${cacheStatus}, total albums: ${releaseGroupMap.size})`)
+        
+        // Early exit for initial search: stop if we found MIN_ALBUMS_TARGET albums
+        if (isInitialSearch && releaseGroupMap.size >= MIN_ALBUMS_TARGET) {
+          console.log(`[Producer Search] Found ${releaseGroupMap.size} albums (target: ${MIN_ALBUMS_TARGET}) - stopping early`)
+          // Report final progress showing completion
+          if (onProgress) {
+            onProgress({ current: actuallyProcessed, total: actuallyProcessed })
+          }
+          break
+        }
+      } catch (err) {
+        const releaseDuration = ((performance.now() - releaseStartTime) / 1000).toFixed(2)
+        console.warn(`[Producer Search] Error processing release ${current}/${totalToProcess} (took ${releaseDuration}s):`, err.message)
+        continue
+      }
+    }
+    
+    // Calculate timing after loop completes (whether we broke early or processed all)
+    const releasesDuration = ((performance.now() - releasesStartTime) / 1000).toFixed(2)
+    if (isInitialSearch && releaseGroupMap.size >= MIN_ALBUMS_TARGET && actuallyProcessed < totalToProcess) {
+      console.log(`[Producer Search] Found ${releaseGroupMap.size} albums (target: ${MIN_ALBUMS_TARGET}) - stopped early (processed ${actuallyProcessed} releases in ${releasesDuration}s)`)
+    } else if (isInitialSearch && actuallyProcessed >= MAX_RELEASES_INITIAL) {
+      console.log(`[Producer Search] Reached maximum releases (${MAX_RELEASES_INITIAL}) - processed ${actuallyProcessed} releases in ${releasesDuration}s, found ${releaseGroupMap.size} unique albums`)
+    } else {
+      const batchInfo = offset > 0 ? ` (batch starting at offset ${offset})` : ''
+      console.log(`[Producer Search] Processed ${actuallyProcessed} releases${batchInfo} in ${releasesDuration}s, found ${releaseGroupMap.size} unique albums`)
+    }
+    
+    // Step 6: Process recording-level producer credits ONLY if we don't have enough release-level results
+    // NOTE: Recording-level processing is very slow (requires fetching each recording), so we skip it for now
+    // For now, only use release-level producer credits for speed (30 seconds vs potentially hours)
+    // TODO: Implement smart pagination for recording-level credits if needed
+    
+    // Only try recording-level if this is initial search (offset === 0) and we have no results
+    // For pagination (offset > 0), it's expected to sometimes get 0 results (we've reached the end)
+    // IMPORTANT: Skip recording-level for pagination (offset > 0) - we've reached the end
+    if (releaseGroupMap.size === 0 && offset === 0 && recordingRelations && recordingRelations.length > 0) {
+      console.log(`[Producer Search] No albums found from release-level, trying recording-level credits...`)
+      console.log(`[Producer Search] WARNING: This may take a long time (${recordingRelations.length} recording relations found)`)
+      
+      // Limit to first 10 recording relations to keep it reasonably fast (10 seconds with rate limiting)
+      // This is a fallback only if release-level returns nothing
+      const recordingReleaseGroupMap = new Map()
+      const recordingRelationsToProcess = recordingRelations.slice(0, 10) // Very limited for speed
+      
+      console.log(`[Producer Search] Processing ${recordingRelationsToProcess.length} recording-level producer credits...`)
+      
+      for (const rel of recordingRelationsToProcess) {
+        try {
+          const recordingUrl = `${MB_API_BASE}/recording/${rel.recording.id}?inc=releases+release-groups+artist-credits&fmt=json`
+          const recordingResponse = await rateLimitedFetch(recordingUrl, {
+            headers: {
+              'User-Agent': 'liner-notez/1.0 (https://github.com/yourusername/liner-notez)',
+              'Accept': 'application/json'
+            }
+          })
+          
+          if (!recordingResponse.ok) continue
+          
+          const recordingData = await recordingResponse.json()
+          const releases = recordingData.releases || []
+          
+          // Get release-groups from releases
+          for (const release of releases) {
+            const releaseGroup = release['release-group']
+            if (!releaseGroup || !releaseGroup.id) continue
+            if (releaseGroup['primary-type'] !== 'Album') continue
+            
+            const releaseGroupId = releaseGroup.id
+            
+            // Check if we've already seen this RG (using seenRgIds Set)
+            if (!recordingReleaseGroupMap.has(releaseGroupId) && !seenRgIds.has(releaseGroupId)) {
+              const artistName = extractArtistName(releaseGroup['artist-credit'])
+              recordingReleaseGroupMap.set(releaseGroupId, {
+                releaseGroupId: releaseGroupId,
+                title: releaseGroup.title || '',
+                artistName: artistName || null,
+                releaseYear: releaseGroup['first-release-date']
+                  ? parseInt(releaseGroup['first-release-date'].substring(0, 4))
+                  : null,
+                isBootleg: release.status === 'Bootleg'
+              })
+              seenRgIds.add(releaseGroupId) // Mark as seen
+            }
+          }
+        } catch (err) {
+          console.warn(`[Producer Search] Error processing recording relation:`, err.message)
+          continue
+        }
+      }
+      
+      // Merge recording-level results into main map
+      for (const [releaseGroupId, rg] of recordingReleaseGroupMap.entries()) {
+        releaseGroupMap.set(releaseGroupId, {
+          releaseGroupId: rg.releaseGroupId,
+          title: rg.title,
+          artistName: rg.artistName,
+          releaseYear: rg.releaseYear,
+          isBootleg: rg.isBootleg
+        })
+      }
+      
+      console.log(`[Producer Search] Added ${recordingReleaseGroupMap.size} albums from recording-level credits`)
+    } else if (releaseGroupMap.size === 0 && offset > 0) {
+      // Pagination reached the end (no new albums found) - this is expected, not an error
+      console.log(`[Producer Search] Pagination: No new albums found at offset ${offset} (reached end of available releases)`)
+      // Don't try recording-level for pagination - just return empty results below
+    } else {
+      console.log(`[Producer Search] Found ${releaseGroupMap.size} albums from release-level credits - skipping recording-level for speed`)
+      if (recordingRelations && recordingRelations.length > 0) {
+        console.log(`[Producer Search] Note: ${recordingRelations.length} recording-level producer credits exist but were skipped to keep search fast`)
+      }
+    }
+    
+    // Convert map to array
+    let results = Array.from(releaseGroupMap.values())
+    
+    // Calculate total available releases (needed for early return case)
+    const totalAvailableReleases = releaseRelations.length
+    
+    // If still no albums found:
+    // - For initial search (offset === 0): throw error (no albums found at all)
+    // - For pagination (offset > 0): return empty results (we've reached the end, which is expected)
+    if (results.length === 0) {
+      if (offset === 0) {
+        throw new Error(`No albums found for this producer. The producer exists but no production credits are documented.`)
+      } else {
+        // Pagination reached the end - return empty results (this is expected, not an error)
+        console.log(`[Producer Search] Pagination: No new albums found at offset ${offset} (reached end of available releases)`)
+        return {
+          results: [],
+          totalCount: totalAvailableReleases,
+          isProducerSearch: true,
+          producerName: producer.name,
+          producerMBID: producerMBIDToUse,
+          hasMore: false,
+          releasesProcessed: actuallyProcessed,
+          releaseRelations: releaseRelations,
+          seenRgIds: seenRgIds
+        }
+      }
+    }
+    
+    // Sort by year (newest first), then by title
+    results.sort((a, b) => {
+      if (a.releaseYear && b.releaseYear) {
+        if (b.releaseYear !== a.releaseYear) {
+          return b.releaseYear - a.releaseYear
+        }
+      } else if (a.releaseYear && !b.releaseYear) {
+        return -1
+      } else if (!a.releaseYear && b.releaseYear) {
+        return 1
+      }
+      return (a.title || '').localeCompare(b.title || '')
+    })
+    
+    const totalDuration = ((performance.now() - totalStartTime) / 1000).toFixed(2)
+    const batchInfo = offset > 0 ? ` (batch offset: ${offset})` : ''
+    console.log(`[Producer Search] ✅ COMPLETE: Found ${results.length} albums with producer credits${batchInfo} in ${totalDuration}s total`)
+    if (cachedReleaseRelations && artistRelsDuration === null) {
+      // Estimate saved time based on typical fetch (usually ~1s)
+      console.log(`[Producer Search] Performance breakdown: Using cached relations (saved ~1.0s), Releases processing: ${releasesDuration}s`)
+    } else {
+      console.log(`[Producer Search] Performance breakdown: Artist fetch: ${artistRelsDuration || '0.00'}s, Releases processing: ${releasesDuration}s`)
+    }
+    
+    // Return total available count (total release relations available for this producer)
+    // This allows the UI to show "X of Y" and enable pagination
+    // For pagination: totalCount should represent total releases available (for calculating pages)
+    // Note: totalAvailableReleases is already calculated above (before early return check)
+    
+    return {
+      results,
+      totalCount: totalAvailableReleases, // Always return total releases available for pagination calculation
+      isProducerSearch: true,
+      producerName: producer.name,
+      producerMBID: producerMBIDToUse,
+      hasMore: endIndex < releaseRelations.length, // Indicate if more releases are available to process
+      releasesProcessed: actuallyProcessed, // How many releases were actually processed (important for pagination offset)
+      releaseRelations: releaseRelations, // Return release relations for caching (to avoid re-fetching during pagination)
+      seenRgIds: seenRgIds // Return seenRgIds Set so it can be passed to next pagination call
+    }
+  } catch (error) {
+    // Re-throw specific errors (no match, no albums) as-is
+    if (error.message.includes('No producer found') || error.message.includes('No albums found')) {
+      throw error
+    }
+    
+    console.error('Error searching by producer:', error)
+    throw error
+  }
+}
+
 // Fetch release group by MBID
 // @param {string} releaseGroupId - MusicBrainz release group ID
 // @param {AbortSignal} signal - Optional AbortSignal for request cancellation

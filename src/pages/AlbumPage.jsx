@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, fetchCoverArt, fetchAllAlbumArt, fetchWikipediaContentFromMusicBrainz } from '../services/musicbrainz'
+import { useState, useEffect, useRef } from 'react'
+import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, searchByProducer, fetchCoverArt, fetchAllAlbumArt, fetchWikipediaContentFromMusicBrainz, clearProducerSeenRgIds } from '../services/musicbrainz'
 import { formatDuration } from '../utils/formatDuration'
 import { getCachedAlbum, setCachedAlbum } from '../utils/albumCache'
 import Help from '../components/Help'
@@ -7,14 +7,24 @@ import { useHelp } from '../contexts/HelpContext'
 import './AlbumPage.css'
 
 function AlbumPage() {
-  // Search state
+  // Search type state: 'album' or 'producer'
+  const [searchType, setSearchType] = useState('album') // 'album' or 'producer'
+  
+  // Album search state
   const [searchArtist, setSearchArtist] = useState('')
   const [searchAlbum, setSearchAlbum] = useState('')
   const [releaseType, setReleaseType] = useState('Album') // Default to Album
+  
+  // Producer search state
+  const [searchProducer, setSearchProducer] = useState('')
+  const [multipleProducerMatches, setMultipleProducerMatches] = useState(null) // Array of producer matches if multiple found
+  const [searchProgress, setSearchProgress] = useState({ current: 0, total: 50 }) // Progress tracking for producer search (50 max for initial search, 10 for pagination)
+  
+  // Shared search state
   const [searching, setSearching] = useState(false)
   const [searchResults, setSearchResults] = useState(null)
   const [searchError, setSearchError] = useState(null)
-  const [searchMeta, setSearchMeta] = useState(null) // { totalCount, isArtistOnly, releaseType }
+  const [searchMeta, setSearchMeta] = useState(null) // { totalCount, isArtistOnly, releaseType, isProducerSearch, producerName, producerMBID }
   const [displayedResults, setDisplayedResults] = useState([])
   const [resultsPage, setResultsPage] = useState(1)
   const [sortOption, setSortOption] = useState('newest') // 'newest', 'oldest', 'title-az', 'title-za'
@@ -23,6 +33,16 @@ function AlbumPage() {
   const [hideBootlegs, setHideBootlegs] = useState(false) // Filter to hide bootleg records
   const [albumPlaceholder, setAlbumPlaceholder] = useState('e.g., Aladdin Sane (leave blank to see all albums)')
   const RESULTS_PER_PAGE = 20
+  
+  // Prefetch state
+  const [prefetchedResults, setPrefetchedResults] = useState(null) // { results: [...], finalOffset: number } or null
+  const [prefetching, setPrefetching] = useState(false) // Whether prefetch is in progress
+  const prefetchAbortController = useRef(null) // AbortController for cancelling prefetch
+  const prefetchPromiseRef = useRef(null) // Promise for the current prefetch operation (allows awaiting completion)
+  const currentProducerMBID = useRef(null) // Track current producer MBID for cache management
+  const prefetchTriggeredRef = useRef(false) // Track if prefetch has been triggered for current search (prevents duplicates)
+  const reachedEndRef = useRef(false) // Track if we've reached the end of unique albums (bypasses React state timing)
+  const previousProducerMBIDRef = useRef(null) // Track previous producer MBID to detect actual changes (not just first set)
   
   // Available release types for filtering
   const RELEASE_TYPES = [
@@ -82,22 +102,49 @@ function AlbumPage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
   
+  // Handle URL query params for search type (?type=producer or ?type=album)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const typeParam = urlParams.get('type')
+    if (typeParam === 'producer' || typeParam === 'album') {
+      setSearchType(typeParam)
+    } else {
+      // Default to album search if no type param
+      setSearchType('album')
+    }
+  }, [])
+  
+  // Update URL when search type changes
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (searchType === 'album') {
+      url.searchParams.delete('type') // Remove param for album (default)
+    } else {
+      url.searchParams.set('type', searchType)
+    }
+    window.history.replaceState(
+      { page: 'search', type: searchType, initialized: true },
+      '',
+      url.toString()
+    )
+  }, [searchType])
+  
   // Initialize browser history on page load (safety measure for back button)
   // This ensures the initial search page is a distinct history entry
   useEffect(() => {
     // Only initialize if no history state exists (first load or page refresh)
     if (window.history.state === null) {
       window.history.replaceState(
-        { page: 'search', initialized: true },
+        { page: 'search', type: searchType, initialized: true },
         '',
         window.location.href
       )
       console.log('[History] Initialized history state for search page')
     }
-  }, [])
+  }, [searchType])
   
   // Get heading text based on release type
-  function getResultsHeading(releaseType) {
+  function getResultsHeading(releaseType, producerName = null) {
     const headingMap = {
       'Album': 'Studio Albums Found',
       'EP': 'EPs Found',
@@ -106,7 +153,14 @@ function AlbumPage() {
       'Compilation': 'Compilations Found',
       'Soundtrack': 'Soundtracks Found'
     }
-    return headingMap[releaseType] || 'Studio Albums Found'
+    const baseHeading = headingMap[releaseType] || 'Studio Albums Found'
+    
+    // For producer search, append producer name
+    if (producerName) {
+      return `${baseHeading} - ${producerName}`
+    }
+    
+    return baseHeading
   }
   
   // Get pluralized release type name for results count
@@ -229,8 +283,417 @@ function AlbumPage() {
     }
   }
 
-  // Handle search form submission
-  async function handleSearch(e) {
+  // Reset prefetch state on new search or when search type changes
+  useEffect(() => {
+    // Reset prefetch trigger ref when search changes
+    if (!searchMeta?.isProducerSearch) {
+      prefetchTriggeredRef.current = false
+      setPrefetchedResults(null)
+      setPrefetching(false)
+      if (prefetchAbortController.current) {
+        prefetchAbortController.current.abort()
+        prefetchAbortController.current = null
+      }
+      prefetchPromiseRef.current = null
+    }
+  }, [searchMeta?.isProducerSearch, searchMeta?.producerMBID])
+  
+  // Prefetch when Next button becomes enabled (user-intent driven approach)
+  // This useEffect watches the state values that affect canGoNext() and triggers prefetch automatically
+  useEffect(() => {
+    // Only prefetch for producer search, on page 1, when Next button is enabled
+    if (
+      !searchMeta?.isProducerSearch ||
+      resultsPage !== 1 ||
+      loadingPage ||
+      prefetching ||
+      prefetchedResults?.results ||
+      prefetchTriggeredRef.current
+    ) {
+      return // Early exit if conditions not met
+    }
+    
+    // Check if Next button would be enabled (reuse canGoNext logic)
+    const nextEnabled = canGoNext()
+    
+    if (nextEnabled) {
+      // Next button is enabled - trigger prefetch in anticipation of user action
+      const producerName = searchMeta.producerName
+      const producerMBID = searchMeta.producerMBID
+      const currentOffset = searchMeta.producerOffset || 0
+      const releaseRelations = searchMeta.releaseRelations
+      const seenRgIds = searchMeta.seenRgIds
+      const totalCount = searchMeta.totalCount
+      
+      // Validate we have all required data
+      if (!producerName || !producerMBID || !releaseRelations || currentOffset >= totalCount) {
+        console.log(`[Prefetch] Skipping: missing required data`, {
+          hasName: !!producerName,
+          hasMBID: !!producerMBID,
+          hasRelations: !!releaseRelations,
+          atEnd: currentOffset >= totalCount
+        })
+        return
+      }
+      
+      // Mark as triggered to prevent duplicate prefetches
+      prefetchTriggeredRef.current = true
+      
+      console.log(`[Prefetch] Next button enabled - starting prefetch automatically`, {
+        producerName,
+        currentOffset,
+        totalCount,
+        resultsPage
+      })
+      
+      startPrefetchNextPage(
+        producerName,
+        producerMBID,
+        currentOffset,
+        releaseRelations,
+        seenRgIds,
+        totalCount
+      )
+    }
+  }, [
+    // Watch all state values that affect canGoNext()
+    searchResults?.length,
+    searchMeta?.isProducerSearch,
+    searchMeta?.totalCount,
+    searchMeta?.producerOffset,
+    searchMeta?.producerName,
+    searchMeta?.producerMBID,
+    searchMeta?.releaseRelations,
+    searchMeta?.seenRgIds,
+    resultsPage,
+    loadingPage,
+    hideBootlegs, // Affects filtered count, which affects canGoNext()
+    prefetching,
+    prefetchedResults
+  ])
+  
+  // Cleanup: Cancel prefetch only when producer actually changes (not on first set)
+  useEffect(() => {
+    const previousProducerMBID = previousProducerMBIDRef.current
+    const currentProducerMBID = searchMeta?.producerMBID || null
+    
+    // Update ref for next render
+    previousProducerMBIDRef.current = currentProducerMBID
+    
+    return () => {
+      // Only abort if producer actually changed (previous !== current) AND previous was not null
+      // This prevents aborting on first set (previous is null, current is set) or when producer stays the same
+      const isProducerChange = previousProducerMBID !== null && 
+                               previousProducerMBID !== currentProducerMBID
+      
+      if (prefetchAbortController.current && isProducerChange) {
+        console.log('[Prefetch] Cleanup: Cancelling in-flight prefetch (producer changed)', {
+          previous: previousProducerMBID,
+          current: currentProducerMBID
+        })
+        prefetchAbortController.current.abort()
+        prefetchAbortController.current = null
+        prefetchPromiseRef.current = null
+      }
+    }
+  }, [searchMeta?.producerMBID]) // Re-run cleanup when producer changes
+  
+  // Handle producer search form submission
+  async function handleProducerSearch(e) {
+    e.preventDefault()
+    
+    const trimmedProducer = searchProducer.trim()
+    if (!trimmedProducer) {
+      setSearchError('Please enter a producer name')
+      return
+    }
+    
+    setSearching(true)
+    setSearchError(null)
+    setSearchResults(null)
+    setSearchMeta(null)
+    
+    // Reset prefetch state for new search
+    prefetchTriggeredRef.current = false
+    reachedEndRef.current = false // Reset reached end flag for new search
+    previousProducerMBIDRef.current = null // Reset previous producer MBID tracking
+    setPrefetchedResults(null)
+    setPrefetching(false)
+    if (prefetchAbortController.current) {
+      prefetchAbortController.current.abort()
+      prefetchAbortController.current = null
+    }
+    prefetchPromiseRef.current = null
+    setAlbum(null)
+    setAlbumError(null)
+    setDisplayedResults([])
+    setResultsPage(1)
+    setFetchedCount(0)
+    setLoadingPage(false)
+    setMultipleProducerMatches(null)
+    setSearchProgress({ current: 0, total: 50 }) // Reset progress (50 max for initial search)
+    
+    // Progress callback for producer search
+    const onProgress = ({ current, total }) => {
+      setSearchProgress({ current, total })
+    }
+    
+    // Cancel any ongoing prefetch
+    if (prefetchAbortController.current) {
+      prefetchAbortController.current.abort()
+      prefetchAbortController.current = null
+    }
+    setPrefetchedResults(null)
+    setPrefetching(false)
+    prefetchPromiseRef.current = null
+    
+    // Clear seenRgIds for previous producer if switching producers
+    if (currentProducerMBID.current && currentProducerMBID.current !== null) {
+      clearProducerSeenRgIds(currentProducerMBID.current)
+    }
+    
+    try {
+      const searchResponse = await searchByProducer(trimmedProducer, null, 0, onProgress)
+      
+      // Check if multiple producer matches found
+      if (searchResponse.multipleMatches) {
+        setMultipleProducerMatches(searchResponse.matches)
+        setSearching(false)
+        setSearchProgress({ current: 0, total: 50 }) // Reset progress
+        return // Wait for user to select a producer
+      }
+      
+      const { results, totalCount, producerName, producerMBID, releasesProcessed, releaseRelations, seenRgIds } = searchResponse
+      
+      // Update current producer MBID
+      currentProducerMBID.current = producerMBID
+      
+      if (results.length === 0) {
+        setSearchError('No albums found for this producer. The producer exists but no production credits are documented.')
+      } else {
+        // Multiple results - sort and show list with pagination
+        const sortedResults = sortResults(results, sortOption)
+        setSearchResults(sortedResults)
+        const newSearchMeta = { 
+          totalCount, // Total releases available for pagination (from API - represents total release relations)
+          isArtistOnly: false, 
+          releaseType: null,
+          isProducerSearch: true,
+          producerName,
+          producerMBID,
+          producerOffset: releasesProcessed || 0, // Track how many releases we've actually processed (important for pagination)
+          releaseRelations: releaseRelations || null, // Cache release relations to avoid re-fetching during pagination
+          seenRgIds: seenRgIds || null // Cache seenRgIds Set for deduplication across pagination
+        }
+        setSearchMeta(newSearchMeta)
+        setFetchedCount(results.length) // Total albums found so far
+        
+        // Apply bootleg filter and show first page of results
+        const filteredResults = filterBootlegs(sortedResults)
+        setDisplayedResults(filteredResults.slice(0, RESULTS_PER_PAGE))
+        
+        // Push new history state for search results
+        console.log('[History] Pushing new history state for producer search results')
+        window.history.pushState(
+          { fromSearch: true, page: 'results', type: 'producer' },
+          '',
+          window.location.href
+        )
+        
+        // Explicitly trigger prefetch immediately after search completes (if Next button would be enabled)
+        // Use setTimeout to ensure state updates have been processed
+        setTimeout(() => {
+          // Check if prefetch should be triggered (same conditions as useEffect)
+          if (
+            !prefetching &&
+            !prefetchedResults &&
+            !prefetchTriggeredRef.current &&
+            releaseRelations &&
+            (releasesProcessed || 0) < totalCount &&
+            !reachedEndRef.current
+          ) {
+            // Check if Next button would be enabled (we have more releases to process)
+            const canFetchMore = (releasesProcessed || 0) < totalCount
+            const calculatedTotalPages = Math.ceil(filteredResults.length / RESULTS_PER_PAGE)
+            const hasNextPage = 1 < calculatedTotalPages
+            const shouldPrefetch = hasNextPage || canFetchMore
+            
+            if (shouldPrefetch) {
+              prefetchTriggeredRef.current = true
+              console.log(`[Prefetch] Explicitly triggering prefetch after search completion`, {
+                producerName,
+                currentOffset: releasesProcessed || 0,
+                totalCount,
+                resultsPage: 1
+              })
+              startPrefetchNextPage(
+                producerName,
+                producerMBID,
+                releasesProcessed || 0,
+                releaseRelations,
+                seenRgIds,
+                totalCount
+              )
+            }
+          }
+        }, 0)
+      }
+    } catch (error) {
+      console.error('Error searching by producer:', error)
+      setSearchError(error.message || 'An error occurred while searching. Please try again.')
+    } finally {
+      setSearching(false)
+      setSearchProgress({ current: 0, total: 50 }) // Reset progress
+    }
+  }
+  
+  // Handle producer selection when multiple matches found
+  async function handleProducerSelection(selectedProducerMBID) {
+    setSearching(true)
+    setSearchError(null)
+    setMultipleProducerMatches(null)
+    setSearchProgress({ current: 0, total: 50 }) // Reset progress (50 max for initial search)
+    
+    // Reset prefetch state for new producer selection
+    prefetchTriggeredRef.current = false
+    reachedEndRef.current = false // Reset reached end flag for new search
+    previousProducerMBIDRef.current = null // Reset previous producer MBID tracking
+    setPrefetchedResults(null)
+    setPrefetching(false)
+    if (prefetchAbortController.current) {
+      prefetchAbortController.current.abort()
+      prefetchAbortController.current = null
+    }
+    prefetchPromiseRef.current = null
+    
+    // Progress callback for producer search
+    const onProgress = ({ current, total }) => {
+      setSearchProgress({ current, total })
+    }
+    
+    // Cancel any ongoing prefetch
+    if (prefetchAbortController.current) {
+      prefetchAbortController.current.abort()
+      prefetchAbortController.current = null
+    }
+    setPrefetchedResults(null)
+    setPrefetching(false)
+    prefetchPromiseRef.current = null
+    
+    // Clear seenRgIds for previous producer if switching producers
+    if (currentProducerMBID.current && currentProducerMBID.current !== selectedProducerMBID) {
+      clearProducerSeenRgIds(currentProducerMBID.current)
+    }
+    
+    try {
+      const searchResponse = await searchByProducer(searchProducer.trim(), selectedProducerMBID, 0, onProgress)
+      
+      const { results, totalCount, producerName, producerMBID, releasesProcessed, releaseRelations, seenRgIds } = searchResponse
+      
+      // Update current producer MBID
+      currentProducerMBID.current = producerMBID
+      
+      if (results.length === 0) {
+        setSearchError('No albums found for this producer. The producer exists but no production credits are documented.')
+      } else {
+        // Multiple results - sort and show list with pagination
+        const sortedResults = sortResults(results, sortOption)
+        setSearchResults(sortedResults)
+        const newSearchMeta = { 
+          totalCount, // Total releases available for pagination (from API - represents total release relations)
+          isArtistOnly: false, 
+          releaseType: null,
+          isProducerSearch: true,
+          producerName,
+          producerMBID,
+          producerOffset: releasesProcessed || 0, // Track how many releases we've actually processed (important for pagination)
+          releaseRelations: releaseRelations || null, // Cache release relations to avoid re-fetching during pagination
+          seenRgIds: seenRgIds || null // Cache seenRgIds Set for deduplication across pagination
+        }
+        setSearchMeta(newSearchMeta)
+        setFetchedCount(results.length) // Total albums found so far
+        // Apply bootleg filter and show first page of results
+        const filteredResults = filterBootlegs(sortedResults)
+        setDisplayedResults(filteredResults.slice(0, RESULTS_PER_PAGE))
+        
+        // Push new history state for search results
+        console.log('[History] Pushing new history state for producer search results')
+        window.history.pushState(
+          { fromSearch: true, page: 'results', type: 'producer' },
+          '',
+          window.location.href
+        )
+        
+        // Explicitly trigger prefetch immediately after search completes (if Next button would be enabled)
+        // Use setTimeout to ensure state updates have been processed
+        setTimeout(() => {
+          // Check if prefetch should be triggered (same conditions as useEffect)
+          if (
+            !prefetching &&
+            !prefetchedResults &&
+            !prefetchTriggeredRef.current &&
+            releaseRelations &&
+            (releasesProcessed || 0) < totalCount &&
+            !reachedEndRef.current
+          ) {
+            // Check if Next button would be enabled (we have more releases to process)
+            const canFetchMore = (releasesProcessed || 0) < totalCount
+            const calculatedTotalPages = Math.ceil(filteredResults.length / RESULTS_PER_PAGE)
+            const hasNextPage = 1 < calculatedTotalPages
+            const shouldPrefetch = hasNextPage || canFetchMore
+            
+            if (shouldPrefetch) {
+              prefetchTriggeredRef.current = true
+              console.log(`[Prefetch] Explicitly triggering prefetch after search completion`, {
+                producerName,
+                currentOffset: releasesProcessed || 0,
+                totalCount,
+                resultsPage: 1
+              })
+              startPrefetchNextPage(
+                producerName,
+                producerMBID,
+                releasesProcessed || 0,
+                releaseRelations,
+                seenRgIds,
+                totalCount
+              )
+            }
+          }
+        }, 0)
+      }
+    } catch (error) {
+      console.error('Error searching by producer:', error)
+      setSearchError(error.message || 'An error occurred while searching. Please try again.')
+    } finally {
+      setSearching(false)
+      setSearchProgress({ current: 0, total: 50 }) // Reset progress
+    }
+  }
+  
+  // Unified search handler that routes to album or producer search based on searchType
+  function handleSearch(e) {
+    e.preventDefault()
+    if (searchType === 'producer') {
+      handleProducerSearch(e)
+    } else {
+      handleAlbumSearch(e)
+    }
+  }
+  
+  // Handle tab switching between album and producer search
+  function handleTabChange(newSearchType) {
+    // Preserve form inputs when switching tabs
+    setSearchType(newSearchType)
+    setSearchError(null)
+    setSearchResults(null)
+    setSearchMeta(null)
+    setMultipleProducerMatches(null)
+    // Don't clear search inputs - preserve them when switching tabs
+  }
+  
+  // Handle search form submission (album search)
+  async function handleAlbumSearch(e) {
     e.preventDefault()
     
     if (!searchArtist.trim()) {
@@ -294,11 +757,11 @@ function AlbumPage() {
         // Push new history entry for search results (unified for mobile and desktop)
         // Initial history state is now guaranteed to exist from component mount
         window.history.pushState(
-          { fromSearch: true, page: 'results' },
+          { fromSearch: true, page: 'results', type: 'album' },
           '',
           window.location.href
         )
-        console.log('[History] Pushed search results state')
+        console.log('[History] Pushed search results state (album search)')
       }
     } catch (err) {
       console.error('Error searching albums:', err)
@@ -310,77 +773,740 @@ function AlbumPage() {
   
   // Calculate total pages based on filtered count
   function getTotalPages() {
-    if (!searchResults || !searchMeta || !searchMeta.totalCount || searchMeta.totalCount <= 0) return 1
+    if (!searchResults || !searchMeta || !searchResults.length) return 1
     const filteredResults = filterBootlegs(searchResults)
-    const filteredCount = hideBootlegs ? filteredResults.length : searchMeta.totalCount
+    // For producer search: use albums found (searchResults.length), not totalCount (which is total releases)
+    // For album search: use totalCount from API if not hiding bootlegs, otherwise use filtered length
+    const filteredCount = (searchMeta.isProducerSearch || hideBootlegs) 
+      ? filteredResults.length 
+      : searchMeta.totalCount || filteredResults.length
     const total = Math.ceil(filteredCount / RESULTS_PER_PAGE)
+    
+    // Option 1: Allow partial pages for producer search
+    // If we have more than RESULTS_PER_PAGE albums AND more releases are available, allow showing page 2 (even if partial)
+    if (searchMeta.isProducerSearch && filteredResults.length > RESULTS_PER_PAGE) {
+      const releasesProcessed = searchMeta.producerOffset || 0
+      const totalReleases = searchMeta.totalCount || 0
+      if (releasesProcessed < totalReleases) {
+        // More releases available, allow at least 2 pages (even if page 2 is partial)
+        return Math.max(2, total)
+      }
+    }
+    
     return Math.max(1, total) // Ensure at least 1 page
   }
   
   function getFilteredCount() {
     if (!searchResults || !searchMeta) return searchMeta?.totalCount || 0
-    if (!hideBootlegs) return searchMeta.totalCount
     const filteredResults = filterBootlegs(searchResults)
-    return filteredResults.length
+    // For producer search: always use albums found (searchResults.length), not totalCount (which is total releases)
+    // For album search: use totalCount from API if not hiding bootlegs, otherwise use filtered length
+    if (searchMeta.isProducerSearch) {
+      return hideBootlegs ? filteredResults.length : searchResults.length
+    }
+    return hideBootlegs ? filteredResults.length : searchMeta.totalCount || filteredResults.length
+  }
+  
+  // Check if Next button should be enabled (for producer search, enable if more releases available)
+  function canGoNext() {
+    const debugInfo = {
+      searchResults: !!searchResults,
+      searchResultsLength: searchResults?.length || 0,
+      searchMeta: !!searchMeta,
+      loadingPage,
+      calculatedTotalPages: searchResults && searchMeta ? getTotalPages() : 0,
+      resultsPage,
+      isProducerSearch: searchMeta?.isProducerSearch,
+      totalCount: searchMeta?.totalCount,
+      producerOffset: searchMeta?.producerOffset,
+      producerName: searchMeta?.producerName,
+      producerMBID: searchMeta?.producerMBID
+    }
+    
+    if (!searchResults || !searchMeta || loadingPage) {
+      console.log('[canGoNext] Returning false (early exit):', debugInfo)
+      return false
+    }
+    
+    const calculatedTotalPages = getTotalPages()
+    
+    // Normal pagination: enable if there's another page
+    if (resultsPage < calculatedTotalPages) {
+      console.log('[canGoNext] Returning true (normal pagination):', { resultsPage, calculatedTotalPages, ...debugInfo })
+      return true
+    }
+    
+    // For producer search: enable Next if we can fetch more releases OR if there's already a next page OR if there are prefetched results
+    if (searchMeta.isProducerSearch && searchMeta.totalCount) {
+      const releasesProcessed = searchMeta.producerOffset || 0
+      const hasNextPage = resultsPage < calculatedTotalPages
+      
+      // Check if we have prefetched results (even partial) - this means there are more albums to show
+      const hasPrefetchedResults = prefetchedResults && prefetchedResults.results && prefetchedResults.results.length > 0
+      
+      // Check if we've reached the end of unique albums
+      // Use ref first (immediate, bypasses React state timing), then fall back to state
+      const hasReachedEnd = reachedEndRef.current || searchMeta.hasMore === false
+      
+      // If we have prefetched results, always enable Next (even if partial page)
+      if (hasPrefetchedResults) {
+        console.log('[canGoNext] Producer search: prefetched results available, enabling Next:', {
+          ...debugInfo,
+          prefetchedCount: prefetchedResults.results.length,
+          resultsPage,
+          calculatedTotalPages
+        })
+        return true
+      }
+      
+      // Check if there are more albums in searchResults than what's displayed on current page
+      const albumsOnCurrentPage = RESULTS_PER_PAGE
+      const albumsAvailable = searchResults.length
+      const albumsNeededForNextPage = resultsPage * albumsOnCurrentPage // Albums needed to fill pages up to current page
+      const hasMoreAlbumsAvailable = albumsAvailable > albumsNeededForNextPage
+      
+      // Check if all releases have been processed (we've fetched everything available)
+      const allReleasesProcessed = releasesProcessed >= searchMeta.totalCount
+      
+      // If we're on the last calculated page:
+      // - Disable Next if we've reached the end, OR
+      // - Disable Next if all releases have been processed AND no more albums available beyond current page
+      if (resultsPage >= calculatedTotalPages) {
+        if (hasReachedEnd || (allReleasesProcessed && !hasMoreAlbumsAvailable)) {
+          console.log('[canGoNext] Producer search: on last page and reached end, disabling Next:', {
+            ...debugInfo,
+            resultsPage,
+            calculatedTotalPages,
+            hasReachedEnd,
+            reachedEndRef: reachedEndRef.current,
+            hasMore: searchMeta.hasMore,
+            albumsAvailable,
+            albumsNeededForNextPage,
+            hasMoreAlbumsAvailable,
+            allReleasesProcessed,
+            releasesProcessed,
+            totalCount: searchMeta.totalCount
+          })
+          return false
+        }
+      }
+      
+      // Only enable if:
+      // 1. We have a next page already loaded, OR
+      // 2. We have more albums available beyond current page, OR
+      // 3. We can fetch more releases AND we haven't reached the end of unique albums
+      const canFetchMore = !hasReachedEnd && releasesProcessed < searchMeta.totalCount
+      const shouldEnable = hasNextPage || hasMoreAlbumsAvailable || canFetchMore
+      
+      console.log('[canGoNext] Producer search check:', {
+        ...debugInfo,
+        releasesProcessed,
+        totalCount: searchMeta.totalCount,
+        hasReachedEnd,
+        reachedEndRef: reachedEndRef.current,
+        canFetchMore,
+        hasNextPage,
+        hasPrefetchedResults,
+        hasMoreAlbumsAvailable,
+        albumsAvailable: searchResults.length,
+        shouldEnable
+      })
+      return shouldEnable
+    }
+    
+    console.log('[canGoNext] Returning false (no conditions met):', debugInfo)
+    return false
   }
   
   // Navigate to a specific page (handles both Previous and Next)
+  // Prefetch next page function - now returns a Promise for awaitable completion
+  const startPrefetchNextPage = async (producerName, producerMBID, currentOffset, releaseRelations, seenRgIds, totalCount) => {
+    // Don't prefetch if already prefetching or if we're at the end
+    if (prefetching || !releaseRelations || currentOffset >= totalCount) {
+      console.log(`[Prefetch] Skipping prefetch: prefetching=${prefetching}, hasRelations=${!!releaseRelations}, atEnd=${currentOffset >= totalCount}`)
+      return null
+    }
+    
+    console.log(`[Prefetch] Starting prefetch for page 2 (currentOffset=${currentOffset}, totalCount=${totalCount})`)
+    setPrefetching(true)
+    
+    // Create abort controller for cancellation
+    const abortController = new AbortController()
+    prefetchAbortController.current = abortController
+    
+    // Create and store Promise for this prefetch operation
+    const prefetchPromise = (async () => {
+      try {
+        // Calculate what we need for page 2 (20 more albums)
+        const targetAlbums = RESULTS_PER_PAGE * 2 // Need 40 albums total for page 2
+        const currentAlbums = RESULTS_PER_PAGE // We have 20 from page 1
+        const albumsNeeded = targetAlbums - currentAlbums
+        
+        console.log(`[Prefetch] Need ${albumsNeeded} more albums for page 2`)
+        
+        // Start fetching batches until we have enough
+        let allResults = []
+        let currentOffsetForPrefetch = currentOffset
+        let currentSeenRgIds = seenRgIds
+        
+        while (allResults.length < albumsNeeded && currentOffsetForPrefetch < totalCount && !abortController.signal.aborted) {
+          const nextOffset = currentOffsetForPrefetch
+          console.log(`[Prefetch] Fetching batch at offset ${nextOffset}... (have ${allResults.length}, need ${albumsNeeded})`)
+          
+          const searchResponse = await searchByProducer(
+            producerName,
+            producerMBID,
+            nextOffset,
+            null, // No progress for background prefetch
+            releaseRelations,
+            currentSeenRgIds
+          )
+          
+          if (abortController.signal.aborted) {
+            console.log(`[Prefetch] Aborted`)
+            throw new Error('Aborted')
+          }
+          
+          const { results: newResults, seenRgIds: updatedSeenRgIds, hasMore, releasesProcessed } = searchResponse
+          
+          // Update seenRgIds for next iteration
+          if (updatedSeenRgIds) {
+            currentSeenRgIds = updatedSeenRgIds
+          }
+          
+          // Filter out duplicates
+          const existingRgIds = new Set(allResults.map(r => r.releaseGroupId))
+          const uniqueNewResults = newResults.filter(r => !existingRgIds.has(r.releaseGroupId))
+          
+          allResults = [...allResults, ...uniqueNewResults]
+          
+          // Calculate actual final offset based on releasesProcessed (if available) or fallback to batch increment
+          // releasesProcessed tells us how many releases were actually processed in this batch
+          const actualReleasesProcessed = releasesProcessed || 10 // Default to 10 if not available (full batch)
+          currentOffsetForPrefetch = nextOffset + actualReleasesProcessed // Move to next batch (use actual count, not assumed 10)
+          
+          console.log(`[Prefetch] Batch at offset ${nextOffset}: found ${uniqueNewResults.length} new albums (${allResults.length} total), processed ${actualReleasesProcessed} releases`)
+          
+          // If we got no results or hasMore is false, we've reached the end
+          if (newResults.length === 0 || hasMore === false) {
+            console.log(`[Prefetch] Reached end of available releases (hasMore=${hasMore})`)
+            // Update ref and state to indicate we've reached the end (so canGoNext() disables Next button)
+            reachedEndRef.current = true
+            setSearchMeta(prev => prev ? { ...prev, hasMore: false } : null)
+            break
+          }
+        }
+        
+        if (abortController.signal.aborted) {
+          throw new Error('Aborted')
+        }
+        
+        // Return prefetch results (even if empty)
+        const result = {
+          results: allResults,
+          finalOffset: currentOffsetForPrefetch,
+          reachedEnd: reachedEndRef.current
+        }
+        
+        if (allResults.length > 0) {
+          // Store both results and final offset for accurate pagination tracking
+          setPrefetchedResults(result)
+          console.log(`[Prefetch] ✅ Prefetched ${allResults.length} albums for page 2 (finalOffset=${currentOffsetForPrefetch})`)
+        } else {
+          console.log(`[Prefetch] No albums prefetched (reached end)`)
+          // If we reached the end with no results, update ref and state
+          reachedEndRef.current = true
+          setSearchMeta(prev => prev ? { ...prev, hasMore: false } : null)
+        }
+        
+        return result
+      } catch (error) {
+        if (error.name === 'AbortError' || error.message === 'Aborted') {
+          console.log('[Prefetch] Prefetch was aborted')
+          // Return null instead of throwing - prevents uncaught Promise rejection
+          // Caller can check prefetchedResults for partial results if available
+          return null
+        } else {
+          console.warn('[Prefetch] Error prefetching next page:', error)
+          throw error
+        }
+      } finally {
+        // Always clear prefetching state when Promise completes (unless aborted)
+        if (!abortController.signal.aborted) {
+          setPrefetching(false)
+          prefetchAbortController.current = null
+          prefetchPromiseRef.current = null
+        } else {
+          // If aborted, still clear the Promise ref but keep prefetching state
+          // (prefetch may have partial results that were set before abort)
+          prefetchPromiseRef.current = null
+        }
+      }
+    })()
+    
+    // Store Promise ref so we can await it in handlePageChange
+    prefetchPromiseRef.current = prefetchPromise
+    
+    // Don't await here - return Promise for caller to await if needed
+    return prefetchPromise
+  }
+  
   async function handlePageChange(direction) {
-    if (!searchResults || !searchMeta || loadingPage) return
+    if (!searchResults || !searchMeta || loadingPage) {
+      console.log(`[Pagination] handlePageChange blocked: searchResults=${!!searchResults}, searchMeta=${!!searchMeta}, loadingPage=${loadingPage}`)
+      return
+    }
     
     const calculatedTotalPages = getTotalPages()
+    console.log(`[Pagination] handlePageChange('${direction}'): currentPage=${resultsPage}, totalPages=${calculatedTotalPages}, canGoNext=${canGoNext()}`)
     let targetPage
     
     if (direction === 'next') {
-      if (resultsPage >= calculatedTotalPages) return
+      // For producer search: allow going to next page even if we're on last page of current results
+      // (we'll fetch more releases to get more albums)
+      // For album search: only allow if there's another page
+      if (!searchMeta.isProducerSearch && resultsPage >= calculatedTotalPages) {
+        console.log(`[Pagination] Blocked: Already on last page (${resultsPage} >= ${calculatedTotalPages})`)
+        return
+      }
       targetPage = resultsPage + 1
     } else if (direction === 'prev') {
-      if (resultsPage <= 1) return
+      // On page 1: clear results and return to search form
+      if (resultsPage === 1) {
+        console.log(`[Pagination] On page 1: clearing results and returning to search form`)
+        
+        // Clear all search state
+        setSearchResults(null)
+        setSearchMeta(null)
+        setDisplayedResults([])
+        setResultsPage(1)
+        setFetchedCount(0)
+        setSearchError(null)
+        setLoadingPage(false)
+        
+        // Clear prefetch state
+        prefetchTriggeredRef.current = false
+        reachedEndRef.current = false
+        previousProducerMBIDRef.current = null // Reset previous producer MBID tracking
+        setPrefetchedResults(null)
+        setPrefetching(false)
+        if (prefetchAbortController.current) {
+          prefetchAbortController.current.abort()
+          prefetchAbortController.current = null
+        }
+        prefetchPromiseRef.current = null
+        
+        // Clear producer-specific cache if needed
+        if (currentProducerMBID.current) {
+          clearProducerSeenRgIds(currentProducerMBID.current)
+          currentProducerMBID.current = null
+        }
+        
+        // Reset search progress
+        setSearchProgress({ current: 0, total: 50 })
+        
+        // Update browser history to return to search page
+        const url = new URL(window.location.href)
+        if (searchType === 'producer') {
+          url.searchParams.set('type', 'producer')
+        } else {
+          url.searchParams.delete('type')
+        }
+        window.history.pushState(
+          { page: 'search', type: searchType, initialized: true },
+          '',
+          url.toString()
+        )
+        
+        return // Early return - we've cleared everything and returned to form
+      }
+      
+      // On page 2+: go to previous page (normal pagination)
       targetPage = resultsPage - 1
+      console.log(`[Pagination] Going to previous page: ${resultsPage} -> ${targetPage}`)
     } else {
       return
     }
     
     // Calculate end index based on filtered results
     const filteredResults = filterBootlegs(searchResults)
-    const filteredCount = hideBootlegs ? filteredResults.length : searchMeta.totalCount
+    // For producer search: use albums found (searchResults.length), not totalCount (which is releases)
+    // For album search: use totalCount from API if not hiding bootlegs
+    const filteredCount = (searchMeta.isProducerSearch)
+      ? (hideBootlegs ? filteredResults.length : searchResults.length)
+      : (hideBootlegs ? filteredResults.length : searchMeta.totalCount || filteredResults.length)
     const startIndex = (targetPage - 1) * RESULTS_PER_PAGE
     const endIndex = Math.min(startIndex + RESULTS_PER_PAGE, filteredCount)
     
-    // Check if we need to fetch more from API
-    if (endIndex > searchResults.length) {
+    // For Previous navigation: always use results already in memory (we're going backwards, so data is already loaded)
+    // For Next navigation: check if we need to fetch more data
+    const isGoingBackwards = direction === 'prev'
+    
+    // Check if we need to fetch more from API (only for Next direction)
+    // For producer search: check if we need more albums for the requested page AND more releases are available
+    // For album search: check if we need more results for the requested page
+    const needsMoreData = isGoingBackwards
+      ? false // Never fetch when going backwards - use what's already in memory
+      : (searchMeta.isProducerSearch)
+        ? (startIndex >= searchResults.length && (searchMeta.producerOffset || 0) < (searchMeta.totalCount || 0))
+        : (endIndex > searchResults.length)
+    
+    console.log(`[Pagination] Page ${targetPage} (direction: ${direction}, goingBackwards: ${isGoingBackwards}): startIndex=${startIndex}, searchResults.length=${searchResults.length}, needsMoreData=${needsMoreData}`)
+    if (searchMeta.isProducerSearch) {
+      console.log(`[Pagination] Producer search: producerOffset=${searchMeta.producerOffset || 0}, totalCount=${searchMeta.totalCount}`)
+    }
+    
+    if (needsMoreData) {
       setLoadingPage(true)
       
       try {
-        const albumName = searchAlbum.trim() || null
-        const typeFilter = albumName ? null : releaseType
-        const nextOffset = fetchedCount
-        
-        const searchResponse = await searchReleaseGroups(
-          searchArtist.trim(), 
-          albumName, 
-          typeFilter, 
-          nextOffset
-        )
-        
-        const { results: newResults } = searchResponse
-        
-        if (newResults.length > 0) {
-          const mergedResults = [...searchResults, ...newResults]
-          const sortedResults = sortResults(mergedResults, sortOption)
+        // Handle producer search pagination differently from album search
+        if (searchMeta && searchMeta.isProducerSearch) {
+          // For producer search: keep fetching batches until we have enough albums for the target page
+          // Page 1 needs 10 albums, Page 2 needs 20 albums, Page 3 needs 30 albums, etc.
+          const albumsNeededForPage = targetPage * RESULTS_PER_PAGE
           
-          // Update state with merged and sorted results
+          // Handle prefetch state before manual fetch
+          // If navigating to page 2 and prefetch is in progress, wait for it (with reasonable timeout)
+          let prefetchResultToUse = null // Store prefetch result to use directly (React state is async)
+          
+          if (targetPage === 2 && prefetching && !prefetchedResults) {
+            console.log(`[Producer Search Pagination] Prefetch in progress for page 2 - waiting for completion...`)
+            
+            // Wait for prefetch to complete with timeout (120s - allows time for large producers)
+            try {
+              const prefetchResult = await Promise.race([
+                prefetchPromiseRef.current,
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Prefetch timeout')), 120000) // 120s timeout
+                )
+              ])
+              
+              // Check if prefetch was aborted (returns null)
+              if (prefetchResult === null) {
+                console.log(`[Producer Search Pagination] Prefetch was aborted - checking for partial results`)
+                // Fall through to check prefetchedResults below
+              } else if (prefetchResult && prefetchResult.results) {
+                console.log(`[Producer Search Pagination] Prefetch completed, using results (${prefetchResult.results.length} albums)`)
+                
+                // Store result to use directly (React state updates are async)
+                prefetchResultToUse = prefetchResult
+                // Also set state for consistency
+                setPrefetchedResults(prefetchResult)
+                // Use prefetchResultToUse directly below instead of prefetchedResults
+              }
+            } catch (error) {
+              // Check for AbortError or 'Aborted' message
+              if (error.name === 'AbortError' || error.message === 'Aborted') {
+                console.log(`[Producer Search Pagination] Prefetch was aborted - checking for partial results`)
+              } else if (error.message === 'Prefetch timeout') {
+                console.warn(`[Producer Search Pagination] Prefetch timed out after 120s - giving prefetch a moment to complete`)
+                // Don't abort prefetch on timeout - let it continue in background
+                // Give prefetch a small grace period (1s) to complete before falling back
+                // This handles cases where prefetch completes just after timeout
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                console.log(`[Producer Search Pagination] Grace period ended - checking if prefetch completed`)
+                
+                // Try to get prefetch result one more time (with very short timeout) in case it completed during grace period
+                if (prefetchPromiseRef.current) {
+                  try {
+                    const quickResult = await Promise.race([
+                      prefetchPromiseRef.current,
+                      new Promise((_, reject) => setTimeout(() => reject(new Error('Still pending')), 100))
+                    ])
+                    if (quickResult && quickResult.results) {
+                      console.log(`[Producer Search Pagination] Prefetch completed during grace period - using ${quickResult.results.length} results`)
+                      prefetchResultToUse = quickResult
+                      setPrefetchedResults(quickResult)
+                    }
+                  } catch (quickError) {
+                    // Prefetch still not ready - that's ok, will check state or proceed with manual fetch
+                    console.log(`[Producer Search Pagination] Prefetch still in progress after grace period`)
+                  }
+                }
+                // Fall through - will check prefetchResultToUse or prefetchedResults below
+              } else {
+                console.warn(`[Producer Search Pagination] Prefetch error: ${error.message} - falling back to manual fetch`)
+              }
+              // Fall through - will check prefetchedResults below if available
+            }
+          }
+          
+          // Abort prefetch if navigating to page 3+ or going back (don't need prefetch data)
+          if (targetPage !== 2 && prefetching) {
+            console.log(`[Producer Search Pagination] Aborting prefetch - navigating to page ${targetPage} (prefetch only needed for page 2)`)
+            if (prefetchAbortController.current) {
+              prefetchAbortController.current.abort()
+              setPrefetching(false)
+              setPrefetchedResults(null)
+              prefetchAbortController.current = null
+              prefetchPromiseRef.current = null
+            }
+          }
+          
+          // Check if we have prefetched results for this page (either already completed or just completed above)
+          // Use prefetchResultToUse if available (from async wait), otherwise check state
+          let prefetchResults = prefetchResultToUse || prefetchedResults
+          
+          // Final check: if we're on page 2 and don't have results yet, check one more time
+          // (prefetch may have completed during grace period or between checks)
+          if (targetPage === 2 && !prefetchResults) {
+            // If prefetching is false, prefetch finished - wait a moment for state to update
+            if (!prefetching) {
+              await new Promise(resolve => setTimeout(resolve, 200))
+              prefetchResults = prefetchedResults
+            } else {
+              // Prefetch still running - try one more quick check (100ms) in case it completes
+              if (prefetchPromiseRef.current) {
+                try {
+                  const finalCheck = await Promise.race([
+                    prefetchPromiseRef.current,
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Still pending')), 100))
+                  ])
+                  if (finalCheck && finalCheck.results) {
+                    console.log(`[Producer Search Pagination] Prefetch completed on final check - using ${finalCheck.results.length} results`)
+                    prefetchResults = finalCheck
+                    setPrefetchedResults(finalCheck)
+                  }
+                } catch (e) {
+                  // Prefetch still not ready - proceed with manual fetch
+                }
+              }
+            }
+          }
+          
+          if (targetPage === 2 && prefetchResults && prefetchResults.results && prefetchResults.results.length > 0) {
+            console.log(`[Producer Search Pagination] Using prefetched results for page 2 (${prefetchResults.results.length} albums, finalOffset=${prefetchResults.finalOffset})`)
+            const existingRgIds = new Set(searchResults.map(r => r.releaseGroupId))
+            const uniquePrefetched = prefetchResults.results.filter(r => !existingRgIds.has(r.releaseGroupId))
+            const combinedResults = [...searchResults, ...uniquePrefetched]
+            
+            // Sort and filter
+            const sortedCombined = sortResults(combinedResults, sortOption)
+            const filteredCombined = filterBootlegs(sortedCombined)
+            
+            setSearchResults(sortedCombined)
+            setFetchedCount(sortedCombined.length)
+            
+            // Clear prefetched results
+            setPrefetchedResults(null)
+            
+            // Update displayed results for page 2
+            // Calculate slice based on actual number of albums on page 1
+            // Page 1 might have fewer than RESULTS_PER_PAGE albums, so we need to account for that
+            // Use displayedResults.length to get the actual number of albums on page 1
+            const actualPage1Length = displayedResults.length || Math.min(RESULTS_PER_PAGE, filteredCombined.length)
+            const pageStart = actualPage1Length // Start page 2 after page 1's actual albums
+            const pageEnd = Math.min(pageStart + RESULTS_PER_PAGE, filteredCombined.length)
+            
+            if (pageStart < filteredCombined.length) {
+              // We have results for page 2
+              const pageResults = filteredCombined.slice(pageStart, pageEnd)
+              console.log(`[Producer Search Pagination] ✅ Displaying page ${targetPage} from prefetch: ${pageResults.length} albums (indices ${pageStart}-${pageEnd - 1} of ${filteredCombined.length}, page1Length=${actualPage1Length})`)
+              setDisplayedResults(pageResults)
+              setResultsPage(targetPage)
+            } else {
+              // Fallback: calculate last valid page (shouldn't happen with prefetch, but handle it)
+              const lastValidPage = Math.max(1, Math.ceil(filteredCombined.length / RESULTS_PER_PAGE))
+              const lastPageStart = (lastValidPage - 1) * RESULTS_PER_PAGE
+              const lastPageEnd = Math.min(lastPageStart + RESULTS_PER_PAGE, filteredCombined.length)
+              const lastPageResults = filteredCombined.slice(lastPageStart, lastPageEnd)
+              console.log(`[Producer Search Pagination] ⚠️ Fallback: displaying page ${lastValidPage} from prefetch: ${lastPageResults.length} albums (indices ${lastPageStart}-${lastPageEnd - 1} of ${filteredCombined.length})`)
+              setDisplayedResults(lastPageResults)
+              setResultsPage(lastValidPage)
+            }
+            
+            setLoadingPage(false)
+            
+            // Update searchMeta with ACTUAL final offset from prefetch (not estimated)
+            // This ensures accurate pagination tracking for subsequent pages
+            setSearchMeta(prev => ({
+              ...prev,
+              producerOffset: prefetchResults.finalOffset // Use actual final offset from prefetch
+            }))
+            
+            return // Early return - we used prefetched data
+          }
+          
+          // If we're on page 2 and prefetch is still running but we don't have results, abort it before starting manual fetch
+          // This prevents race conditions where prefetch and manual fetch process overlapping offsets
+          if (targetPage === 2 && prefetching && !prefetchResults) {
+            console.warn(`[Producer Search Pagination] Prefetch still running but no results - aborting prefetch before manual fetch`)
+            if (prefetchAbortController.current) {
+              prefetchAbortController.current.abort()
+              setPrefetching(false)
+              setPrefetchedResults(null)
+              prefetchAbortController.current = null
+              prefetchPromiseRef.current = null
+            }
+          }
+          
+          let currentResults = [...searchResults]
+          let currentOffset = searchMeta.producerOffset || 0
+          const totalReleases = searchMeta.totalCount || 0
+          let lastHasMore = true // Track hasMore from last response
+          
+          console.log(`[Producer Search Pagination] Target page ${targetPage} needs ${albumsNeededForPage} albums, currently have ${currentResults.length}`)
+          
+          // Keep fetching batches until we have enough albums for the target page OR no more releases available
+          while (currentResults.length < albumsNeededForPage && currentOffset < totalReleases) {
+            const nextOffset = currentOffset + 10 // Process next batch of 10 releases
+            console.log(`[Producer Search Pagination] Fetching batch starting at offset ${nextOffset}... (need ${albumsNeededForPage - currentResults.length} more albums)`)
+            
+            const searchResponse = await searchByProducer(
+              searchMeta.producerName,
+              searchMeta.producerMBID,
+              nextOffset,
+              null, // No progress callback for pagination (background fetch)
+              searchMeta.releaseRelations || null, // Use cached release relations if available (performance optimization)
+              searchMeta.seenRgIds || null // Pass seenRgIds Set for deduplication
+            )
+            
+            const { results: newResults, totalCount, releasesProcessed, seenRgIds: updatedSeenRgIds, hasMore } = searchResponse
+            
+            // Track hasMore from this response
+            lastHasMore = hasMore !== false // Only set to false if explicitly false
+            
+            // Update seenRgIds in searchMeta for next pagination call
+            if (updatedSeenRgIds) {
+              setSearchMeta(prev => ({
+                ...prev,
+                seenRgIds: updatedSeenRgIds
+              }))
+            }
+            
+            // Merge new results with existing (deduplicate by releaseGroupId)
+            const existingIds = new Set(currentResults.map(r => r.releaseGroupId))
+            const uniqueNewResults = newResults.filter(r => !existingIds.has(r.releaseGroupId))
+            
+            if (uniqueNewResults.length > 0) {
+              currentResults = [...currentResults, ...uniqueNewResults]
+              currentOffset = nextOffset // Always use the offset we just fetched from (not releasesProcessed which is batch count)
+              console.log(`[Producer Search Pagination] Found ${uniqueNewResults.length} new albums (${currentResults.length} total now)`)
+            } else {
+              // No new albums in this batch
+              currentOffset = nextOffset
+              console.log(`[Producer Search Pagination] No new albums in this batch, continuing...`)
+              
+              // If hasMore is false, we've reached the end - break out of loop
+              if (hasMore === false) {
+                console.log(`[Producer Search Pagination] Reached end of available releases (hasMore=false)`)
+                lastHasMore = false
+                break
+              }
+            }
+            
+            // Update totalCount if it changed
+            if (totalCount !== totalReleases) {
+              setSearchMeta({
+                ...searchMeta,
+                totalCount: totalCount
+              })
+            }
+            
+            // Safety check: if we've processed all available releases, break
+            if (currentOffset >= totalReleases) {
+              console.log(`[Producer Search Pagination] Reached end of available releases (offset ${currentOffset} >= total ${totalReleases})`)
+              break
+            }
+          }
+          
+          // Sort all results
+          const sortedResults = sortResults(currentResults, sortOption)
+          
+          // Update state with all results
           setSearchResults(sortedResults)
-          setFetchedCount(fetchedCount + newResults.length)
+          setFetchedCount(sortedResults.length)
           
-          // Apply bootleg filter and display the target page
+          // Determine if we've reached the end (no more unique albums available)
+          // We've reached the end if:
+          // 1. We've processed all available releases, OR
+          // 2. The last search response had hasMore === false
+          const reachedEnd = currentOffset >= totalReleases || lastHasMore === false
+          
+          // Update ref immediately (bypasses React state timing issues)
+          reachedEndRef.current = reachedEnd
+          
+          // Update searchMeta with final offset and hasMore status
+          setSearchMeta({
+            ...searchMeta,
+            totalCount: totalReleases,
+            producerOffset: currentOffset,
+            hasMore: reachedEnd ? false : undefined // Store false if we reached end, otherwise don't override (keep existing or undefined)
+          })
+          
+          // Apply bootleg filter
           const filteredResults = filterBootlegs(sortedResults)
+          
+          // Calculate if we have enough for the target page
           const pageStart = (targetPage - 1) * RESULTS_PER_PAGE
           const pageEnd = Math.min(pageStart + RESULTS_PER_PAGE, filteredResults.length)
-          const pageResults = filteredResults.slice(pageStart, pageEnd)
           
-          setDisplayedResults(pageResults)
-          setResultsPage(targetPage)
+          if (pageStart < filteredResults.length) {
+            // We have enough results for the target page
+            const pageResults = filteredResults.slice(pageStart, pageEnd)
+            setDisplayedResults(pageResults)
+            setResultsPage(targetPage)
+            console.log(`[Producer Search Pagination] ✅ Displaying page ${targetPage}: ${pageResults.length} albums (indices ${pageStart}-${pageEnd - 1} of ${filteredResults.length})`)
+          } else {
+            // This shouldn't happen since we fetched until we had enough, but handle it anyway
+            // This fallback occurs when we've reached the end but don't have enough for the target page
+            const lastValidPage = Math.max(1, Math.ceil(filteredResults.length / RESULTS_PER_PAGE))
+            const lastPageStart = (lastValidPage - 1) * RESULTS_PER_PAGE
+            const lastPageEnd = Math.min(lastPageStart + RESULTS_PER_PAGE, filteredResults.length)
+            const lastPageResults = filteredResults.slice(lastPageStart, lastPageEnd)
+            setDisplayedResults(lastPageResults)
+            setResultsPage(lastValidPage)
+            
+            // Explicitly mark that we've reached the end (this is a fallback, so we're definitely at the end)
+            reachedEndRef.current = true
+            setSearchMeta(prev => ({
+              ...prev,
+              hasMore: false // Explicitly set to false in fallback case
+            }))
+            
+            console.log(`[Producer Search Pagination] ⚠️ Fallback: displaying page ${lastValidPage} with ${lastPageResults.length} albums (reached end)`)
+          }
+        } else {
+          // Album search pagination (existing logic)
+          const albumName = searchAlbum.trim() || null
+          const typeFilter = albumName ? null : releaseType
+          const nextOffset = fetchedCount
+          
+          const searchResponse = await searchReleaseGroups(
+            searchArtist.trim(), 
+            albumName, 
+            typeFilter, 
+            nextOffset
+          )
+          
+            const { results: newResults, seenRgIds: updatedSeenRgIds } = searchResponse
+            
+            // Update seenRgIds in searchMeta for next pagination call
+            if (updatedSeenRgIds) {
+              setSearchMeta(prev => ({
+                ...prev,
+                seenRgIds: updatedSeenRgIds
+              }))
+            }
+          
+          if (newResults.length > 0) {
+            const mergedResults = [...searchResults, ...newResults]
+            const sortedResults = sortResults(mergedResults, sortOption)
+            
+            // Update state with merged and sorted results
+            setSearchResults(sortedResults)
+            setFetchedCount(fetchedCount + newResults.length)
+            
+            // Apply bootleg filter and display the target page
+            const filteredResults = filterBootlegs(sortedResults)
+            const pageStart = (targetPage - 1) * RESULTS_PER_PAGE
+            const pageEnd = Math.min(pageStart + RESULTS_PER_PAGE, filteredResults.length)
+            const pageResults = filteredResults.slice(pageStart, pageEnd)
+            
+            setDisplayedResults(pageResults)
+            setResultsPage(targetPage)
+          }
         }
       } catch (err) {
         console.error('Error loading page:', err)
@@ -392,11 +1518,26 @@ function AlbumPage() {
       // Results already in memory, apply bootleg filter and display the page
       const filteredResults = filterBootlegs(searchResults)
       const pageStart = (targetPage - 1) * RESULTS_PER_PAGE
-      const pageEnd = Math.min(pageStart + RESULTS_PER_PAGE, filteredResults.length)
-      const pageResults = filteredResults.slice(pageStart, pageEnd)
       
-      setDisplayedResults(pageResults)
-      setResultsPage(targetPage)
+      console.log(`[Pagination] Displaying page from memory: targetPage=${targetPage}, pageStart=${pageStart}, filteredResults.length=${filteredResults.length}`)
+      
+      // Ensure we don't try to slice beyond available results
+      if (pageStart >= filteredResults.length) {
+        // Not enough results for this page - go back to last valid page
+        const lastValidPage = Math.max(1, Math.ceil(filteredResults.length / RESULTS_PER_PAGE))
+        const lastPageStart = (lastValidPage - 1) * RESULTS_PER_PAGE
+        const lastPageEnd = Math.min(lastPageStart + RESULTS_PER_PAGE, filteredResults.length)
+        const lastPageResults = filteredResults.slice(lastPageStart, lastPageEnd)
+        setDisplayedResults(lastPageResults)
+        setResultsPage(lastValidPage)
+        console.log(`[Pagination] Not enough results for page ${targetPage} (have ${filteredResults.length} albums), displaying page ${lastValidPage}`)
+      } else {
+        const pageEnd = Math.min(pageStart + RESULTS_PER_PAGE, filteredResults.length)
+        const pageResults = filteredResults.slice(pageStart, pageEnd)
+        console.log(`[Pagination] Slicing results: pageStart=${pageStart}, pageEnd=${pageEnd}, pageResults.length=${pageResults.length}`)
+        setDisplayedResults(pageResults)
+        setResultsPage(targetPage)
+      }
     }
   }
   
@@ -626,6 +1767,10 @@ function AlbumPage() {
       // Case 4: Returning to initial search page (check history state)
       // This handles going back from search results to the initial search page
       if (historyState && (historyState.page === 'search' || historyState.initialized === true)) {
+        // Restore search type from history state if available
+        if (historyState.type) {
+          setSearchType(historyState.type)
+        }
         // Clear search results and return to main search form
         setSearchResults(null)
         setSearchMeta(null)
@@ -633,15 +1778,22 @@ function AlbumPage() {
         setResultsPage(1)
         setFetchedCount(0)
         setSearchError(null)
+        setMultipleProducerMatches(null)
         // Keep search form values so user can see what they searched for
-        // (Don't clear searchArtist, searchAlbum, releaseType)
-        console.log('[History] Returning to initial search page')
+        // (Don't clear searchArtist, searchAlbum, releaseType, searchProducer)
+        console.log('[History] Returning to initial search page', historyState.type ? `(type: ${historyState.type})` : '')
         return
       }
       
       // Case 5: On search results page (no album) → return to main search page
       // Fallback: Check React state if history state doesn't match
       if (!album && searchResults && searchResults.length > 0) {
+        // Restore search type from searchMeta if available (producer vs album search)
+        if (searchMeta && searchMeta.isProducerSearch) {
+          setSearchType('producer')
+        } else {
+          setSearchType('album')
+        }
         // Clear search results and return to main search form
         setSearchResults(null)
         setSearchMeta(null)
@@ -649,8 +1801,9 @@ function AlbumPage() {
         setResultsPage(1)
         setFetchedCount(0)
         setSearchError(null)
+        setMultipleProducerMatches(null)
         // Keep search form values so user can see what they searched for
-        // (Don't clear searchArtist, searchAlbum, releaseType)
+        // (Don't clear searchArtist, searchAlbum, releaseType, searchProducer)
         console.log('[History] Returning to search page (fallback)')
         return
       }
@@ -991,8 +2144,30 @@ function AlbumPage() {
             </p>
           </div>
           <section className="search-section">
-            <h1 className="search-title">{isMobile ? 'Search Albums' : 'Search for an Album'}</h1>
-            <form onSubmit={handleSearch} className="search-form">
+            {/* Tab Navigation */}
+            <div className="search-tabs">
+              <button
+                type="button"
+                className={`search-tab ${searchType === 'album' ? 'active' : ''}`}
+                onClick={() => handleTabChange('album')}
+                disabled={searching}
+              >
+                Search Albums
+              </button>
+              <button
+                type="button"
+                className={`search-tab ${searchType === 'producer' ? 'active' : ''}`}
+                onClick={() => handleTabChange('producer')}
+                disabled={searching}
+              >
+                Search by Producer
+              </button>
+            </div>
+            
+            {/* Album Search Form */}
+            {searchType === 'album' && (
+              <form onSubmit={handleSearch} className="search-form">
+                <h1 className="search-title">{isMobile ? 'Search Albums' : 'Search for an Album'}</h1>
               <div className="search-field">
                 <label htmlFor="artist-name">Artist Name</label>
                 <input
@@ -1059,10 +2234,69 @@ function AlbumPage() {
               >
                 {searching ? 'Searching...' : 'Search'}
               </button>
-              {searchError && (
-                <div className="search-error">{searchError}</div>
-              )}
-            </form>
+                {searchError && (
+                  <div className="search-error">{searchError}</div>
+                )}
+              </form>
+            )}
+            
+            {/* Producer Search Form */}
+            {searchType === 'producer' && (
+              <form onSubmit={handleSearch} className="search-form">
+                <h1 className="search-title">{isMobile ? 'Search by Producer' : 'Search Albums by Producer'}</h1>
+                
+                {/* Multiple Producer Matches Selection */}
+                {multipleProducerMatches && multipleProducerMatches.length > 0 && (
+                  <div className="search-field">
+                    <label>Multiple producers found. Please select one:</label>
+                    <div className="producer-matches-list">
+                      {multipleProducerMatches.map((producer, index) => (
+                        <button
+                          key={producer.mbid}
+                          type="button"
+                          className="producer-match-button"
+                          onClick={() => handleProducerSelection(producer.mbid)}
+                          disabled={searching}
+                        >
+                          {producer.name}
+                          {producer.disambiguation && ` (${producer.disambiguation})`}
+                          {producer.type && ` - ${producer.type}`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="search-field">
+                  <label htmlFor="producer-name">Producer Name</label>
+                  <input
+                    id="producer-name"
+                    type="text"
+                    value={searchProducer}
+                    onChange={(e) => setSearchProducer(e.target.value)}
+                    placeholder="e.g., Quincy Jones"
+                    disabled={searching || !!multipleProducerMatches}
+                    required
+                  />
+                </div>
+                
+                <button 
+                  type="submit" 
+                  className="search-button"
+                  disabled={searching || !!multipleProducerMatches}
+                >
+                  {searching && searchType === 'producer' && searchProgress.current > 0
+                    ? `Searching... (${searchProgress.current} of ${searchProgress.total})`
+                    : searching
+                    ? 'Searching...'
+                    : 'Search'}
+                </button>
+                
+                {searchError && (
+                  <div className="search-error">{searchError}</div>
+                )}
+              </form>
+            )}
           </section>
           <p className="search-description-note">ⓘ Album information only — no audio playback or streaming</p>
           {!isMobile && (
@@ -1099,7 +2333,7 @@ function AlbumPage() {
         <div className="album-container">
           <section className="search-results-section">
             <div className="search-results-header">
-              <h2>{getResultsHeading(searchMeta?.releaseType || 'Album')}</h2>
+              <h2>{getResultsHeading(searchMeta?.releaseType || 'Album', searchMeta?.isProducerSearch ? searchMeta?.producerName : null)}</h2>
               <button 
                 className="new-search-button"
                 onClick={handleNewSearch}
@@ -1111,11 +2345,19 @@ function AlbumPage() {
               <div className="results-meta">
                 <div className="results-meta-row">
                   <p className="results-count">
-                    Showing {displayedResults.length} of {getFilteredCount()} {getReleaseTypePlural(searchMeta.releaseType || 'Album')}
-                    {hideBootlegs && searchMeta.totalCount > getFilteredCount() && (
-                      <span className="filter-note">
-                        {' '}({searchMeta.totalCount - getFilteredCount()} bootlegs hidden)
-                      </span>
+                    {searchMeta.isProducerSearch ? (
+                      // For producer search: show "Page X (Y albums)" format (stable, no changing totals)
+                      <>Page {resultsPage} ({displayedResults.length} {displayedResults.length === 1 ? getReleaseTypeSingular(searchMeta.releaseType || 'Album') : getReleaseTypePlural(searchMeta.releaseType || 'Album')})</>
+                    ) : (
+                      // For album search: show "Showing X of Y" format (total is known upfront)
+                      <>
+                        Showing {displayedResults.length} of {getFilteredCount()} {getReleaseTypePlural(searchMeta.releaseType || 'Album')}
+                        {hideBootlegs && searchMeta.totalCount > getFilteredCount() && (
+                          <span className="filter-note">
+                            {' '}({searchMeta.totalCount - getFilteredCount()} bootlegs hidden)
+                          </span>
+                        )}
+                      </>
                     )}
                     {searchMeta.isArtistOnly && (
                       <span className="refine-suggestion">
@@ -1171,18 +2413,57 @@ function AlbumPage() {
               <div className="pagination-controls">
                 <button
                   className="pagination-button pagination-prev"
-                  onClick={() => handlePageChange('prev')}
-                  disabled={resultsPage <= 1 || loadingPage}
+                  onClick={() => {
+                    // Previous button is always enabled (on page 1 it returns to search form, on page 2+ it goes to previous page)
+                    const buttonDisabled = loadingPage
+                    console.log('[Previous Button] Clicked!', {
+                      resultsPage,
+                      searchResultsLength: searchResults?.length,
+                      displayedResultsLength: displayedResults.length,
+                      buttonDisabled,
+                      loadingPage,
+                      getTotalPages: getTotalPages(),
+                      action: resultsPage === 1 ? 'return to search form' : 'go to previous page'
+                    })
+                    if (!buttonDisabled) {
+                      handlePageChange('prev')
+                    } else {
+                      console.log('[Previous Button] Button is disabled (loading), click ignored')
+                    }
+                  }}
+                  disabled={loadingPage}
                 >
                   Previous
                 </button>
                 <span className="pagination-info">
-                  Page {resultsPage} of {getTotalPages()}
+                  {(() => {
+                    const totalPages = getTotalPages()
+                    const isProducerSearch = searchMeta?.isProducerSearch
+                    const releasesProcessed = searchMeta?.producerOffset || 0
+                    const totalReleases = searchMeta?.totalCount || 0
+                    const hasMoreReleases = releasesProcessed < totalReleases
+                    
+                    // Option 4: Progressive pagination messaging
+                    // If we're on page 1 with only 1 page, but more releases are available for producer search, show "Loading more..."
+                    if (isProducerSearch && resultsPage === 1 && totalPages === 1 && hasMoreReleases) {
+                      return <>Page 1 • Loading more...</>
+                    }
+                    
+                    // Normal pagination display
+                    return <>Page {resultsPage} of {totalPages}</>
+                  })()}
                 </span>
                 <button
                   className="pagination-button pagination-next"
-                  onClick={() => handlePageChange('next')}
-                  disabled={resultsPage >= getTotalPages() || loadingPage}
+                  onClick={() => {
+                    console.log('[Next Button] Clicked! canGoNext() =', canGoNext())
+                    if (canGoNext()) {
+                      handlePageChange('next')
+                    } else {
+                      console.log('[Next Button] Button is disabled, click ignored')
+                    }
+                  }}
+                  disabled={!canGoNext()}
                 >
                   {loadingPage ? 'Loading...' : 'Next'}
                 </button>
