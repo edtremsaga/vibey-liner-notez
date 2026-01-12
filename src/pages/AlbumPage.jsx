@@ -3,7 +3,6 @@ import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, searchByProdu
 import { formatDuration } from '../utils/formatDuration'
 import { getCachedAlbum, setCachedAlbum } from '../utils/albumCache'
 import Help from '../components/Help'
-import ChromeDebugPanel from '../components/ChromeDebugPanel'
 import { useHelp } from '../contexts/HelpContext'
 import './AlbumPage.css'
 
@@ -118,13 +117,16 @@ function AlbumPage() {
   // Update URL when search type changes (only on search page, not results/album pages)
   useEffect(() => {
     // Only update history if we're on the search page (not results or album pages)
+    // Be very strict: only replace if page is explicitly 'search' or no state exists (initial load)
     const currentState = window.history.state
-    const isOnSearchPage = !currentState || 
-                          currentState.page === 'search' || 
-                          currentState.initialized === true
+    const isOnSearchPage = !currentState || currentState.page === 'search'
     
     // Don't replace history if we're on results or album pages
     if (!isOnSearchPage) {
+      console.log('[History] Skipping searchType replaceState - not on search page:', {
+        currentState,
+        isOnSearchPage
+      })
       return
     }
     
@@ -2468,8 +2470,6 @@ function AlbumPage() {
             </div>
           )}
         </div>
-        {/* Chrome Debug Panel - Only shows on Chrome mobile */}
-        <ChromeDebugPanel key="debug-panel-search" />
       </div>
   )
   }
@@ -2484,8 +2484,6 @@ function AlbumPage() {
             : `Loading ${getLoadingReleaseType()} from MusicBrainz...`
           }
         </div>
-        {/* Chrome Debug Panel - Only shows on Chrome mobile */}
-        <ChromeDebugPanel key="debug-panel-loading" />
       </div>
     )
   }
@@ -2643,8 +2641,6 @@ function AlbumPage() {
             </div>
           )}
         </div>
-        {/* Chrome Debug Panel - Only shows on Chrome mobile */}
-        <ChromeDebugPanel key="debug-panel-results" />
       </div>
   )
   }
@@ -2666,8 +2662,6 @@ function AlbumPage() {
             </button>
           </div>
         </div>
-        {/* Chrome Debug Panel - Only shows on Chrome mobile */}
-        <ChromeDebugPanel key="debug-panel-error" />
       </div>
     )
   }
@@ -2685,8 +2679,6 @@ function AlbumPage() {
             {searchResults && searchResults.length > 0 ? 'Back to Results' : 'New Search'}
           </button>
         </div>
-        {/* Chrome Debug Panel - Only shows on Chrome mobile */}
-        <ChromeDebugPanel key="debug-panel-no-album" />
       </div>
     )
   }
@@ -3276,8 +3268,6 @@ function AlbumPage() {
           </div>
         )}
       </div>
-      {/* Chrome Debug Panel - Only shows on Chrome mobile */}
-      <ChromeDebugPanel key="debug-panel-album" />
     </div>
   )
 }
