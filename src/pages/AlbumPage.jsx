@@ -2468,11 +2468,10 @@ function AlbumPage() {
             </div>
           )}
         </div>
+        {/* Chrome Debug Panel - Only shows on Chrome mobile */}
+        <ChromeDebugPanel />
       </div>
-      {/* Chrome Debug Panel - Only shows on Chrome mobile */}
-      <ChromeDebugPanel />
-    </div>
-    )
+  )
   }
   
   // Show loading state (searching or loading album)
@@ -2644,11 +2643,10 @@ function AlbumPage() {
             </div>
           )}
         </div>
+        {/* Chrome Debug Panel - Only shows on Chrome mobile */}
+        <ChromeDebugPanel />
       </div>
-      {/* Chrome Debug Panel - Only shows on Chrome mobile */}
-      <ChromeDebugPanel />
-    </div>
-    )
+  )
   }
   
   // Show album error
