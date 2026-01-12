@@ -155,39 +155,61 @@ export default function ChromeDebugPanel() {
 
   // Always show on mobile devices for debugging (check directly during render, don't rely on state)
   // This check happens synchronously during render, so it works immediately
-  const userAgent = typeof window !== 'undefined' ? (navigator.userAgent || '') : ''
-  const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(userAgent)
+  // Use multiple checks to handle Chrome timing issues
+  const hasWindow = typeof window !== 'undefined'
+  const userAgent = hasWindow ? (navigator.userAgent || '') : ''
+  const isMobileDevice = hasWindow && /iPhone|iPad|iPod|Android/i.test(userAgent)
+  
+  // Additional Chrome-specific checks (Chrome may have timing issues with userAgent)
+  const isChromeBrowser = hasWindow && (
+    /CriOS/.test(userAgent) || 
+    (/Chrome/.test(userAgent) && /Mobile/.test(userAgent)) ||
+    (window.chrome && /iPhone|iPad|iPod/.test(userAgent))
+  )
   
   // Always show on mobile devices - don't depend on isChrome state which is set asynchronously in useEffect
-  // This ensures it works on first render on all pages
-  const shouldShow = isMobileDevice
+  // Also show if Chrome is detected (even if mobile detection fails due to timing)
+  const shouldShow = isMobileDevice || (isChromeBrowser && hasWindow)
   
-  // Aggressive debug logging during render (not in useEffect) to catch Chrome-specific issues
-  if (typeof window !== 'undefined') {
-    // Only log if we're on a page where it should show but might not be
+  // ALWAYS log during render to debug Chrome issues (unconditional logging)
+  if (hasWindow) {
     const currentPath = window.location.pathname
-    const isSearchOrResults = currentPath === '/' || currentPath.includes('search') || currentPath.includes('results')
+    const currentHash = window.location.hash
+    const currentSearch = window.location.search
     
-    if (isSearchOrResults || !shouldShow) {
-      console.log('[ChromeDebugPanel] RENDER CHECK:', {
-        userAgent,
-        isMobileDevice,
-        shouldShow,
-        willRender: shouldShow,
-        pathname: currentPath,
-        isSearchOrResults,
-        timestamp: new Date().toISOString()
-      })
-    }
+    // Log every render attempt - this will help us see what's happening in Chrome
+    console.log('[ChromeDebugPanel] RENDER CHECK (ALWAYS):', {
+      userAgent: userAgent.substring(0, 100), // Truncate for readability
+      isMobileDevice,
+      isChromeBrowser,
+      shouldShow,
+      willRender: shouldShow,
+      pathname: currentPath,
+      hash: currentHash,
+      search: currentSearch,
+      hasWindow,
+      hasNavigator: typeof navigator !== 'undefined',
+      navigatorUserAgent: typeof navigator !== 'undefined' ? (navigator.userAgent || 'MISSING').substring(0, 100) : 'NO_NAVIGATOR',
+      timestamp: new Date().toISOString(),
+      isChromeState: isChrome,
+      isVisibleState: isVisible
+    })
   }
   
   if (!shouldShow) {
-    // Log why we're not showing
-    if (typeof window !== 'undefined') {
-      console.warn('[ChromeDebugPanel] NOT RENDERING - not a mobile device:', {
-        userAgent,
+    // Log why we're not showing - this is critical for debugging
+    if (hasWindow) {
+      console.warn('[ChromeDebugPanel] NOT RENDERING - checks failed:', {
+        userAgent: userAgent.substring(0, 100),
         isMobileDevice,
-        pathname: window.location.pathname
+        isChromeBrowser,
+        shouldShow,
+        pathname: window.location.pathname,
+        hasWindow,
+        hasNavigator: typeof navigator !== 'undefined',
+        navigatorUserAgent: typeof navigator !== 'undefined' ? (navigator.userAgent || 'MISSING').substring(0, 100) : 'NO_NAVIGATOR',
+        windowChrome: hasWindow ? !!window.chrome : false,
+        timestamp: new Date().toISOString()
       })
     }
     return null
