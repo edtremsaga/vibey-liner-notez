@@ -29,7 +29,12 @@ export default function ChromeDebugPanel() {
       setIsVisible(true)
     }
 
-    // Override console.log to capture logs EARLY
+    // Load logs from global store (captured early in main.jsx)
+    if (window.__chromeDebugLogs && Array.isArray(window.__chromeDebugLogs)) {
+      setLogs([...window.__chromeDebugLogs].slice(-maxLogs))
+    }
+
+    // Also continue capturing new logs (in case main.jsx didn't set it up)
     const originalLog = console.log
     const originalWarn = console.warn
     const originalError = console.error
@@ -66,37 +71,61 @@ export default function ChromeDebugPanel() {
         return String(arg)
       }).join(' ')
 
+      // Add to both local state and global store
       setLogs(prev => {
         const newLogs = [...prev, { level, message, timestamp: new Date().toLocaleTimeString() }]
-        return newLogs.slice(-maxLogs) // Keep last 100 logs
+        const trimmed = newLogs.slice(-maxLogs)
+        
+        // Also update global store
+        if (window.__chromeDebugLogs) {
+          window.__chromeDebugLogs.push({ level, message, timestamp: new Date().toLocaleTimeString() })
+          if (window.__chromeDebugLogs.length > 200) {
+            window.__chromeDebugLogs = window.__chromeDebugLogs.slice(-200)
+          }
+        }
+        
+        return trimmed
       })
     }
 
-    // Override console methods
-    console.log = (...args) => {
-      originalLog.apply(console, args)
-      addLog('log', args)
-    }
+    // Only override if not already overridden by main.jsx
+    // Check if console.log has been overridden (it will have __chromeDebugLogs in closure)
+    if (!window.__chromeDebugLogs) {
+      // Override console methods as fallback
+      console.log = (...args) => {
+        originalLog.apply(console, args)
+        addLog('log', args)
+      }
 
-    console.warn = (...args) => {
-      originalWarn.apply(console, args)
-      addLog('warn', args)
-    }
+      console.warn = (...args) => {
+        originalWarn.apply(console, args)
+        addLog('warn', args)
+      }
 
-    console.error = (...args) => {
-      originalError.apply(console, args)
-      addLog('error', args)
+      console.error = (...args) => {
+        originalError.apply(console, args)
+        addLog('error', args)
+      }
+    } else {
+      // main.jsx already set up capture, just sync with existing logs
+      // Set up a listener to sync new logs from global store
+      const syncInterval = setInterval(() => {
+        if (window.__chromeDebugLogs && Array.isArray(window.__chromeDebugLogs)) {
+          setLogs(prev => {
+            const globalLogs = window.__chromeDebugLogs.slice(-maxLogs)
+            // Only update if there are new logs
+            if (globalLogs.length !== prev.length || 
+                (globalLogs.length > 0 && globalLogs[globalLogs.length - 1].timestamp !== prev[prev.length - 1]?.timestamp)) {
+              return globalLogs
+            }
+            return prev
+          })
+        }
+      }, 200) // Check every 200ms for new logs
+      
+      return () => clearInterval(syncInterval)
     }
-
-    // Add a test log to verify capture is working
-    console.log('[History] Debug panel initialized and ready to capture logs')
-
-    return () => {
-      console.log = originalLog
-      console.warn = originalWarn
-      console.error = originalError
-    }
-  }, [])
+  }, []) // Only run once on mount
 
   // Auto-scroll to bottom when new logs arrive
   useEffect(() => {
