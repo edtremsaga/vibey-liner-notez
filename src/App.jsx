@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import AlbumPage from './pages/AlbumPage'
 import AppShell from './layout/AppShell'
 import ErrorBoundary from './components/ErrorBoundary'
-import ChromeDebugPanel from './components/ChromeDebugPanel'
 import { Analytics } from '@vercel/analytics/react'
 import { HelpProvider, useHelp } from './contexts/HelpContext'
 import './App.css'
@@ -65,8 +64,6 @@ function App() {
         <AppShell header={header}>
           <AlbumPage />
         </AppShell>
-        {/* Chrome Debug Panel - Render at App level so it's always present on all pages */}
-        <ChromeDebugPanel />
         <Analytics /> {/* Vercel Analytics tracking */}
       </HelpProvider>
     </ErrorBoundary>
