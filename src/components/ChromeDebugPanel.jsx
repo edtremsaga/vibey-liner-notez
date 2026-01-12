@@ -59,7 +59,7 @@ export default function ChromeDebugPanel() {
     const originalError = console.error
 
     const addLog = (level, args) => {
-      // Check ALL arguments for [History] - more robust
+      // Check ALL arguments for [History] or [ChromeDebugPanel] - capture both
       const allArgsString = args.map(arg => {
         if (typeof arg === 'string') {
           return arg
@@ -73,8 +73,8 @@ export default function ChromeDebugPanel() {
         return String(arg)
       }).join(' ')
       
-      // Only capture logs that contain [History] anywhere in the message
-      if (!allArgsString.includes('[History]')) {
+      // Capture logs that contain [History] OR [ChromeDebugPanel] - this helps debug the panel itself
+      if (!allArgsString.includes('[History]') && !allArgsString.includes('[ChromeDebugPanel]')) {
         return
       }
 
@@ -153,67 +153,29 @@ export default function ChromeDebugPanel() {
     }
   }, [logs])
 
-  // Always show on mobile devices for debugging (check directly during render, don't rely on state)
-  // This check happens synchronously during render, so it works immediately
-  // Use multiple checks to handle Chrome timing issues
+  // SIMPLIFIED: Show on mobile only, but with minimal detection
+  // Check for mobile using the simplest possible method
   const hasWindow = typeof window !== 'undefined'
-  const userAgent = hasWindow ? (navigator.userAgent || '') : ''
-  const isMobileDevice = hasWindow && /iPhone|iPad|iPod|Android/i.test(userAgent)
   
-  // Additional Chrome-specific checks (Chrome may have timing issues with userAgent)
-  const isChromeBrowser = hasWindow && (
-    /CriOS/.test(userAgent) || 
-    (/Chrome/.test(userAgent) && /Mobile/.test(userAgent)) ||
-    (window.chrome && /iPhone|iPad|iPod/.test(userAgent))
-  )
-  
-  // Always show on mobile devices - don't depend on isChrome state which is set asynchronously in useEffect
-  // Also show if Chrome is detected (even if mobile detection fails due to timing)
-  const shouldShow = isMobileDevice || (isChromeBrowser && hasWindow)
-  
-  // ALWAYS log during render to debug Chrome issues (unconditional logging)
-  if (hasWindow) {
-    const currentPath = window.location.pathname
-    const currentHash = window.location.hash
-    const currentSearch = window.location.search
-    
-    // Log every render attempt - this will help us see what's happening in Chrome
-    console.log('[ChromeDebugPanel] RENDER CHECK (ALWAYS):', {
-      userAgent: userAgent.substring(0, 100), // Truncate for readability
-      isMobileDevice,
-      isChromeBrowser,
-      shouldShow,
-      willRender: shouldShow,
-      pathname: currentPath,
-      hash: currentHash,
-      search: currentSearch,
-      hasWindow,
-      hasNavigator: typeof navigator !== 'undefined',
-      navigatorUserAgent: typeof navigator !== 'undefined' ? (navigator.userAgent || 'MISSING').substring(0, 100) : 'NO_NAVIGATOR',
-      timestamp: new Date().toISOString(),
-      isChromeState: isChrome,
-      isVisibleState: isVisible
-    })
-  }
-  
-  if (!shouldShow) {
-    // Log why we're not showing - this is critical for debugging
-    if (hasWindow) {
-      console.warn('[ChromeDebugPanel] NOT RENDERING - checks failed:', {
-        userAgent: userAgent.substring(0, 100),
-        isMobileDevice,
-        isChromeBrowser,
-        shouldShow,
-        pathname: window.location.pathname,
-        hasWindow,
-        hasNavigator: typeof navigator !== 'undefined',
-        navigatorUserAgent: typeof navigator !== 'undefined' ? (navigator.userAgent || 'MISSING').substring(0, 100) : 'NO_NAVIGATOR',
-        windowChrome: hasWindow ? !!window.chrome : false,
-        timestamp: new Date().toISOString()
-      })
-    }
+  if (!hasWindow) {
     return null
   }
+  
+  // Simple mobile check - just look for iPhone/iPad/Android in userAgent
+  // No complex logic, no Chrome detection, just basic mobile check
+  const userAgent = navigator?.userAgent || ''
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent)
+  
+  // Only show on mobile devices
+  if (!isMobile) {
+    return null
+  }
+  
+  // Log that we're rendering
+  console.log('[ChromeDebugPanel] Rendering on mobile device:', {
+    pathname: window.location.pathname,
+    userAgent: userAgent.substring(0, 80)
+  })
 
   return (
     <>
@@ -230,7 +192,7 @@ export default function ChromeDebugPanel() {
       {isVisible && (
         <div className="chrome-debug-panel">
           <div className="chrome-debug-header">
-            <h3>Chrome Debug Logs (History Events)</h3>
+            <h3>Chrome Debug Logs (History & Panel Events)</h3>
             <div className="chrome-debug-controls">
               <button onClick={() => setLogs([])}>Clear</button>
               <button onClick={() => setIsVisible(false)}>Close</button>

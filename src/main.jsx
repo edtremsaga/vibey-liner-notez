@@ -34,7 +34,8 @@ if (typeof window !== 'undefined') {
         return String(arg)
       }).join(' ')
       
-      if (allArgsString.includes('[History]')) {
+      // Capture both [History] and [ChromeDebugPanel] logs
+      if (allArgsString.includes('[History]') || allArgsString.includes('[ChromeDebugPanel]')) {
         const message = args.map(arg => {
           if (typeof arg === 'object') {
             try {
