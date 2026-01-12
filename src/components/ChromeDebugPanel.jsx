@@ -13,36 +13,49 @@ export default function ChromeDebugPanel() {
   const maxLogs = 100 // Keep last 100 logs
 
   useEffect(() => {
-    // Detect if we're on Chrome (especially mobile Chrome)
+    // Detect if we're on mobile (show panel on all mobile browsers for debugging)
     const userAgent = navigator.userAgent || ''
-    // Check for Chrome on iOS (CriOS), Chrome on Android, or Chrome mobile mode
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent)
+    
+    // Check for Chrome (especially mobile Chrome)
     const isChromeMobile = /CriOS/.test(userAgent) || 
                           (/Chrome/.test(userAgent) && /Mobile/.test(userAgent)) ||
                           (/Chrome/.test(userAgent) && !/Safari/.test(userAgent) && /iPhone|iPad|iPod/.test(userAgent))
     
-    if (isChromeMobile) {
+    // Show panel on mobile (for debugging) or Chrome specifically
+    if (isMobile || isChromeMobile) {
       setIsChrome(true)
-      // Auto-show on Chrome mobile
+      // Auto-show on mobile for debugging
       setIsVisible(true)
     }
 
-    // Override console.log to capture logs
+    // Override console.log to capture logs EARLY
     const originalLog = console.log
     const originalWarn = console.warn
     const originalError = console.error
 
     const addLog = (level, args) => {
-      // Check the first argument for [History] - this is more reliable
-      const firstArg = args[0]
-      const firstArgString = typeof firstArg === 'string' ? firstArg : String(firstArg)
+      // Check ALL arguments for [History] - more robust
+      const allArgsString = args.map(arg => {
+        if (typeof arg === 'string') {
+          return arg
+        } else if (typeof arg === 'object') {
+          try {
+            return JSON.stringify(arg)
+          } catch (e) {
+            return String(arg)
+          }
+        }
+        return String(arg)
+      }).join(' ')
       
-      // Only capture logs that start with or contain [History] in the first argument
-      if (!firstArgString.includes('[History]')) {
+      // Only capture logs that contain [History] anywhere in the message
+      if (!allArgsString.includes('[History]')) {
         return
       }
 
-      // Build the full message
-      const message = args.map(arg => {
+      // Build the full message with better formatting
+      const message = args.map((arg, index) => {
         if (typeof arg === 'object') {
           try {
             return JSON.stringify(arg, null, 2)
@@ -59,6 +72,7 @@ export default function ChromeDebugPanel() {
       })
     }
 
+    // Override console methods
     console.log = (...args) => {
       originalLog.apply(console, args)
       addLog('log', args)
@@ -74,6 +88,9 @@ export default function ChromeDebugPanel() {
       addLog('error', args)
     }
 
+    // Add a test log to verify capture is working
+    console.log('[History] Debug panel initialized and ready to capture logs')
+
     return () => {
       console.log = originalLog
       console.warn = originalWarn
@@ -88,7 +105,7 @@ export default function ChromeDebugPanel() {
     }
   }, [logs])
 
-  // Don't render if not Chrome
+  // Don't render if not mobile/Chrome (for debugging, show on all mobile)
   if (!isChrome) {
     return null
   }
