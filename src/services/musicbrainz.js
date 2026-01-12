@@ -990,7 +990,13 @@ export async function fetchAllAlbumArt(releaseGroupId, signal = null) {
       throw new Error('Request aborted')
     }
     
-    // If response is not ok, throw error
+    // Handle 404 gracefully - no album art available (not an error)
+    if (response.status === 404) {
+      console.log('[Gallery Debug] 404 response - no album art available for this release')
+      return [] // Return empty array instead of throwing error
+    }
+    
+    // If response is not ok (and not 404), throw error
     if (!response.ok) {
       console.log('[Gallery Debug] Response not ok - throwing error')
       throw new Error(`Failed to fetch album art: ${response.status} ${response.statusText}`)

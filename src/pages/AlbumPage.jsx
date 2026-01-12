@@ -2767,13 +2767,19 @@ function AlbumPage() {
           </div>
         </section>
 
-        {/* Album Art Gallery - Show if we have images, are loading, or have error */}
+        {/* Album Art Gallery - Show if we have images, are loading, have error, or successfully checked (no images) */}
         {(() => {
-          const shouldRender = galleryImages.length > 0 || loadingGallery || galleryError
+          // Show gallery section if:
+          // - We have images, OR
+          // - We're loading, OR
+          // - We have an error, OR
+          // - We've finished loading and have no images (successfully checked, no art available)
+          const shouldRender = galleryImages.length > 0 || loadingGallery || galleryError || (!loadingGallery && !galleryError && album !== null)
           console.log('[Gallery Debug] Conditional render check:')
           console.log('[Gallery Debug]   galleryImages.length:', galleryImages.length)
           console.log('[Gallery Debug]   loadingGallery:', loadingGallery)
           console.log('[Gallery Debug]   galleryError:', galleryError)
+          console.log('[Gallery Debug]   album:', album !== null)
           console.log('[Gallery Debug]   shouldRender:', shouldRender)
           return shouldRender
         })() && (
@@ -2781,9 +2787,12 @@ function AlbumPage() {
             <div className="gallery-header">
               <h2>Album Art Gallery</h2>
               {(() => {
-                const shouldShowButton = !galleryError
+                // Show button only if we have images or are loading (not for empty state or error)
+                const shouldShowButton = !galleryError && (galleryImages.length > 0 || loadingGallery)
                 console.log('[Gallery Debug] Button visibility check:')
                 console.log('[Gallery Debug]   galleryError:', galleryError)
+                console.log('[Gallery Debug]   galleryImages.length:', galleryImages.length)
+                console.log('[Gallery Debug]   loadingGallery:', loadingGallery)
                 console.log('[Gallery Debug]   shouldShowButton:', shouldShowButton)
                 return shouldShowButton
               })() && (
@@ -2849,17 +2858,21 @@ function AlbumPage() {
                 </button>
               </div>
             ) : (() => {
+              // Show content if:
+              // - No error AND (expanded OR no images to show message directly)
+              const shouldShowContent = !galleryError && (galleryExpanded || galleryImages.length === 0)
               console.log('[Gallery Debug] Gallery content render check:')
               console.log('[Gallery Debug]   galleryError:', galleryError)
               console.log('[Gallery Debug]   galleryExpanded:', galleryExpanded)
-              console.log('[Gallery Debug]   shouldShowContent:', !galleryError && galleryExpanded)
-              return !galleryError && galleryExpanded
+              console.log('[Gallery Debug]   galleryImages.length:', galleryImages.length)
+              console.log('[Gallery Debug]   shouldShowContent:', shouldShowContent)
+              return shouldShowContent
             })() && (
               <div className="gallery-content">
                 {loadingGallery ? (
                   <div className="gallery-loading">Loading album art...</div>
                 ) : galleryImages.length === 0 ? (
-                  <div className="gallery-empty">No additional album art available.</div>
+                  <div className="gallery-empty">No album art available for this title.</div>
                 ) : (
                   <div className="gallery-grid">
                     {(() => {
