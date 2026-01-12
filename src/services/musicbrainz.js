@@ -17,12 +17,18 @@ async function rateLimitedFetch(url, options = {}) {
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
   
   // Merge signals if both exist
+  let cleanupListeners = null
   const signal = options.signal 
     ? (() => {
         const combinedController = new AbortController()
         const abort = () => combinedController.abort()
         controller.signal.addEventListener('abort', abort)
         options.signal.addEventListener('abort', abort)
+        // Store cleanup function to remove listeners
+        cleanupListeners = () => {
+          controller.signal.removeEventListener('abort', abort)
+          options.signal.removeEventListener('abort', abort)
+        }
         return combinedController.signal
       })()
     : controller.signal
@@ -31,12 +37,14 @@ async function rateLimitedFetch(url, options = {}) {
     // Check if request was aborted during delay
     if (signal.aborted) {
       clearTimeout(timeoutId)
+      if (cleanupListeners) cleanupListeners()
       throw new Error('Request aborted')
     }
     await new Promise(resolve => setTimeout(resolve, 1000 - timeSinceLastRequest))
     // Check again after delay
     if (signal.aborted) {
       clearTimeout(timeoutId)
+      if (cleanupListeners) cleanupListeners()
       throw new Error('Request aborted')
     }
   }
@@ -54,9 +62,11 @@ async function rateLimitedFetch(url, options = {}) {
     
     const response = await fetch(url, fetchOptions)
     clearTimeout(timeoutId)
+    if (cleanupListeners) cleanupListeners()
     return response
   } catch (error) {
     clearTimeout(timeoutId)
+    if (cleanupListeners) cleanupListeners()
     if (error.name === 'AbortError') {
       throw new Error(`Request timeout after ${timeoutMs}ms`)
     }
@@ -270,17 +280,117 @@ async function findProducerMBIDs(producerName) {
 }
 
 // ============================================================================
-// Release → RG Cache System (3-layer cache)
+// Release → RG Cache System (3-layer cache with size limits)
 // ============================================================================
 
-// Global cache: releaseId → rgInfo (persists across searches until page refresh)
-const globalReleaseCache = new Map() // releaseId → rgInfo object
+// Cache size limits to prevent unbounded memory growth
+const MAX_RELEASE_CACHE_SIZE = 500 // Maximum release cache entries (LRU)
+const MAX_FETCH_PROMISES = 50 // Maximum in-flight promises (should be small)
+const MAX_PRODUCER_SEEN_CACHE = 20 // Maximum producer seenRgIds entries (LRU)
+
+// LRU cache implementation for globalReleaseCache
+class LRUCache {
+  constructor(maxSize) {
+    this.maxSize = maxSize
+    this.cache = new Map() // Map maintains insertion order
+  }
+
+  get(key) {
+    if (!this.cache.has(key)) {
+      return undefined
+    }
+    // Move to end (most recently used)
+    const value = this.cache.get(key)
+    this.cache.delete(key)
+    this.cache.set(key, value)
+    return value
+  }
+
+  set(key, value) {
+    if (this.cache.has(key)) {
+      // Update existing: move to end
+      this.cache.delete(key)
+    } else if (this.cache.size >= this.maxSize) {
+      // Remove oldest (first) entry
+      const firstKey = this.cache.keys().next().value
+      this.cache.delete(firstKey)
+    }
+    this.cache.set(key, value)
+  }
+
+  has(key) {
+    return this.cache.has(key)
+  }
+
+  delete(key) {
+    return this.cache.delete(key)
+  }
+
+  get size() {
+    return this.cache.size
+  }
+
+  clear() {
+    this.cache.clear()
+  }
+}
+
+// Global cache: releaseId → rgInfo (LRU with size limit)
+const globalReleaseCache = new LRUCache(MAX_RELEASE_CACHE_SIZE)
 
 // Promise memoization: releaseId → Promise<rgInfo> (prevents duplicate in-flight fetches)
+// Limited size - oldest promises removed when limit reached
 const fetchPromises = new Map() // releaseId → Promise<rgInfo>
 
 // Per-producer seenRgIds: producerMBID → Set<rgId> (deduplication per search session)
-const producerSeenRgIds = new Map() // producerMBID → Set<rgId>
+// LRU cache to limit memory growth
+class ProducerSeenCache {
+  constructor(maxSize) {
+    this.maxSize = maxSize
+    this.cache = new Map() // Map maintains insertion order
+  }
+
+  get(producerMBID) {
+    if (!this.cache.has(producerMBID)) {
+      return undefined
+    }
+    // Move to end (most recently used)
+    const value = this.cache.get(producerMBID)
+    this.cache.delete(producerMBID)
+    this.cache.set(producerMBID, value)
+    return value
+  }
+
+  set(producerMBID, seenSet) {
+    if (this.cache.has(producerMBID)) {
+      // Update existing: move to end
+      this.cache.delete(producerMBID)
+    } else if (this.cache.size >= this.maxSize) {
+      // Remove oldest (first) entry
+      const firstKey = this.cache.keys().next().value
+      this.cache.delete(firstKey)
+    }
+    this.cache.set(producerMBID, seenSet)
+  }
+
+  has(producerMBID) {
+    return this.cache.has(producerMBID)
+  }
+
+  delete(producerMBID) {
+    return this.cache.delete(producerMBID)
+  }
+
+  get size() {
+    return this.cache.size
+  }
+
+  clear() {
+    this.cache.clear()
+  }
+}
+
+const producerSeenRgIds = new ProducerSeenCache(MAX_PRODUCER_SEEN_CACHE)
 
 /**
  * Get Release Group info for a release ID using 3-layer cache
@@ -335,7 +445,7 @@ async function getReleaseGroupInfo(releaseId) {
         releaseId: releaseId // Include release ID for reference
       }
       
-      // Store in value cache
+      // Store in value cache (LRU will handle eviction if needed)
       globalReleaseCache.set(releaseId, rgInfo)
       fetchPromises.delete(releaseId) // Clean up promise cache
       
@@ -347,6 +457,13 @@ async function getReleaseGroupInfo(releaseId) {
     }
   })()
   
+  // Limit fetchPromises size - remove oldest if limit reached
+  if (fetchPromises.size >= MAX_FETCH_PROMISES) {
+    // Remove oldest promise (first in Map)
+    const firstKey = fetchPromises.keys().next().value
+    fetchPromises.delete(firstKey)
+  }
+  
   fetchPromises.set(releaseId, promise)
   return promise
 }
@@ -357,10 +474,12 @@ async function getReleaseGroupInfo(releaseId) {
  * @returns {Set<string>} - Set of seen Release Group IDs
  */
 function getSeenRgIdsForProducer(producerMBID) {
-  if (!producerSeenRgIds.has(producerMBID)) {
-    producerSeenRgIds.set(producerMBID, new Set())
+  let seenSet = producerSeenRgIds.get(producerMBID)
+  if (!seenSet) {
+    seenSet = new Set()
+    producerSeenRgIds.set(producerMBID, seenSet)
   }
-  return producerSeenRgIds.get(producerMBID)
+  return seenSet
 }
 
 /**
@@ -371,6 +490,36 @@ export function clearProducerSeenRgIds(producerMBID) {
   if (producerMBID) {
     producerSeenRgIds.delete(producerMBID)
   }
+}
+
+/**
+ * Get cache statistics (for testing and monitoring)
+ * @returns {Object} Cache stats
+ */
+export function getCacheStats() {
+  return {
+    releaseCache: {
+      size: globalReleaseCache.size,
+      maxSize: MAX_RELEASE_CACHE_SIZE
+    },
+    fetchPromises: {
+      size: fetchPromises.size,
+      maxSize: MAX_FETCH_PROMISES
+    },
+    producerSeenCache: {
+      size: producerSeenRgIds.size,
+      maxSize: MAX_PRODUCER_SEEN_CACHE
+    }
+  }
+}
+
+/**
+ * Clear all caches (for testing)
+ */
+export function clearAllCaches() {
+  globalReleaseCache.clear()
+  fetchPromises.clear()
+  producerSeenRgIds.clear()
 }
 
 // POC TEST: Check if Release Group IDs are available in relationships payload (cheap, no extra fetches)

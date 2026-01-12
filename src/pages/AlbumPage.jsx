@@ -44,6 +44,9 @@ function AlbumPage() {
   const reachedEndRef = useRef(false) // Track if we've reached the end of unique albums (bypasses React state timing)
   const previousProducerMBIDRef = useRef(null) // Track previous producer MBID to detect actual changes (not just first set)
   
+  // Mount status tracking - prevents state updates after component unmounts
+  const isMountedRef = useRef(true)
+  
   // Available release types for filtering
   const RELEASE_TYPES = [
     { value: 'Album', label: 'Studio Albums' },
@@ -1707,13 +1710,15 @@ function AlbumPage() {
       // It will update the album state when it arrives
       fetchCoverArt(releaseGroupId, basicData.selectedReleaseId)
         .then(coverArtUrl => {
-          if (coverArtUrl) {
+          if (coverArtUrl && isMountedRef.current) {
             setAlbum(prev => prev ? { ...prev, coverArtUrl } : null)
           }
         })
         .catch(err => {
-          console.warn('Failed to load cover art:', err)
-          // Don't show error - cover art is optional
+          if (isMountedRef.current) {
+            console.warn('Failed to load cover art:', err)
+            // Don't show error - cover art is optional
+          }
         })
       
       setLoadingTracklist(true)
@@ -2004,15 +2009,15 @@ function AlbumPage() {
           console.log('[Gallery Debug] fetchAllAlbumArt SUCCESS - images received:', images.length)
           console.log('[Gallery Debug] Aborted?', abortController.signal.aborted)
           
-          // Only update if this request hasn't been cancelled
-          if (!abortController.signal.aborted) {
+          // Only update if this request hasn't been cancelled AND component is still mounted
+          if (!abortController.signal.aborted && isMountedRef.current) {
             clearTimeout(timeoutId)
             console.log('[Gallery Debug] Setting galleryImages to:', images.length, 'images')
             setGalleryImages(images)
             setGalleryError(null)
             console.log('[Gallery Debug] State after success - images:', images.length, 'error:', null)
           } else {
-            console.log('[Gallery Debug] Request was aborted - not updating state')
+            console.log('[Gallery Debug] Request was aborted or component unmounted - not updating state')
           }
         })
         .catch(err => {
@@ -2021,8 +2026,8 @@ function AlbumPage() {
           console.log('[Gallery Debug] Error message:', err.message)
           console.log('[Gallery Debug] Aborted?', abortController.signal.aborted)
           
-          // Only update if this request hasn't been cancelled
-          if (!abortController.signal.aborted) {
+          // Only update if this request hasn't been cancelled AND component is still mounted
+          if (!abortController.signal.aborted && isMountedRef.current) {
             clearTimeout(timeoutId)
             console.warn('Error loading gallery images:', err)
             const errorMessage = err.message || 'Failed to load album art gallery'
@@ -2033,19 +2038,19 @@ function AlbumPage() {
             setGalleryError(finalError)
             console.log('[Gallery Debug] State after error - images: 0, error:', finalError)
           } else {
-            console.log('[Gallery Debug] Request was aborted - not updating error state')
+            console.log('[Gallery Debug] Request was aborted or component unmounted - not updating error state')
           }
         })
         .finally(() => {
           console.log('[Gallery Debug] finally() called - Aborted?', abortController.signal.aborted)
           
-          // Only update if this request hasn't been cancelled
-          if (!abortController.signal.aborted) {
+          // Only update if this request hasn't been cancelled AND component is still mounted
+          if (!abortController.signal.aborted && isMountedRef.current) {
             clearTimeout(timeoutId)
             console.log('[Gallery Debug] Setting loadingGallery to false')
             setLoadingGallery(false)
           } else {
-            console.log('[Gallery Debug] Request was aborted - not updating loading state')
+            console.log('[Gallery Debug] Request was aborted or component unmounted - not updating loading state')
           }
         })
       
@@ -2086,8 +2091,8 @@ function AlbumPage() {
       
       fetchWikipediaContentFromMusicBrainz(album.albumId, abortController.signal)
         .then(content => {
-          // Only update if this request hasn't been cancelled
-          if (!abortController.signal.aborted) {
+          // Only update if this request hasn't been cancelled AND component is still mounted
+          if (!abortController.signal.aborted && isMountedRef.current) {
             clearTimeout(timeoutId)
             if (content) {
               setWikipediaContent(content)
@@ -2099,8 +2104,8 @@ function AlbumPage() {
           }
         })
         .catch(err => {
-          // Only update if this request hasn't been cancelled
-          if (!abortController.signal.aborted) {
+          // Only update if this request hasn't been cancelled AND component is still mounted
+          if (!abortController.signal.aborted && isMountedRef.current) {
             clearTimeout(timeoutId)
             console.warn('Error loading Wikipedia content:', err)
             const errorMessage = err.message || 'Failed to load Wikipedia content'
@@ -2110,8 +2115,8 @@ function AlbumPage() {
           }
         })
         .finally(() => {
-          // Only update if this request hasn't been cancelled
-          if (!abortController.signal.aborted) {
+          // Only update if this request hasn't been cancelled AND component is still mounted
+          if (!abortController.signal.aborted && isMountedRef.current) {
             clearTimeout(timeoutId)
             setLoadingWikipedia(false)
           }
@@ -2161,13 +2166,13 @@ function AlbumPage() {
       fetchAllAlbumArt(album.albumId, abortController.signal)
         .then(images => {
           console.log('[Gallery Debug] Retry SUCCESS - images received:', images.length)
-          if (!abortController.signal.aborted) {
+          if (!abortController.signal.aborted && isMountedRef.current) {
             console.log('[Gallery Debug] Retry - Setting galleryImages to:', images.length)
             setGalleryImages(images)
             setGalleryError(null)
             console.log('[Gallery Debug] Retry - State after success: images:', images.length, 'error:', null)
           } else {
-            console.log('[Gallery Debug] Retry - Request was aborted')
+            console.log('[Gallery Debug] Retry - Request was aborted or component unmounted')
           }
         })
         .catch(err => {
@@ -2175,7 +2180,7 @@ function AlbumPage() {
           console.log('[Gallery Debug] Retry ERROR name:', err.name)
           console.log('[Gallery Debug] Retry ERROR message:', err.message)
           console.log('[Gallery Debug] Retry ERROR stack:', err.stack)
-          if (!abortController.signal.aborted) {
+          if (!abortController.signal.aborted && isMountedRef.current) {
             console.warn('Error loading gallery images:', err)
             // Show more detailed error message for debugging
             const errorMsg = err.message || 'Failed to load album art gallery'
@@ -2183,12 +2188,12 @@ function AlbumPage() {
             console.log('[Gallery Debug] Retry - Setting galleryError to:', detailedError)
             setGalleryError(detailedError)
           } else {
-            console.log('[Gallery Debug] Retry - Request was aborted, not setting error')
+            console.log('[Gallery Debug] Retry - Request was aborted or component unmounted, not setting error')
           }
         })
         .finally(() => {
           console.log('[Gallery Debug] Retry finally() - Setting loadingGallery to false')
-          if (!abortController.signal.aborted) {
+          if (!abortController.signal.aborted && isMountedRef.current) {
             setLoadingGallery(false)
           }
         })
@@ -2206,7 +2211,7 @@ function AlbumPage() {
       
       fetchWikipediaContentFromMusicBrainz(album.albumId, abortController.signal)
         .then(content => {
-          if (!abortController.signal.aborted) {
+          if (!abortController.signal.aborted && isMountedRef.current) {
             if (content) {
               setWikipediaContent(content)
               setWikipediaError(null)
@@ -2216,13 +2221,13 @@ function AlbumPage() {
           }
         })
         .catch(err => {
-          if (!abortController.signal.aborted) {
+          if (!abortController.signal.aborted && isMountedRef.current) {
             console.warn('Error loading Wikipedia content:', err)
             setWikipediaError(err.message || 'Failed to load Wikipedia content')
           }
         })
         .finally(() => {
-          if (!abortController.signal.aborted) {
+          if (!abortController.signal.aborted && isMountedRef.current) {
             setLoadingWikipedia(false)
           }
         })

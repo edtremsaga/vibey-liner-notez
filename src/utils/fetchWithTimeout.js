@@ -10,6 +10,7 @@ export function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
   
   // Merge signals if both exist
+  let cleanupListeners = null
   const signal = options.signal 
     ? (() => {
         // If both signals exist, abort when either aborts
@@ -17,17 +18,27 @@ export function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
         const abort = () => combinedController.abort()
         controller.signal.addEventListener('abort', abort)
         options.signal.addEventListener('abort', abort)
+        // Store cleanup function to remove listeners
+        cleanupListeners = () => {
+          controller.signal.removeEventListener('abort', abort)
+          options.signal.removeEventListener('abort', abort)
+        }
         return combinedController.signal
       })()
     : controller.signal
   
+  const cleanup = () => {
+    clearTimeout(timeoutId)
+    if (cleanupListeners) cleanupListeners()
+  }
+  
   return fetch(url, { ...options, signal })
     .then(response => {
-      clearTimeout(timeoutId)
+      cleanup()
       return response
     })
     .catch(error => {
-      clearTimeout(timeoutId)
+      cleanup()
       if (error.name === 'AbortError') {
         throw new Error(`Request timeout after ${timeoutMs}ms`)
       }
