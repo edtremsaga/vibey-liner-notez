@@ -18,15 +18,34 @@ export default function ChromeDebugPanel() {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent)
     
     // Check for Chrome (especially mobile Chrome)
+    // iPhone Chrome uses "CriOS" in user agent, but also check for Chrome in general
     const isChromeMobile = /CriOS/.test(userAgent) || 
                           (/Chrome/.test(userAgent) && /Mobile/.test(userAgent)) ||
-                          (/Chrome/.test(userAgent) && !/Safari/.test(userAgent) && /iPhone|iPad|iPod/.test(userAgent))
+                          (/Chrome/.test(userAgent) && !/Safari/.test(userAgent) && /iPhone|iPad|iPod/.test(userAgent)) ||
+                          // Also check if it's Chrome by checking for Chrome-specific properties
+                          (window.chrome && /iPhone|iPad|iPod/.test(userAgent))
     
-    // Show panel on mobile (for debugging) or Chrome specifically
+    // Show panel on ALL mobile devices for debugging (not just Chrome)
+    // This ensures it shows on iPhone Chrome even if detection fails
     if (isMobile || isChromeMobile) {
       setIsChrome(true)
       // Auto-show on mobile for debugging
       setIsVisible(true)
+      // Debug log to help troubleshoot
+      console.log('[ChromeDebugPanel] Initialized:', {
+        userAgent,
+        isMobile,
+        isChromeMobile,
+        hasChrome: !!window.chrome
+      })
+    } else {
+      // Debug log if not showing
+      console.log('[ChromeDebugPanel] Not showing:', {
+        userAgent,
+        isMobile,
+        isChromeMobile,
+        hasChrome: !!window.chrome
+      })
     }
 
     // Load logs from global store (captured early in main.jsx)
@@ -134,8 +153,11 @@ export default function ChromeDebugPanel() {
     }
   }, [logs])
 
-  // Don't render if not mobile/Chrome (for debugging, show on all mobile)
-  if (!isChrome) {
+  // Always show on mobile devices for debugging (especially iPhone Chrome)
+  // If isChrome is false but we're on mobile, still show it
+  const shouldShow = isChrome || (typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || ''))
+  
+  if (!shouldShow) {
     return null
   }
 
