@@ -3,6 +3,7 @@ import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, searchByProdu
 import { formatDuration } from '../utils/formatDuration'
 import { getCachedAlbum, setCachedAlbum } from '../utils/albumCache'
 import Help from '../components/Help'
+import ChromeDebugPanel from '../components/ChromeDebugPanel'
 import { useHelp } from '../contexts/HelpContext'
 import './AlbumPage.css'
 
@@ -504,11 +505,20 @@ function AlbumPage() {
           fromPage: 'search'
         }
         console.log('[History] Pushing new history state for producer search results:', producerResultsHistoryState)
-        window.history.pushState(
-          producerResultsHistoryState,
-          '',
-          window.location.href
-        )
+        try {
+          window.history.pushState(
+            producerResultsHistoryState,
+            '',
+            window.location.href
+          )
+          // Verify the state was actually set (Chrome sometimes has issues)
+          const verifyState = window.history.state
+          if (!verifyState || verifyState.page !== 'results') {
+            console.error('[History] WARNING: pushState may have failed. Expected state:', producerResultsHistoryState, 'Actual state:', verifyState)
+          }
+        } catch (error) {
+          console.error('[History] Error pushing producer search results state:', error, producerResultsHistoryState)
+        }
         
         // Explicitly trigger prefetch immediately after search completes (if Next button would be enabled)
         // Use setTimeout to ensure state updates have been processed
@@ -633,11 +643,20 @@ function AlbumPage() {
           fromPage: 'search'
         }
         console.log('[History] Pushing new history state for producer search results:', producerResultsHistoryState)
-        window.history.pushState(
-          producerResultsHistoryState,
-          '',
-          window.location.href
-        )
+        try {
+          window.history.pushState(
+            producerResultsHistoryState,
+            '',
+            window.location.href
+          )
+          // Verify the state was actually set (Chrome sometimes has issues)
+          const verifyState = window.history.state
+          if (!verifyState || verifyState.page !== 'results') {
+            console.error('[History] WARNING: pushState may have failed. Expected state:', producerResultsHistoryState, 'Actual state:', verifyState)
+          }
+        } catch (error) {
+          console.error('[History] Error pushing producer search results state:', error, producerResultsHistoryState)
+        }
         
         // Explicitly trigger prefetch immediately after search completes (if Next button would be enabled)
         // Use setTimeout to ensure state updates have been processed
@@ -776,12 +795,22 @@ function AlbumPage() {
           searchType: 'album',
           fromPage: 'search'
         }
-        window.history.pushState(
-          resultsHistoryState,
-          '',
-          window.location.href
-        )
-        console.log('[History] Pushed search results state (album search):', resultsHistoryState)
+        try {
+          window.history.pushState(
+            resultsHistoryState,
+            '',
+            window.location.href
+          )
+          console.log('[History] Pushed search results state (album search):', resultsHistoryState)
+          
+          // Verify the state was actually set (Chrome sometimes has issues)
+          const verifyState = window.history.state
+          if (!verifyState || verifyState.page !== 'results') {
+            console.error('[History] WARNING: pushState may have failed. Expected state:', resultsHistoryState, 'Actual state:', verifyState)
+          }
+        } catch (error) {
+          console.error('[History] Error pushing search results state:', error, resultsHistoryState)
+        }
       }
     } catch (err) {
       console.error('Error searching albums:', err)
@@ -1716,12 +1745,22 @@ function AlbumPage() {
         fromPage: 'results',
         searchType: searchMeta?.isProducerSearch ? 'producer' : 'album'
       }
-      window.history.pushState(
-        albumHistoryState,
-        '',
-        window.location.href
-      )
-      console.log('[History] Pushed album details state:', albumHistoryState)
+      try {
+        window.history.pushState(
+          albumHistoryState,
+          '',
+          window.location.href
+        )
+        console.log('[History] Pushed album details state:', albumHistoryState)
+        
+        // Verify the state was actually set (Chrome sometimes has issues)
+        const verifyState = window.history.state
+        if (!verifyState || verifyState.page !== 'album') {
+          console.error('[History] WARNING: pushState may have failed. Expected state:', albumHistoryState, 'Actual state:', verifyState)
+        }
+      } catch (error) {
+        console.error('[History] Error pushing album details state:', error, albumHistoryState)
+      }
     }
   }
   
@@ -1767,8 +1806,23 @@ function AlbumPage() {
       // Handle back button navigation based on history state being navigated TO
       const historyState = event.state
       
+      // Detect browser for debugging
+      const userAgent = navigator.userAgent || ''
+      // Chrome detection: CriOS (Chrome iOS), or Chrome without Safari, or Chrome on Android
+      const isChrome = /CriOS/.test(userAgent) || 
+                      (/Chrome/.test(userAgent) && !/Safari/.test(userAgent)) ||
+                      (/Chrome/.test(userAgent) && /Android/.test(userAgent))
+      // Safari detection: Safari but not Chrome/CriOS
+      const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent) && !/CriOS/.test(userAgent)
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent)
+      
       console.log('[History] popstate event fired:', {
+        browser: isChrome ? 'Chrome' : isSafari ? 'Safari' : 'Unknown',
+        isMobile,
+        userAgent: userAgent.substring(0, 100), // First 100 chars for privacy
         historyState,
+        historyStateType: typeof historyState,
+        historyStateKeys: historyState ? Object.keys(historyState) : null,
         currentReactState: {
           hasAlbum: !!album,
           hasSearchResults: !!searchResults,
@@ -1777,6 +1831,12 @@ function AlbumPage() {
           hasSelectedImage: selectedImage !== null
         }
       })
+      
+      // Chrome-specific: Sometimes historyState can be undefined even when it should exist
+      // Log a warning if we're in Chrome and historyState is unexpectedly null
+      if (isChrome && !historyState && (album || searchResults)) {
+        console.warn('[History] Chrome: historyState is null but React state suggests we should have history. This may indicate a Chrome-specific issue.')
+      }
       
       // Case 1: Lightbox is open → close lightbox and stay on album details page
       if (selectedImage !== null) {
@@ -1830,9 +1890,11 @@ function AlbumPage() {
       if (historyState && (historyState.page === 'search' || historyState.initialized === true)) {
         console.log('[History] Navigating back to initial search page:', historyState)
         
-        // Restore search type from history state if available (support both 'type' and 'searchType' for backward compatibility)
-        if (historyState.searchType || historyState.type) {
-          setSearchType(historyState.searchType || historyState.type)
+        // Restore search type from history state if available
+        // Support both 'searchType' (new) and 'type' (old) for backward compatibility
+        const searchTypeToUse = historyState.searchType || historyState.type
+        if (searchTypeToUse) {
+          setSearchType(searchTypeToUse)
         }
         
         // Clear search results and return to main search form
@@ -3193,6 +3255,8 @@ function AlbumPage() {
           </div>
         )}
       </div>
+      {/* Chrome Debug Panel - Only shows on Chrome mobile */}
+      <ChromeDebugPanel />
     </div>
   )
 }
