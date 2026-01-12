@@ -6,6 +6,15 @@ import './ChromeDebugPanel.css'
  * where Safari Web Inspector doesn't show Chrome's console logs
  */
 export default function ChromeDebugPanel() {
+  // DISABLED: ChromeDebugPanel is completely disabled
+  // Component will not render anything on any device
+  // To re-enable: Remove this return null and restore the code below
+  
+  // Return null immediately - this prevents any rendering
+  // Hooks below are unreachable but kept for future re-enabling
+  return null
+  
+  // ===== DISABLED CODE BELOW (kept for future re-enabling) =====
   const [isVisible, setIsVisible] = useState(false)
   const [logs, setLogs] = useState([])
   const [isChrome, setIsChrome] = useState(false)
