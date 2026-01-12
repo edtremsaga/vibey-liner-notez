@@ -2469,6 +2469,9 @@ function AlbumPage() {
           )}
         </div>
       </div>
+      {/* Chrome Debug Panel - Only shows on Chrome mobile */}
+      <ChromeDebugPanel />
+    </div>
     )
   }
   
@@ -2482,6 +2485,8 @@ function AlbumPage() {
             : `Loading ${getLoadingReleaseType()} from MusicBrainz...`
           }
         </div>
+        {/* Chrome Debug Panel - Only shows on Chrome mobile */}
+        <ChromeDebugPanel />
       </div>
     )
   }
@@ -2640,6 +2645,9 @@ function AlbumPage() {
           )}
         </div>
       </div>
+      {/* Chrome Debug Panel - Only shows on Chrome mobile */}
+      <ChromeDebugPanel />
+    </div>
     )
   }
   
@@ -2660,6 +2668,8 @@ function AlbumPage() {
             </button>
           </div>
         </div>
+        {/* Chrome Debug Panel - Only shows on Chrome mobile */}
+        <ChromeDebugPanel />
       </div>
     )
   }
@@ -2677,6 +2687,8 @@ function AlbumPage() {
             {searchResults && searchResults.length > 0 ? 'Back to Results' : 'New Search'}
           </button>
         </div>
+        {/* Chrome Debug Panel - Only shows on Chrome mobile */}
+        <ChromeDebugPanel />
       </div>
     )
   }
