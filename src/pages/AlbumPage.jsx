@@ -115,8 +115,19 @@ function AlbumPage() {
     }
   }, [])
   
-  // Update URL when search type changes
+  // Update URL when search type changes (only on search page, not results/album pages)
   useEffect(() => {
+    // Only update history if we're on the search page (not results or album pages)
+    const currentState = window.history.state
+    const isOnSearchPage = !currentState || 
+                          currentState.page === 'search' || 
+                          currentState.initialized === true
+    
+    // Don't replace history if we're on results or album pages
+    if (!isOnSearchPage) {
+      return
+    }
+    
     const url = new URL(window.location.href)
     if (searchType === 'album') {
       url.searchParams.delete('type') // Remove param for album (default)
