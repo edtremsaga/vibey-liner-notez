@@ -155,27 +155,41 @@ export default function ChromeDebugPanel() {
 
   // Always show on mobile devices for debugging (check directly during render, don't rely on state)
   // This check happens synchronously during render, so it works immediately
-  const isMobileDevice = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '')
+  const userAgent = typeof window !== 'undefined' ? (navigator.userAgent || '') : ''
+  const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(userAgent)
   
   // Always show on mobile devices - don't depend on isChrome state which is set asynchronously in useEffect
   // This ensures it works on first render on all pages
   const shouldShow = isMobileDevice
   
-  // Debug logging (only log once per mount to avoid spam)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      console.log('[ChromeDebugPanel] Mount check:', {
-        userAgent: navigator.userAgent,
+  // Aggressive debug logging during render (not in useEffect) to catch Chrome-specific issues
+  if (typeof window !== 'undefined') {
+    // Only log if we're on a page where it should show but might not be
+    const currentPath = window.location.pathname
+    const isSearchOrResults = currentPath === '/' || currentPath.includes('search') || currentPath.includes('results')
+    
+    if (isSearchOrResults || !shouldShow) {
+      console.log('[ChromeDebugPanel] RENDER CHECK:', {
+        userAgent,
         isMobileDevice,
-        isChromeState: isChrome,
         shouldShow,
         willRender: shouldShow,
-        location: window.location.pathname
+        pathname: currentPath,
+        isSearchOrResults,
+        timestamp: new Date().toISOString()
       })
     }
-  }, [isMobileDevice, isChrome, shouldShow]) // Log when these change
+  }
   
   if (!shouldShow) {
+    // Log why we're not showing
+    if (typeof window !== 'undefined') {
+      console.warn('[ChromeDebugPanel] NOT RENDERING - not a mobile device:', {
+        userAgent,
+        isMobileDevice,
+        pathname: window.location.pathname
+      })
+    }
     return null
   }
 

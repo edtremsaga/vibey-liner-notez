@@ -2469,7 +2469,7 @@ function AlbumPage() {
           )}
         </div>
         {/* Chrome Debug Panel - Only shows on Chrome mobile */}
-        <ChromeDebugPanel />
+        <ChromeDebugPanel key="debug-panel-search" />
       </div>
   )
   }
@@ -2485,7 +2485,7 @@ function AlbumPage() {
           }
         </div>
         {/* Chrome Debug Panel - Only shows on Chrome mobile */}
-        <ChromeDebugPanel />
+        <ChromeDebugPanel key="debug-panel-loading" />
       </div>
     )
   }
@@ -2644,7 +2644,7 @@ function AlbumPage() {
           )}
         </div>
         {/* Chrome Debug Panel - Only shows on Chrome mobile */}
-        <ChromeDebugPanel />
+        <ChromeDebugPanel key="debug-panel-results" />
       </div>
   )
   }
@@ -2667,7 +2667,7 @@ function AlbumPage() {
           </div>
         </div>
         {/* Chrome Debug Panel - Only shows on Chrome mobile */}
-        <ChromeDebugPanel />
+        <ChromeDebugPanel key="debug-panel-error" />
       </div>
     )
   }
@@ -2686,7 +2686,7 @@ function AlbumPage() {
           </button>
         </div>
         {/* Chrome Debug Panel - Only shows on Chrome mobile */}
-        <ChromeDebugPanel />
+        <ChromeDebugPanel key="debug-panel-no-album" />
       </div>
     )
   }
@@ -3277,7 +3277,7 @@ function AlbumPage() {
         )}
       </div>
       {/* Chrome Debug Panel - Only shows on Chrome mobile */}
-      <ChromeDebugPanel />
+      <ChromeDebugPanel key="debug-panel-album" />
     </div>
   )
 }
