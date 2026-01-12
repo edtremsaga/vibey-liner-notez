@@ -2448,8 +2448,8 @@ function AlbumPage() {
                   className="search-button"
                   disabled={searching || !!multipleProducerMatches}
                 >
-                  {searching && searchType === 'producer' && searchProgress.current > 0
-                    ? `Searching... (${searchProgress.current} of ${searchProgress.total})`
+                  {searching && searchType === 'producer'
+                    ? 'Searching music archives...'
                     : searching
                     ? 'Searching...'
                     : 'Search'}
