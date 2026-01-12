@@ -153,9 +153,27 @@ export default function ChromeDebugPanel() {
     }
   }, [logs])
 
-  // Always show on mobile devices for debugging (especially iPhone Chrome)
-  // If isChrome is false but we're on mobile, still show it
-  const shouldShow = isChrome || (typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || ''))
+  // Always show on mobile devices for debugging (check directly during render, don't rely on state)
+  // This check happens synchronously during render, so it works immediately
+  const isMobileDevice = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '')
+  
+  // Always show on mobile devices - don't depend on isChrome state which is set asynchronously in useEffect
+  // This ensures it works on first render on all pages
+  const shouldShow = isMobileDevice
+  
+  // Debug logging (only log once per mount to avoid spam)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      console.log('[ChromeDebugPanel] Mount check:', {
+        userAgent: navigator.userAgent,
+        isMobileDevice,
+        isChromeState: isChrome,
+        shouldShow,
+        willRender: shouldShow,
+        location: window.location.pathname
+      })
+    }
+  }, [isMobileDevice, isChrome, shouldShow]) // Log when these change
   
   if (!shouldShow) {
     return null
