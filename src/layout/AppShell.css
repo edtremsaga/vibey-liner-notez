@@ -47,6 +47,9 @@
   .app-content {
     padding-left: 0.25rem;
     padding-right: 0.25rem;
+    /* Add bottom padding to account for browser chrome on mobile (especially Chrome iOS) */
+    /* 60px for browser navigation bar + safe area inset for devices with home indicator */
+    padding-bottom: calc(0.8rem + 60px + env(safe-area-inset-bottom, 0px));
   }
 }
 

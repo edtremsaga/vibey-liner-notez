@@ -768,6 +768,13 @@
   }
 }
 
+/* Extra bottom margin on mobile to ensure pagination controls are accessible above browser chrome */
+@media (max-width: 480px) {
+  .pagination-controls {
+    margin-bottom: calc(2rem + 20px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* Wikipedia Section */
 .wikipedia-section {
   margin-bottom: 3rem;
