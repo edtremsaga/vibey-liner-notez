@@ -153,6 +153,11 @@ export default function ChromeDebugPanel() {
     }
   }, [logs])
 
+  // DISABLED: ChromeDebugPanel is currently disabled
+  // Return null immediately - component will not render on any device
+  // To re-enable: Remove this early return and restore detection logic below
+  return null
+  
   // SIMPLIFIED: Show on mobile only, but with minimal detection
   // Check for mobile using the simplest possible method
   const hasWindow = typeof window !== 'undefined'
