@@ -134,12 +134,17 @@ function AlbumPage() {
   useEffect(() => {
     // Only initialize if no history state exists (first load or page refresh)
     if (window.history.state === null) {
+      const initialHistoryState = {
+        page: 'search',
+        searchType: searchType,
+        initialized: true
+      }
       window.history.replaceState(
-        { page: 'search', type: searchType, initialized: true },
+        initialHistoryState,
         '',
         window.location.href
       )
-      console.log('[History] Initialized history state for search page')
+      console.log('[History] Initialized history state for search page:', initialHistoryState)
     }
   }, [searchType])
   
@@ -493,9 +498,14 @@ function AlbumPage() {
         setDisplayedResults(filteredResults.slice(0, RESULTS_PER_PAGE))
         
         // Push new history state for search results
-        console.log('[History] Pushing new history state for producer search results')
+        const producerResultsHistoryState = {
+          page: 'results',
+          searchType: 'producer',
+          fromPage: 'search'
+        }
+        console.log('[History] Pushing new history state for producer search results:', producerResultsHistoryState)
         window.history.pushState(
-          { fromSearch: true, page: 'results', type: 'producer' },
+          producerResultsHistoryState,
           '',
           window.location.href
         )
@@ -617,9 +627,14 @@ function AlbumPage() {
         setDisplayedResults(filteredResults.slice(0, RESULTS_PER_PAGE))
         
         // Push new history state for search results
-        console.log('[History] Pushing new history state for producer search results')
+        const producerResultsHistoryState = {
+          page: 'results',
+          searchType: 'producer',
+          fromPage: 'search'
+        }
+        console.log('[History] Pushing new history state for producer search results:', producerResultsHistoryState)
         window.history.pushState(
-          { fromSearch: true, page: 'results', type: 'producer' },
+          producerResultsHistoryState,
           '',
           window.location.href
         )
@@ -756,12 +771,17 @@ function AlbumPage() {
         
         // Push new history entry for search results (unified for mobile and desktop)
         // Initial history state is now guaranteed to exist from component mount
+        const resultsHistoryState = {
+          page: 'results',
+          searchType: 'album',
+          fromPage: 'search'
+        }
         window.history.pushState(
-          { fromSearch: true, page: 'results', type: 'album' },
+          resultsHistoryState,
           '',
           window.location.href
         )
-        console.log('[History] Pushed search results state (album search)')
+        console.log('[History] Pushed search results state (album search):', resultsHistoryState)
       }
     } catch (err) {
       console.error('Error searching albums:', err)
@@ -1690,11 +1710,18 @@ function AlbumPage() {
     // Push browser history entry if we came from search results
     // This allows back button to return to search results
     if (searchResults && searchResults.length > 0) {
+      const albumHistoryState = {
+        page: 'album',
+        albumId: releaseGroupId,
+        fromPage: 'results',
+        searchType: searchMeta?.isProducerSearch ? 'producer' : 'album'
+      }
       window.history.pushState(
-        { fromSearchResults: true, albumId: releaseGroupId },
+        albumHistoryState,
         '',
         window.location.href
       )
+      console.log('[History] Pushed album details state:', albumHistoryState)
     }
   }
   
@@ -1737,11 +1764,23 @@ function AlbumPage() {
   // Handle browser back/forward button
   useEffect(() => {
     const handlePopState = (event) => {
-      // Handle back button navigation based on current state
+      // Handle back button navigation based on history state being navigated TO
       const historyState = event.state
+      
+      console.log('[History] popstate event fired:', {
+        historyState,
+        currentReactState: {
+          hasAlbum: !!album,
+          hasSearchResults: !!searchResults,
+          searchResultsLength: searchResults?.length || 0,
+          showHelp,
+          hasSelectedImage: selectedImage !== null
+        }
+      })
       
       // Case 1: Lightbox is open → close lightbox and stay on album details page
       if (selectedImage !== null) {
+        console.log('[History] Closing lightbox, staying on album page')
         setSelectedImage(null)
         // Don't push a new state - we're already on the album details page
         // The history stack is: search results → album details → lightbox open
@@ -1751,49 +1790,51 @@ function AlbumPage() {
       
       // Case 2: Coming back from help section → close help
       if (showHelp) {
+        console.log('[History] Closing help section')
         setShowHelp(false)
         return
       }
       
-      // Case 3: On album page with search results → return to search results
-      if (album && searchResults && searchResults.length > 0) {
+      // Case 3: Navigating back to search results page (from album details)
+      // Check history state first - this is the source of truth for what page we're navigating TO
+      if (historyState && historyState.page === 'results') {
+        console.log('[History] Navigating back to search results page:', historyState)
+        
+        // Restore search type if available
+        if (historyState.searchType) {
+          setSearchType(historyState.searchType)
+        }
+        
+        // Clear album state to show search results
         setAlbum(null)
         setAlbumError(null)
-        setDisplayedResults(searchResults.slice(0, RESULTS_PER_PAGE))
-        setResultsPage(1)
-        return
-      }
-      
-      // Case 4: Returning to initial search page (check history state)
-      // This handles going back from search results to the initial search page
-      if (historyState && (historyState.page === 'search' || historyState.initialized === true)) {
-        // Restore search type from history state if available
-        if (historyState.type) {
-          setSearchType(historyState.type)
-        }
-        // Clear search results and return to main search form
-        setSearchResults(null)
-        setSearchMeta(null)
-        setDisplayedResults([])
-        setResultsPage(1)
-        setFetchedCount(0)
-        setSearchError(null)
-        setMultipleProducerMatches(null)
-        // Keep search form values so user can see what they searched for
-        // (Don't clear searchArtist, searchAlbum, releaseType, searchProducer)
-        console.log('[History] Returning to initial search page', historyState.type ? `(type: ${historyState.type})` : '')
-        return
-      }
-      
-      // Case 5: On search results page (no album) → return to main search page
-      // Fallback: Check React state if history state doesn't match
-      if (!album && searchResults && searchResults.length > 0) {
-        // Restore search type from searchMeta if available (producer vs album search)
-        if (searchMeta && searchMeta.isProducerSearch) {
-          setSearchType('producer')
+        
+        // Restore displayed results if we have search results in memory
+        if (searchResults && searchResults.length > 0) {
+          setDisplayedResults(searchResults.slice(0, RESULTS_PER_PAGE))
+          setResultsPage(1)
+          console.log('[History] Restored search results from memory')
         } else {
-          setSearchType('album')
+          // Search results not in memory - this shouldn't happen, but handle gracefully
+          console.warn('[History] Search results not in memory when navigating back to results page')
+          setSearchResults(null)
+          setSearchMeta(null)
+          setDisplayedResults([])
+          setResultsPage(1)
         }
+        return
+      }
+      
+      // Case 4: Navigating back to initial search page
+      // Check if history state indicates we're going back to search page
+      if (historyState && (historyState.page === 'search' || historyState.initialized === true)) {
+        console.log('[History] Navigating back to initial search page:', historyState)
+        
+        // Restore search type from history state if available (support both 'type' and 'searchType' for backward compatibility)
+        if (historyState.searchType || historyState.type) {
+          setSearchType(historyState.searchType || historyState.type)
+        }
+        
         // Clear search results and return to main search form
         setSearchResults(null)
         setSearchMeta(null)
@@ -1802,13 +1843,51 @@ function AlbumPage() {
         setFetchedCount(0)
         setSearchError(null)
         setMultipleProducerMatches(null)
+        setAlbum(null)
+        setAlbumError(null)
         // Keep search form values so user can see what they searched for
         // (Don't clear searchArtist, searchAlbum, releaseType, searchProducer)
-        console.log('[History] Returning to search page (fallback)')
         return
+      }
+      
+      // Case 5: Fallback - use React state if history state is null or doesn't match expected structure
+      // This handles edge cases where history state might be missing or malformed
+      if (!historyState || (!historyState.page && !historyState.initialized)) {
+        console.log('[History] No valid history state, using React state fallback')
+        
+        // If we have an album, assume we're going back to search results
+        if (album && searchResults && searchResults.length > 0) {
+          console.log('[History] Fallback: Returning to search results (album → results)')
+          setAlbum(null)
+          setAlbumError(null)
+          setDisplayedResults(searchResults.slice(0, RESULTS_PER_PAGE))
+          setResultsPage(1)
+          return
+        }
+        
+        // If we have search results but no album, assume we're going back to search page
+        if (!album && searchResults && searchResults.length > 0) {
+          console.log('[History] Fallback: Returning to search page (results → search)')
+          // Restore search type from searchMeta if available
+          if (searchMeta && searchMeta.isProducerSearch) {
+            setSearchType('producer')
+          } else {
+            setSearchType('album')
+          }
+          // Clear search results and return to main search form
+          setSearchResults(null)
+          setSearchMeta(null)
+          setDisplayedResults([])
+          setResultsPage(1)
+          setFetchedCount(0)
+          setSearchError(null)
+          setMultipleProducerMatches(null)
+          return
+        }
       }
       
       // Case 6: No special handling needed, let browser handle normally
+      console.log('[History] No special handling, letting browser handle normally')
     }
     
     window.addEventListener('popstate', handlePopState)
