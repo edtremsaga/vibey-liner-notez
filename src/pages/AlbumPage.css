@@ -166,10 +166,15 @@
   line-height: 1.6;
 }
 
-/* Hide long description text on mobile */
+/* Hide long description text on mobile (except for producer search) */
 @media (max-width: 480px) {
   .search-description-long {
     display: none;
+  }
+  
+  /* Show full text for producer search on mobile */
+  .producer-search-description .search-description-long {
+    display: inline;
   }
 }
 

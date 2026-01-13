@@ -2296,7 +2296,7 @@ function AlbumPage() {
     return (
       <div className="album-page">
         <div className="album-container">
-          <div className="search-description">
+          <div className={`search-description ${searchType === 'producer' ? 'producer-search-description' : ''}`}>
             <p className="search-description-main">
               {searchType === 'producer' ? (
                 <>
