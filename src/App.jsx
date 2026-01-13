@@ -33,23 +33,43 @@ function AppHeader() {
         liner notez
       </h1>
       {isMobile && (
-        <button
-          onClick={openHelp}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--muted2)',
-            fontSize: '0.9rem',
-            cursor: 'pointer',
-            textDecoration: 'underline',
-            padding: '0.5rem',
-            transition: 'color 0.2s'
-          }}
-          onMouseEnter={(e) => e.target.style.color = 'var(--accent)'}
-          onMouseLeave={(e) => e.target.style.color = 'var(--muted2)'}
-        >
-          Help
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button
+            onClick={openHelp}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--muted2)',
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              padding: '0.5rem',
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={(e) => e.target.style.color = 'var(--accent)'}
+            onMouseLeave={(e) => e.target.style.color = 'var(--muted2)'}
+          >
+            Help
+          </button>
+          <span style={{ color: 'var(--muted2)', fontSize: '0.9rem' }}>|</span>
+          <a
+            href="mailto:vibeycraft@gmail.com?subject=Vibey Music Looper Feedback"
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--muted2)',
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              padding: '0.5rem',
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={(e) => e.target.style.color = 'var(--accent)'}
+            onMouseLeave={(e) => e.target.style.color = 'var(--muted2)'}
+          >
+            Feedback
+          </a>
+        </div>
       )}
     </div>
   )

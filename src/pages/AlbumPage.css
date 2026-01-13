@@ -11,12 +11,17 @@
   text-align: center;
   margin-top: 3rem;
   margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 /* Move help link closer to "album information only" text on mobile */
 @media (max-width: 480px) {
   .help-link-container {
-    margin-top: 0.5rem;
+    margin-top: 0.25rem; /* Reduced from 0.5rem to bring links closer to search area */
     margin-bottom: 0.75rem; /* Phase 2: Reduced from 1rem */
   }
 }
@@ -34,6 +39,17 @@
 
 .help-link:hover {
   color: var(--accent);
+}
+
+/* Feedback link styling (same as help link) */
+.help-link-container a.help-link {
+  text-decoration: underline;
+}
+
+.help-link-separator {
+  color: var(--muted2);
+  font-size: 0.9rem;
+  padding: 0 0.25rem;
 }
 
 .album-container {
@@ -121,7 +137,7 @@
   /* Make "Search for an Album" title same size as "liner notez" header on mobile */
   .search-title {
     font-size: 1.2rem; /* Reduced to fit on one line on mobile */
-    margin-bottom: 0.5rem; /* Further reduced from 0.75rem */
+    margin-bottom: 0.375rem; /* Reduced by 25% from 0.5rem */
     letter-spacing: -0.01em; /* Slightly tighter letter spacing to help fit */
     line-height: 1.2; /* Tighter line height */
   }
@@ -192,7 +208,7 @@
 @media (max-width: 480px) {
   .search-description-note {
     margin-top: 0.5rem; /* Reduced top margin */
-    margin-bottom: 0.5rem; /* Reduced bottom margin */
+    margin-bottom: 0.25rem; /* Reduced from 0.5rem to bring help/feedback links closer */
     font-size: 0.8rem; /* Slightly smaller font */
   }
 }

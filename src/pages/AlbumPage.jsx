@@ -2467,13 +2467,15 @@ function AlbumPage() {
             )}
           </section>
           <p className="search-description-note">ⓘ Album information only — no audio playback or streaming</p>
-          {!isMobile && (
-            <div className="help-link-container">
-              <button className="help-link" onClick={handleOpenHelp}>
-                Help
-              </button>
-            </div>
-          )}
+          <div className="help-link-container">
+            <button className="help-link" onClick={handleOpenHelp}>
+              Help
+            </button>
+            <span className="help-link-separator">|</span>
+            <a href="mailto:vibeycraft@gmail.com?subject=Vibey Music Looper Feedback" className="help-link">
+              Feedback
+            </a>
+          </div>
         </div>
       </div>
   )
@@ -2638,13 +2640,15 @@ function AlbumPage() {
               </div>
             )}
           </section>
-          {!isMobile && (
-            <div className="help-link-container">
-              <button className="help-link" onClick={handleOpenHelp}>
-                Help
-              </button>
-            </div>
-          )}
+          <div className="help-link-container">
+            <button className="help-link" onClick={handleOpenHelp}>
+              Help
+            </button>
+            <span className="help-link-separator">|</span>
+            <a href="mailto:vibeycraft@gmail.com?subject=Vibey Music Looper Feedback" className="help-link">
+              Feedback
+            </a>
+          </div>
         </div>
       </div>
   )
@@ -3278,13 +3282,15 @@ function AlbumPage() {
             </>
           )}
         </section>
-        {!isMobile && (
-          <div className="help-link-container">
-            <button className="help-link" onClick={handleOpenHelp}>
-              Help
-            </button>
-          </div>
-        )}
+        <div className="help-link-container">
+          <button className="help-link" onClick={handleOpenHelp}>
+            Help
+          </button>
+          <span className="help-link-separator">|</span>
+          <a href="mailto:vibeycraft@gmail.com?subject=Vibey Music Looper Feedback" className="help-link">
+            Feedback
+          </a>
+        </div>
       </div>
     </div>
   )

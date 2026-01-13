@@ -232,6 +232,10 @@ function Help({ onClose }) {
             <li><strong>MusicBrainz</strong>: <a href="https://musicbrainz.org" target="_blank" rel="noopener noreferrer">musicbrainz.org</a></li>
             <li><strong>Cover Art Archive</strong>: <a href="https://coverartarchive.org" target="_blank" rel="noopener noreferrer">coverartarchive.org</a></li>
           </ul>
+          <p>For feedback about liner notez:</p>
+          <ul>
+            <li><strong>Send Feedback</strong>: <a href="mailto:vibeycraft@gmail.com?subject=Vibey Music Looper Feedback">vibeycraft@gmail.com</a></li>
+          </ul>
         </section>
 
         <div className="help-footer">
