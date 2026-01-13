@@ -115,10 +115,8 @@
     padding-top: 0.4rem; /* Reduced from 0.8rem */
   }
   
-  /* Hide search description text on mobile to save vertical space */
-  .search-description {
-    display: none;
-  }
+  /* Note: search-description is now visible on mobile for producer search */
+  /* Only the long description text is hidden (see .search-description-long below) */
   
   /* Make "Search for an Album" title same size as "liner notez" header on mobile */
   .search-title {
