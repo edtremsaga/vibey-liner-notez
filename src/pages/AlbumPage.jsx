@@ -1757,7 +1757,7 @@ function AlbumPage() {
       setAlbum(null)
     }
     
-    // Don't clear searchResults - we need it for "Back to Results" button
+    // Don't clear searchResults - we need it for "Back to Search Results" button
     setEditionsExpanded(false) // Reset editions collapse state when loading new album
     setAlbumCreditsExpanded(true) // Reset album credits to expanded when loading new album
     setLoadingBasicInfo(false) // Basic info already shown from search results
@@ -2023,8 +2023,14 @@ function AlbumPage() {
   
   // Return to search form
   function handleNewSearch() {
+    // Check current URL to determine what page we're on
+    // This is needed because after browser back button, React state might not match URL
+    const pathname = window.location.pathname
+    const isOnResultsPage = pathname === '/results'
+    
     // Check if we're on album page BEFORE clearing album state
-    const wasOnAlbumPage = !!album
+    // Use URL pathname as fallback if React state doesn't match (e.g., after browser back)
+    const wasOnAlbumPage = !!album || pathname.startsWith('/album/')
     
     setAlbum(null)
     setAlbumError(null)
@@ -2036,6 +2042,62 @@ function AlbumPage() {
       setSearchError(null)
       setDisplayedResults(searchResults.slice(0, RESULTS_PER_PAGE))
       setResultsPage(1)
+      
+      // Update browser URL to match the results page
+      const resultsUrl = new URL(window.location.origin + '/results')
+      if (searchMeta?.isProducerSearch) {
+        resultsUrl.searchParams.set('type', 'producer')
+        if (searchMeta.producerName) {
+          resultsUrl.searchParams.set('producer', encodeURIComponent(searchMeta.producerName))
+        }
+        if (searchMeta.producerMBID) {
+          resultsUrl.searchParams.set('mbid', searchMeta.producerMBID)
+        }
+      } else {
+        resultsUrl.searchParams.set('type', 'album')
+        if (searchArtist) {
+          resultsUrl.searchParams.set('artist', encodeURIComponent(searchArtist))
+        }
+        if (searchAlbum) {
+          resultsUrl.searchParams.set('album', encodeURIComponent(searchAlbum))
+        }
+        if (releaseType && releaseType !== 'Album') {
+          resultsUrl.searchParams.set('releaseType', releaseType)
+        }
+      }
+      
+      const resultsHistoryState = {
+        page: 'results',
+        searchType: searchMeta?.isProducerSearch ? 'producer' : 'album',
+        fromPage: 'search',
+        producerName: searchMeta?.producerName,
+        producerMBID: searchMeta?.producerMBID,
+        artist: searchMeta?.isProducerSearch ? null : (searchArtist || null),
+        album: searchMeta?.isProducerSearch ? null : (searchAlbum || null),
+        releaseType: searchMeta?.isProducerSearch ? null : (releaseType || null)
+      }
+      
+      // Special case: If we're already on results page (e.g., after browser back button),
+      // use replaceState instead of pushState to avoid creating duplicate history entries
+      // This fixes the bug where clicking "Back to Search Results" from results page
+      // would create a duplicate entry and break the browser back button
+      if (isOnResultsPage && window.history.state?.page === 'results') {
+        // Already on results page with correct state - just ensure state is up to date
+        window.history.replaceState(
+          resultsHistoryState,
+          '',
+          resultsUrl.toString()
+        )
+        console.log('[History] Replaced results state from Back to Search Results button (already on results):', resultsHistoryState)
+      } else {
+        // Coming from album page - push new history entry
+        window.history.pushState(
+          resultsHistoryState,
+          '',
+          resultsUrl.toString()
+        )
+        console.log('[History] Pushed results state from Back to Search Results button:', resultsHistoryState)
+      }
     } else {
       // Start completely fresh - clear everything
       setSearchResults(null)
@@ -2046,6 +2108,18 @@ function AlbumPage() {
       setReleaseType('Album') // Reset to default
       setDisplayedResults([])
       setResultsPage(1)
+      
+      // Update browser URL to search page
+      const searchUrl = new URL(window.location.origin + '/')
+      if (searchType === 'producer') {
+        searchUrl.searchParams.set('type', 'producer')
+      }
+      window.history.pushState(
+        { page: 'search', searchType: searchType, initialized: true },
+        '',
+        searchUrl.toString()
+      )
+      console.log('[History] Pushed search page state from New Search button')
     }
     setSortOption('newest') // Reset to default sort
     setExpandedTracks(new Set())
@@ -2971,12 +3045,15 @@ function AlbumPage() {
             <h2>Error Loading Album</h2>
             <p>{albumError}</p>
             <p>Please check your internet connection and try again.</p>
-            <button 
-              className="new-search-button"
-              onClick={handleNewSearch}
-            >
-              {searchResults && searchResults.length > 0 ? 'Back to Results' : 'New Search'}
-            </button>
+            {/* Hide "Back to Search Results" on desktop - browser back button is sufficient */}
+            {(isMobile || !searchResults || searchResults.length === 0) && (
+              <button 
+                className="new-search-button"
+                onClick={handleNewSearch}
+              >
+                {searchResults && searchResults.length > 0 ? 'Back to Search Results' : 'New Search'}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -2989,12 +3066,15 @@ function AlbumPage() {
       <div className="album-page">
         <div className="album-container">
           <div className="error">No album data available</div>
-          <button 
-            className="new-search-button"
-            onClick={handleNewSearch}
-          >
-            {searchResults && searchResults.length > 0 ? 'Back to Results' : 'New Search'}
-          </button>
+          {/* Hide "Back to Search Results" on desktop - browser back button is sufficient */}
+          {(isMobile || !searchResults || searchResults.length === 0) && (
+            <button 
+              className="new-search-button"
+              onClick={handleNewSearch}
+            >
+              {searchResults && searchResults.length > 0 ? 'Back to Search Results' : 'New Search'}
+            </button>
+          )}
         </div>
       </div>
     )
@@ -3019,13 +3099,16 @@ function AlbumPage() {
             ← Back
           </button>
         )}
-        <button 
-          className="new-search-button"
-          onClick={handleNewSearch}
-          style={{ marginBottom: '2rem' }}
-        >
-          {searchResults && searchResults.length > 0 ? 'Back to Results' : 'New Search'}
-        </button>
+        {/* Hide "Back to Search Results" on desktop - browser back button is sufficient */}
+        {(isMobile || !searchResults || searchResults.length === 0) && (
+          <button 
+            className="new-search-button"
+            onClick={handleNewSearch}
+            style={{ marginBottom: '2rem' }}
+          >
+            {searchResults && searchResults.length > 0 ? 'Back to Search Results' : 'New Search'}
+          </button>
+        )}
         
         {/* Wikipedia Content */}
         {(wikipediaContent || loadingWikipedia || wikipediaError) && (

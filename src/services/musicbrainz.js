@@ -70,9 +70,12 @@ async function rateLimitedFetch(url, options = {}) {
     if (error.name === 'AbortError') {
       throw new Error(`Request timeout after ${timeoutMs}ms`)
     }
-    // iOS Safari specific: "Load failed" usually means network/CORS issue
+    // Safari (iOS and desktop) specific: "Load failed" usually means network/CORS issue
     if (error.message?.includes('Load failed') || error.message?.includes('Failed to fetch')) {
-      throw new Error(`Network request failed on iOS: ${error.message}. URL: ${url}`)
+      const isSafari = /Safari/.test(navigator.userAgent || '') && !/Chrome/.test(navigator.userAgent || '') && !/CriOS/.test(navigator.userAgent || '')
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent || '')
+      const platform = isIOS ? 'iOS' : isSafari ? 'Safari' : 'browser'
+      throw new Error(`Network request failed on ${platform}: ${error.message}. URL: ${url}`)
     }
     throw error
   }
@@ -1022,9 +1025,15 @@ function testImageUrl(url) {
 
 // Fetch cover art for release group or release
 export async function fetchCoverArt(releaseGroupId, releaseId = null) {
-  // iOS Safari workaround: Try direct image URLs first (they often work when fetch() doesn't)
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  // Detect Safari (iOS and desktop) - Safari has stricter CORS policies
+  const userAgent = navigator.userAgent || ''
+  const isIOS = /iPad|iPhone|iPod/.test(userAgent)
+  const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent) && !/CriOS/.test(userAgent)
+  const isMobile = /iPad|iPhone|iPod|Android/.test(userAgent) || window.innerWidth <= 480
   
+  console.log('[CoverArt Debug] Browser detection:', { userAgent: userAgent.substring(0, 80), isIOS, isSafari, isMobile })
+  
+  // iOS Safari workaround: Try direct image URLs first (they often work when fetch() doesn't)
   if (isIOS) {
     // Try release-level direct image URL first (more specific)
     if (releaseId) {
@@ -1046,11 +1055,21 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
   // Try release group first (standard API approach)
   try {
     const releaseGroupUrl = `${COVER_ART_BASE}/release-group/${releaseGroupId}`
+    // Remove User-Agent header on Safari (iOS and desktop) - causes CORS error
+    // Same issue as mobile: "Request header field User-Agent is not allowed by Access-Control-Allow-Headers"
+    const shouldRemoveUserAgent = isMobile || isSafari
+    const headers = shouldRemoveUserAgent 
+      ? { 'Accept': 'application/json' }
+      : { 'User-Agent': 'liner-notez/1.0', 'Accept': 'application/json' }
+    
+    console.log('[CoverArt Debug] Fetching release group cover art:', { 
+      url: releaseGroupUrl, 
+      headers, 
+      removedUserAgent: shouldRemoveUserAgent 
+    })
+    
     const response = await rateLimitedFetch(releaseGroupUrl, {
-      headers: {
-        'User-Agent': 'liner-notez/1.0',
-        'Accept': 'application/json'
-      }
+      headers
     })
     
     if (response.ok) {
@@ -1076,10 +1095,18 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
   if (releaseId) {
     try {
       const releaseUrl = `${COVER_ART_BASE}/release/${releaseId}`
+      // Remove User-Agent header on Safari (same CORS issue)
+      const shouldRemoveUserAgent = isMobile || isSafari
+      const headers = shouldRemoveUserAgent ? {} : { 'User-Agent': 'liner-notez/1.0' }
+      
+      console.log('[CoverArt Debug] Fetching release cover art:', { 
+        url: releaseUrl, 
+        headers, 
+        removedUserAgent: shouldRemoveUserAgent 
+      })
+      
       const response = await rateLimitedFetch(releaseUrl, {
-        headers: {
-          'User-Agent': 'liner-notez/1.0'
-        }
+        headers
       })
       
       if (response.ok) {
@@ -1115,13 +1142,17 @@ export async function fetchAllAlbumArt(releaseGroupId, signal = null) {
   console.log('[Gallery Debug] URL:', url)
   console.log('[Gallery Debug] Signal aborted?', signal?.aborted)
   
-  // Detect mobile for User-Agent header fix
-  const isMobile = /iPad|iPhone|iPod|Android/.test(navigator.userAgent) || window.innerWidth <= 480
+  // Detect Safari (iOS and desktop) and mobile for User-Agent header fix
+  const userAgent = navigator.userAgent || ''
+  const isMobile = /iPad|iPhone|iPod|Android/.test(userAgent) || window.innerWidth <= 480
+  const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent) && !/CriOS/.test(userAgent)
   
   try {
     console.log('[Gallery Debug] Calling rateLimitedFetch...')
-    // Remove User-Agent header on mobile - causes CORS error: "Request header field User-Agent is not allowed by Access-Control-Allow-Headers"
-    const fetchHeaders = isMobile ? {} : { 'User-Agent': 'liner-notez/1.0' }
+    console.log('[Gallery Debug] Browser detection:', { userAgent: userAgent.substring(0, 80), isMobile, isSafari })
+    // Remove User-Agent header on mobile OR Safari - causes CORS error: "Request header field User-Agent is not allowed by Access-Control-Allow-Headers"
+    const shouldRemoveUserAgent = isMobile || isSafari
+    const fetchHeaders = shouldRemoveUserAgent ? {} : { 'User-Agent': 'liner-notez/1.0' }
     console.log('[Gallery Debug] Fetch headers:', fetchHeaders)
     const response = await rateLimitedFetch(url, {
       headers: fetchHeaders,
