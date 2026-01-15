@@ -136,12 +136,23 @@ function Help({ onClose }) {
             <li><strong>From Album Detail Page</strong>: Returns to search results (if you came from search)</li>
             <li><strong>From Search Results</strong>: Returns to the main search page</li>
             <li><strong>From Main Search</strong>: Normal browser behavior</li>
+            <li>Works on most browsers and devices (MacBook Safari/Chrome, iPhone Safari, etc.)</li>
           </ul>
           
-          <h3>"Back to Results" / "New Search" Button</h3>
+          <h3>"← Back" Link (iPhone Chrome)</h3>
+          <p>A visible "← Back" link appears at the top of the page when using Chrome on iPhone. This provides a reliable way to navigate back if the browser's back button doesn't work as expected.</p>
           <ul>
-            <li><strong>On Album Detail Page</strong>: Returns to your search results</li>
-            <li><strong>On Search Results Page</strong>: Clears search and returns to main search form</li>
+            <li><strong>Where it appears</strong>: Results page and Album Detail page (iPhone Chrome only)</li>
+            <li><strong>How it works</strong>: Click the link to go back to the previous page</li>
+            <li>Automatically appears only on iPhone Chrome for better navigation reliability</li>
+          </ul>
+          
+          <h3>"Back to Search Results" / "New Search" Button (Mobile)</h3>
+          <ul>
+            <li><strong>On Album Detail Page (Mobile)</strong>: Returns to your search results</li>
+            <li><strong>On Search Results Page (Mobile)</strong>: Clears search and returns to main search form</li>
+            <li>This button is only visible on mobile devices</li>
+            <li>On desktop, use the browser back button instead</li>
           </ul>
         </section>
 
