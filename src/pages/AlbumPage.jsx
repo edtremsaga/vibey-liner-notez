@@ -2911,11 +2911,6 @@ function AlbumPage() {
                         )}
                       </>
                     )}
-                    {searchMeta.isArtistOnly && (
-                      <span className="refine-suggestion">
-                        {' '}• Enter an album name to narrow your search
-                      </span>
-                    )}
                   </p>
                   <div className="sort-control">
                     <label htmlFor="sort-select">Sort by:</label>
@@ -3466,7 +3461,7 @@ function AlbumPage() {
           {albumCredits.length > 0 && (
             <div className="credits-group">
               <button
-                className="track-credit-title-button"
+                className="track-credit-title-button album-credit-title-button"
                 onClick={toggleAlbumCreditsExpanded}
                 aria-expanded={albumCreditsExpanded}
               >

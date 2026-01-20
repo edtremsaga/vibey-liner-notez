@@ -29,8 +29,11 @@ function AppHeader() {
       justifyContent: isMobile ? 'space-between' : 'flex-start',
       width: '100%'
     }}>
-      <h1 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--text)', fontWeight: 600, fontStyle: 'italic' }}>
-        liner notez
+      <h1 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--text)', fontWeight: 600, fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <span>liner notez</span>
+        <span style={{ fontSize: '0.85rem', color: 'var(--muted)', fontWeight: 400, fontStyle: 'normal' }}>
+          by Vibey Craft
+        </span>
       </h1>
       {isMobile && (
         <button
