@@ -5,6 +5,7 @@ import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import albumSchema from '../../album.v1.json'
 import { album } from '../data/album.js'
+import { debugLog, debugWarn } from './debug'
 
 // Configure AJV for draft-2020-12 schema
 const ajv = new Ajv({ 
@@ -22,9 +23,9 @@ const validate = ajv.compile(schemaToValidate)
 
 export function validateAlbumData() {
   try {
-    console.log('Validating album data...')
-    console.log('Album object:', album)
-    console.log('Schema loaded:', !!albumSchema)
+    debugLog('Validating album data...')
+    debugLog('Album object:', album)
+    debugLog('Schema loaded:', !!albumSchema)
     
     const valid = validate(album)
     
@@ -38,17 +39,17 @@ export function validateAlbumData() {
         }
       })
       // Don't throw - just log for now
-      console.warn('⚠️ Validation failed but continuing...')
+      debugWarn('⚠️ Validation failed but continuing...')
       return false
     }
     
-    console.log('✅ Album data validated successfully against album.v1.json schema')
+    debugLog('✅ Album data validated successfully against album.v1.json schema')
     return true
   } catch (error) {
     console.error('Validation error:', error)
     console.error('Error stack:', error.stack)
     // Don't throw - just log
-    console.warn('⚠️ Validation error occurred but continuing...')
+    debugWarn('⚠️ Validation error occurred but continuing...')
     return false
   }
 }

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, searchByProducer, fetchCoverArt, fetchAllAlbumArt, fetchWikipediaContentFromMusicBrainz, clearProducerSeenRgIds } from '../services/musicbrainz'
 import { formatDuration } from '../utils/formatDuration'
 import { getCachedAlbum, setCachedAlbum } from '../utils/albumCache'
+import { debugLog, debugWarn } from '../utils/debug'
 import Help from '../components/Help'
 import { useHelp } from '../contexts/HelpContext'
 import './AlbumPage.css'
@@ -112,7 +113,7 @@ function AlbumPage() {
     const isIPhoneChromeDetected = isChrome && isIPhone
     
     // Debug: Log detection for troubleshooting
-    console.log('[Back Link Debug]', {
+    debugLog('[Back Link Debug]', {
       userAgent: userAgent.substring(0, 100),
       isChrome,
       isIPhone,
@@ -148,7 +149,7 @@ function AlbumPage() {
     
     // Don't replace history if we're on results or album pages
     if (!isOnSearchPage) {
-      console.log('[History] Skipping searchType replaceState - not on search page:', {
+      debugLog('[History] Skipping searchType replaceState - not on search page:', {
         currentState,
         isOnSearchPage
       })
@@ -182,7 +183,7 @@ function AlbumPage() {
           const producerName = urlParams.get('producer')
           const producerMBID = urlParams.get('mbid')
           if (producerName) {
-            console.log('[History] Restoring producer search from URL:', { producerName, producerMBID })
+            debugLog('[History] Restoring producer search from URL:', { producerName, producerMBID })
             setSearchType('producer')
             setSearchProducer(producerName)
             // Note: We can't restore full search results from URL, user would need to search again
@@ -204,7 +205,7 @@ function AlbumPage() {
           const album = urlParams.get('album')
           const releaseType = urlParams.get('releaseType')
           if (artist) {
-            console.log('[History] Restoring album search from URL:', { artist, album, releaseType })
+            debugLog('[History] Restoring album search from URL:', { artist, album, releaseType })
             setSearchType('album')
             setSearchArtist(artist)
             if (album) setSearchAlbum(album)
@@ -229,7 +230,7 @@ function AlbumPage() {
         const albumIdMatch = pathname.match(/^\/album\/([^/]+)/)
         if (albumIdMatch) {
           const albumId = albumIdMatch[1]
-          console.log('[History] Restoring album from URL:', albumId)
+          debugLog('[History] Restoring album from URL:', albumId)
           const historyState = {
             page: 'album',
             albumId,
@@ -258,7 +259,7 @@ function AlbumPage() {
           '',
           window.location.href
         )
-        console.log('[History] Initialized history state for search page:', initialHistoryState)
+        debugLog('[History] Initialized history state for search page:', initialHistoryState)
       }
     }
   }, []) // Only run once on mount
@@ -270,7 +271,7 @@ function AlbumPage() {
       const albumIdMatch = pathname.match(/^\/album\/([^/]+)/)
       if (albumIdMatch) {
         const albumId = albumIdMatch[1]
-        console.log('[History] Loading album from URL:', albumId)
+        debugLog('[History] Loading album from URL:', albumId)
         loadAlbum(albumId)
       }
     }
@@ -460,7 +461,7 @@ function AlbumPage() {
       
       // Validate we have all required data
       if (!producerName || !producerMBID || !releaseRelations || currentOffset >= totalCount) {
-        console.log(`[Prefetch] Skipping: missing required data`, {
+        debugLog(`[Prefetch] Skipping: missing required data`, {
           hasName: !!producerName,
           hasMBID: !!producerMBID,
           hasRelations: !!releaseRelations,
@@ -472,7 +473,7 @@ function AlbumPage() {
       // Mark as triggered to prevent duplicate prefetches
       prefetchTriggeredRef.current = true
       
-      console.log(`[Prefetch] Next button enabled - starting prefetch automatically`, {
+      debugLog(`[Prefetch] Next button enabled - starting prefetch automatically`, {
         producerName,
         currentOffset,
         totalCount,
@@ -520,7 +521,7 @@ function AlbumPage() {
                                previousProducerMBID !== currentProducerMBID
       
       if (prefetchAbortController.current && isProducerChange) {
-        console.log('[Prefetch] Cleanup: Cancelling in-flight prefetch (producer changed)', {
+        debugLog('[Prefetch] Cleanup: Cancelling in-flight prefetch (producer changed)', {
           previous: previousProducerMBID,
           current: currentProducerMBID
         })
@@ -639,7 +640,7 @@ function AlbumPage() {
           ...producerResultsHistoryState,
           pageNumber: 1
         }
-        console.log('[History] Pushing new history state for producer search results:', producerResultsHistoryStateWithPage)
+        debugLog('[History] Pushing new history state for producer search results:', producerResultsHistoryStateWithPage)
         try {
           window.history.pushState(
             producerResultsHistoryStateWithPage,
@@ -675,7 +676,7 @@ function AlbumPage() {
             
             if (shouldPrefetch) {
               prefetchTriggeredRef.current = true
-              console.log(`[Prefetch] Explicitly triggering prefetch after search completion`, {
+              debugLog(`[Prefetch] Explicitly triggering prefetch after search completion`, {
                 producerName,
                 currentOffset: releasesProcessed || 0,
                 totalCount,
@@ -785,7 +786,7 @@ function AlbumPage() {
           ...producerResultsHistoryState,
           pageNumber: 1
         }
-        console.log('[History] Pushing new history state for producer search results (pagination):', producerResultsHistoryStateWithPage)
+        debugLog('[History] Pushing new history state for producer search results (pagination):', producerResultsHistoryStateWithPage)
         try {
           window.history.pushState(
             producerResultsHistoryStateWithPage,
@@ -821,7 +822,7 @@ function AlbumPage() {
             
             if (shouldPrefetch) {
               prefetchTriggeredRef.current = true
-              console.log(`[Prefetch] Explicitly triggering prefetch after search completion`, {
+              debugLog(`[Prefetch] Explicitly triggering prefetch after search completion`, {
                 producerName,
                 currentOffset: releasesProcessed || 0,
                 totalCount,
@@ -950,7 +951,7 @@ function AlbumPage() {
             '',
             resultsUrl.toString()
           )
-          console.log('[History] Pushed search results state (album search):', resultsHistoryState)
+          debugLog('[History] Pushed search results state (album search):', resultsHistoryState)
           
           // Verify the state was actually set (Chrome sometimes has issues)
           const verifyState = window.history.state
@@ -1022,7 +1023,7 @@ function AlbumPage() {
     }
     
     if (!searchResults || !searchMeta || loadingPage) {
-      console.log('[canGoNext] Returning false (early exit):', debugInfo)
+      debugLog('[canGoNext] Returning false (early exit):', debugInfo)
       return false
     }
     
@@ -1030,7 +1031,7 @@ function AlbumPage() {
     
     // Normal pagination: enable if there's another page
     if (resultsPage < calculatedTotalPages) {
-      console.log('[canGoNext] Returning true (normal pagination):', { resultsPage, calculatedTotalPages, ...debugInfo })
+      debugLog('[canGoNext] Returning true (normal pagination):', { resultsPage, calculatedTotalPages, ...debugInfo })
       return true
     }
     
@@ -1048,7 +1049,7 @@ function AlbumPage() {
       
       // If we have prefetched results, always enable Next (even if partial page)
       if (hasPrefetchedResults) {
-        console.log('[canGoNext] Producer search: prefetched results available, enabling Next:', {
+        debugLog('[canGoNext] Producer search: prefetched results available, enabling Next:', {
           ...debugInfo,
           prefetchedCount: prefetchedResults.results.length,
           resultsPage,
@@ -1071,7 +1072,7 @@ function AlbumPage() {
       // - Disable Next if all releases have been processed AND no more albums available beyond current page
       if (resultsPage >= calculatedTotalPages) {
         if (hasReachedEnd || (allReleasesProcessed && !hasMoreAlbumsAvailable)) {
-          console.log('[canGoNext] Producer search: on last page and reached end, disabling Next:', {
+          debugLog('[canGoNext] Producer search: on last page and reached end, disabling Next:', {
             ...debugInfo,
             resultsPage,
             calculatedTotalPages,
@@ -1096,7 +1097,7 @@ function AlbumPage() {
       const canFetchMore = !hasReachedEnd && releasesProcessed < searchMeta.totalCount
       const shouldEnable = hasNextPage || hasMoreAlbumsAvailable || canFetchMore
       
-      console.log('[canGoNext] Producer search check:', {
+      debugLog('[canGoNext] Producer search check:', {
         ...debugInfo,
         releasesProcessed,
         totalCount: searchMeta.totalCount,
@@ -1112,7 +1113,7 @@ function AlbumPage() {
       return shouldEnable
     }
     
-    console.log('[canGoNext] Returning false (no conditions met):', debugInfo)
+    debugLog('[canGoNext] Returning false (no conditions met):', debugInfo)
     return false
   }
   
@@ -1121,11 +1122,11 @@ function AlbumPage() {
   const startPrefetchNextPage = async (producerName, producerMBID, currentOffset, releaseRelations, seenRgIds, totalCount) => {
     // Don't prefetch if already prefetching or if we're at the end
     if (prefetching || !releaseRelations || currentOffset >= totalCount) {
-      console.log(`[Prefetch] Skipping prefetch: prefetching=${prefetching}, hasRelations=${!!releaseRelations}, atEnd=${currentOffset >= totalCount}`)
+      debugLog(`[Prefetch] Skipping prefetch: prefetching=${prefetching}, hasRelations=${!!releaseRelations}, atEnd=${currentOffset >= totalCount}`)
       return null
     }
     
-    console.log(`[Prefetch] Starting prefetch for page 2 (currentOffset=${currentOffset}, totalCount=${totalCount})`)
+    debugLog(`[Prefetch] Starting prefetch for page 2 (currentOffset=${currentOffset}, totalCount=${totalCount})`)
     setPrefetching(true)
     
     // Create abort controller for cancellation
@@ -1140,7 +1141,7 @@ function AlbumPage() {
         const currentAlbums = RESULTS_PER_PAGE // We have 20 from page 1
         const albumsNeeded = targetAlbums - currentAlbums
         
-        console.log(`[Prefetch] Need ${albumsNeeded} more albums for page 2`)
+        debugLog(`[Prefetch] Need ${albumsNeeded} more albums for page 2`)
         
         // Start fetching batches until we have enough
         let allResults = []
@@ -1149,7 +1150,7 @@ function AlbumPage() {
         
         while (allResults.length < albumsNeeded && currentOffsetForPrefetch < totalCount && !abortController.signal.aborted) {
           const nextOffset = currentOffsetForPrefetch
-          console.log(`[Prefetch] Fetching batch at offset ${nextOffset}... (have ${allResults.length}, need ${albumsNeeded})`)
+          debugLog(`[Prefetch] Fetching batch at offset ${nextOffset}... (have ${allResults.length}, need ${albumsNeeded})`)
           
           const searchResponse = await searchByProducer(
             producerName,
@@ -1161,7 +1162,7 @@ function AlbumPage() {
           )
           
           if (abortController.signal.aborted) {
-            console.log(`[Prefetch] Aborted`)
+            debugLog(`[Prefetch] Aborted`)
             throw new Error('Aborted')
           }
           
@@ -1183,11 +1184,11 @@ function AlbumPage() {
           const actualReleasesProcessed = releasesProcessed || 10 // Default to 10 if not available (full batch)
           currentOffsetForPrefetch = nextOffset + actualReleasesProcessed // Move to next batch (use actual count, not assumed 10)
           
-          console.log(`[Prefetch] Batch at offset ${nextOffset}: found ${uniqueNewResults.length} new albums (${allResults.length} total), processed ${actualReleasesProcessed} releases`)
+          debugLog(`[Prefetch] Batch at offset ${nextOffset}: found ${uniqueNewResults.length} new albums (${allResults.length} total), processed ${actualReleasesProcessed} releases`)
           
           // If we got no results or hasMore is false, we've reached the end
           if (newResults.length === 0 || hasMore === false) {
-            console.log(`[Prefetch] Reached end of available releases (hasMore=${hasMore})`)
+            debugLog(`[Prefetch] Reached end of available releases (hasMore=${hasMore})`)
             // Update ref and state to indicate we've reached the end (so canGoNext() disables Next button)
             reachedEndRef.current = true
             setSearchMeta(prev => prev ? { ...prev, hasMore: false } : null)
@@ -1209,9 +1210,9 @@ function AlbumPage() {
         if (allResults.length > 0) {
           // Store both results and final offset for accurate pagination tracking
           setPrefetchedResults(result)
-          console.log(`[Prefetch] ✅ Prefetched ${allResults.length} albums for page 2 (finalOffset=${currentOffsetForPrefetch})`)
+          debugLog(`[Prefetch] ✅ Prefetched ${allResults.length} albums for page 2 (finalOffset=${currentOffsetForPrefetch})`)
         } else {
-          console.log(`[Prefetch] No albums prefetched (reached end)`)
+          debugLog(`[Prefetch] No albums prefetched (reached end)`)
           // If we reached the end with no results, update ref and state
           reachedEndRef.current = true
           setSearchMeta(prev => prev ? { ...prev, hasMore: false } : null)
@@ -1220,12 +1221,12 @@ function AlbumPage() {
         return result
       } catch (error) {
         if (error.name === 'AbortError' || error.message === 'Aborted') {
-          console.log('[Prefetch] Prefetch was aborted')
+          debugLog('[Prefetch] Prefetch was aborted')
           // Return null instead of throwing - prevents uncaught Promise rejection
           // Caller can check prefetchedResults for partial results if available
           return null
         } else {
-          console.warn('[Prefetch] Error prefetching next page:', error)
+          debugWarn('[Prefetch] Error prefetching next page:', error)
           throw error
         }
       } finally {
@@ -1251,12 +1252,12 @@ function AlbumPage() {
   
   async function handlePageChange(direction) {
     if (!searchResults || !searchMeta || loadingPage) {
-      console.log(`[Pagination] handlePageChange blocked: searchResults=${!!searchResults}, searchMeta=${!!searchMeta}, loadingPage=${loadingPage}`)
+      debugLog(`[Pagination] handlePageChange blocked: searchResults=${!!searchResults}, searchMeta=${!!searchMeta}, loadingPage=${loadingPage}`)
       return
     }
     
     const calculatedTotalPages = getTotalPages()
-    console.log(`[Pagination] handlePageChange('${direction}'): currentPage=${resultsPage}, totalPages=${calculatedTotalPages}, canGoNext=${canGoNext()}`)
+    debugLog(`[Pagination] handlePageChange('${direction}'): currentPage=${resultsPage}, totalPages=${calculatedTotalPages}, canGoNext=${canGoNext()}`)
     let targetPage
     
     if (direction === 'next') {
@@ -1264,14 +1265,14 @@ function AlbumPage() {
       // (we'll fetch more releases to get more albums)
       // For album search: only allow if there's another page
       if (!searchMeta.isProducerSearch && resultsPage >= calculatedTotalPages) {
-        console.log(`[Pagination] Blocked: Already on last page (${resultsPage} >= ${calculatedTotalPages})`)
+        debugLog(`[Pagination] Blocked: Already on last page (${resultsPage} >= ${calculatedTotalPages})`)
         return
       }
       targetPage = resultsPage + 1
     } else if (direction === 'prev') {
       // On page 1: clear results and return to search form
       if (resultsPage === 1) {
-        console.log(`[Pagination] On page 1: clearing results and returning to search form`)
+        debugLog(`[Pagination] On page 1: clearing results and returning to search form`)
         
         // Clear all search state
         setSearchResults(null)
@@ -1321,7 +1322,7 @@ function AlbumPage() {
       
       // On page 2+: go to previous page (normal pagination)
       targetPage = resultsPage - 1
-      console.log(`[Pagination] Going to previous page: ${resultsPage} -> ${targetPage}`)
+      debugLog(`[Pagination] Going to previous page: ${resultsPage} -> ${targetPage}`)
     } else {
       return
     }
@@ -1349,9 +1350,9 @@ function AlbumPage() {
         ? (startIndex >= searchResults.length && (searchMeta.producerOffset || 0) < (searchMeta.totalCount || 0))
         : (endIndex > searchResults.length)
     
-    console.log(`[Pagination] Page ${targetPage} (direction: ${direction}, goingBackwards: ${isGoingBackwards}): startIndex=${startIndex}, searchResults.length=${searchResults.length}, needsMoreData=${needsMoreData}`)
+    debugLog(`[Pagination] Page ${targetPage} (direction: ${direction}, goingBackwards: ${isGoingBackwards}): startIndex=${startIndex}, searchResults.length=${searchResults.length}, needsMoreData=${needsMoreData}`)
     if (searchMeta.isProducerSearch) {
-      console.log(`[Pagination] Producer search: producerOffset=${searchMeta.producerOffset || 0}, totalCount=${searchMeta.totalCount}`)
+      debugLog(`[Pagination] Producer search: producerOffset=${searchMeta.producerOffset || 0}, totalCount=${searchMeta.totalCount}`)
     }
     
     if (needsMoreData) {
@@ -1369,7 +1370,7 @@ function AlbumPage() {
           let prefetchResultToUse = null // Store prefetch result to use directly (React state is async)
           
           if (targetPage === 2 && prefetching && !prefetchedResults) {
-            console.log(`[Producer Search Pagination] Prefetch in progress for page 2 - waiting for completion...`)
+            debugLog(`[Producer Search Pagination] Prefetch in progress for page 2 - waiting for completion...`)
             
             // Wait for prefetch to complete with timeout (120s - allows time for large producers)
             try {
@@ -1382,10 +1383,10 @@ function AlbumPage() {
               
               // Check if prefetch was aborted (returns null)
               if (prefetchResult === null) {
-                console.log(`[Producer Search Pagination] Prefetch was aborted - checking for partial results`)
+                debugLog(`[Producer Search Pagination] Prefetch was aborted - checking for partial results`)
                 // Fall through to check prefetchedResults below
               } else if (prefetchResult && prefetchResult.results) {
-                console.log(`[Producer Search Pagination] Prefetch completed, using results (${prefetchResult.results.length} albums)`)
+                debugLog(`[Producer Search Pagination] Prefetch completed, using results (${prefetchResult.results.length} albums)`)
                 
                 // Store result to use directly (React state updates are async)
                 prefetchResultToUse = prefetchResult
@@ -1396,14 +1397,14 @@ function AlbumPage() {
             } catch (error) {
               // Check for AbortError or 'Aborted' message
               if (error.name === 'AbortError' || error.message === 'Aborted') {
-                console.log(`[Producer Search Pagination] Prefetch was aborted - checking for partial results`)
+                debugLog(`[Producer Search Pagination] Prefetch was aborted - checking for partial results`)
               } else if (error.message === 'Prefetch timeout') {
-                console.warn(`[Producer Search Pagination] Prefetch timed out after 120s - giving prefetch a moment to complete`)
+                debugWarn(`[Producer Search Pagination] Prefetch timed out after 120s - giving prefetch a moment to complete`)
                 // Don't abort prefetch on timeout - let it continue in background
                 // Give prefetch a small grace period (1s) to complete before falling back
                 // This handles cases where prefetch completes just after timeout
                 await new Promise(resolve => setTimeout(resolve, 1000))
-                console.log(`[Producer Search Pagination] Grace period ended - checking if prefetch completed`)
+                debugLog(`[Producer Search Pagination] Grace period ended - checking if prefetch completed`)
                 
                 // Try to get prefetch result one more time (with very short timeout) in case it completed during grace period
                 if (prefetchPromiseRef.current) {
@@ -1413,18 +1414,18 @@ function AlbumPage() {
                       new Promise((_, reject) => setTimeout(() => reject(new Error('Still pending')), 100))
                     ])
                     if (quickResult && quickResult.results) {
-                      console.log(`[Producer Search Pagination] Prefetch completed during grace period - using ${quickResult.results.length} results`)
+                      debugLog(`[Producer Search Pagination] Prefetch completed during grace period - using ${quickResult.results.length} results`)
                       prefetchResultToUse = quickResult
                       setPrefetchedResults(quickResult)
                     }
                   } catch (quickError) {
                     // Prefetch still not ready - that's ok, will check state or proceed with manual fetch
-                    console.log(`[Producer Search Pagination] Prefetch still in progress after grace period`)
+                    debugLog(`[Producer Search Pagination] Prefetch still in progress after grace period`)
                   }
                 }
                 // Fall through - will check prefetchResultToUse or prefetchedResults below
               } else {
-                console.warn(`[Producer Search Pagination] Prefetch error: ${error.message} - falling back to manual fetch`)
+                debugWarn(`[Producer Search Pagination] Prefetch error: ${error.message} - falling back to manual fetch`)
               }
               // Fall through - will check prefetchedResults below if available
             }
@@ -1432,7 +1433,7 @@ function AlbumPage() {
           
           // Abort prefetch if navigating to page 3+ or going back (don't need prefetch data)
           if (targetPage !== 2 && prefetching) {
-            console.log(`[Producer Search Pagination] Aborting prefetch - navigating to page ${targetPage} (prefetch only needed for page 2)`)
+            debugLog(`[Producer Search Pagination] Aborting prefetch - navigating to page ${targetPage} (prefetch only needed for page 2)`)
             if (prefetchAbortController.current) {
               prefetchAbortController.current.abort()
               setPrefetching(false)
@@ -1462,7 +1463,7 @@ function AlbumPage() {
                     new Promise((_, reject) => setTimeout(() => reject(new Error('Still pending')), 100))
                   ])
                   if (finalCheck && finalCheck.results) {
-                    console.log(`[Producer Search Pagination] Prefetch completed on final check - using ${finalCheck.results.length} results`)
+                    debugLog(`[Producer Search Pagination] Prefetch completed on final check - using ${finalCheck.results.length} results`)
                     prefetchResults = finalCheck
                     setPrefetchedResults(finalCheck)
                   }
@@ -1474,7 +1475,7 @@ function AlbumPage() {
           }
           
           if (targetPage === 2 && prefetchResults && prefetchResults.results && prefetchResults.results.length > 0) {
-            console.log(`[Producer Search Pagination] Using prefetched results for page 2 (${prefetchResults.results.length} albums, finalOffset=${prefetchResults.finalOffset})`)
+            debugLog(`[Producer Search Pagination] Using prefetched results for page 2 (${prefetchResults.results.length} albums, finalOffset=${prefetchResults.finalOffset})`)
             const existingRgIds = new Set(searchResults.map(r => r.releaseGroupId))
             const uniquePrefetched = prefetchResults.results.filter(r => !existingRgIds.has(r.releaseGroupId))
             const combinedResults = [...searchResults, ...uniquePrefetched]
@@ -1500,7 +1501,7 @@ function AlbumPage() {
             if (pageStart < filteredCombined.length) {
               // We have results for page 2
               const pageResults = filteredCombined.slice(pageStart, pageEnd)
-              console.log(`[Producer Search Pagination] ✅ Displaying page ${targetPage} from prefetch: ${pageResults.length} albums (indices ${pageStart}-${pageEnd - 1} of ${filteredCombined.length}, page1Length=${actualPage1Length})`)
+              debugLog(`[Producer Search Pagination] ✅ Displaying page ${targetPage} from prefetch: ${pageResults.length} albums (indices ${pageStart}-${pageEnd - 1} of ${filteredCombined.length}, page1Length=${actualPage1Length})`)
               setDisplayedResults(pageResults)
               setResultsPage(targetPage)
               
@@ -1516,7 +1517,7 @@ function AlbumPage() {
               }
               try {
                 window.history.pushState(resultsHistoryState, '', resultsUrl.toString())
-                console.log('[History] Pushed pagination history state (prefetch):', { page: targetPage })
+                debugLog('[History] Pushed pagination history state (prefetch):', { page: targetPage })
               } catch (error) {
                 console.error('[History] Error pushing pagination state:', error)
               }
@@ -1526,7 +1527,7 @@ function AlbumPage() {
               const lastPageStart = (lastValidPage - 1) * RESULTS_PER_PAGE
               const lastPageEnd = Math.min(lastPageStart + RESULTS_PER_PAGE, filteredCombined.length)
               const lastPageResults = filteredCombined.slice(lastPageStart, lastPageEnd)
-              console.log(`[Producer Search Pagination] ⚠️ Fallback: displaying page ${lastValidPage} from prefetch: ${lastPageResults.length} albums (indices ${lastPageStart}-${lastPageEnd - 1} of ${filteredCombined.length})`)
+              debugLog(`[Producer Search Pagination] ⚠️ Fallback: displaying page ${lastValidPage} from prefetch: ${lastPageResults.length} albums (indices ${lastPageStart}-${lastPageEnd - 1} of ${filteredCombined.length})`)
               setDisplayedResults(lastPageResults)
               setResultsPage(lastValidPage)
             }
@@ -1546,7 +1547,7 @@ function AlbumPage() {
           // If we're on page 2 and prefetch is still running but we don't have results, abort it before starting manual fetch
           // This prevents race conditions where prefetch and manual fetch process overlapping offsets
           if (targetPage === 2 && prefetching && !prefetchResults) {
-            console.warn(`[Producer Search Pagination] Prefetch still running but no results - aborting prefetch before manual fetch`)
+            debugWarn(`[Producer Search Pagination] Prefetch still running but no results - aborting prefetch before manual fetch`)
             if (prefetchAbortController.current) {
               prefetchAbortController.current.abort()
               setPrefetching(false)
@@ -1561,12 +1562,12 @@ function AlbumPage() {
           const totalReleases = searchMeta.totalCount || 0
           let lastHasMore = true // Track hasMore from last response
           
-          console.log(`[Producer Search Pagination] Target page ${targetPage} needs ${albumsNeededForPage} albums, currently have ${currentResults.length}`)
+          debugLog(`[Producer Search Pagination] Target page ${targetPage} needs ${albumsNeededForPage} albums, currently have ${currentResults.length}`)
           
           // Keep fetching batches until we have enough albums for the target page OR no more releases available
           while (currentResults.length < albumsNeededForPage && currentOffset < totalReleases) {
             const nextOffset = currentOffset + 10 // Process next batch of 10 releases
-            console.log(`[Producer Search Pagination] Fetching batch starting at offset ${nextOffset}... (need ${albumsNeededForPage - currentResults.length} more albums)`)
+            debugLog(`[Producer Search Pagination] Fetching batch starting at offset ${nextOffset}... (need ${albumsNeededForPage - currentResults.length} more albums)`)
             
             const searchResponse = await searchByProducer(
               searchMeta.producerName,
@@ -1597,15 +1598,15 @@ function AlbumPage() {
             if (uniqueNewResults.length > 0) {
               currentResults = [...currentResults, ...uniqueNewResults]
               currentOffset = nextOffset // Always use the offset we just fetched from (not releasesProcessed which is batch count)
-              console.log(`[Producer Search Pagination] Found ${uniqueNewResults.length} new albums (${currentResults.length} total now)`)
+              debugLog(`[Producer Search Pagination] Found ${uniqueNewResults.length} new albums (${currentResults.length} total now)`)
             } else {
               // No new albums in this batch
               currentOffset = nextOffset
-              console.log(`[Producer Search Pagination] No new albums in this batch, continuing...`)
+              debugLog(`[Producer Search Pagination] No new albums in this batch, continuing...`)
               
               // If hasMore is false, we've reached the end - break out of loop
               if (hasMore === false) {
-                console.log(`[Producer Search Pagination] Reached end of available releases (hasMore=false)`)
+                debugLog(`[Producer Search Pagination] Reached end of available releases (hasMore=false)`)
                 lastHasMore = false
                 break
               }
@@ -1621,7 +1622,7 @@ function AlbumPage() {
             
             // Safety check: if we've processed all available releases, break
             if (currentOffset >= totalReleases) {
-              console.log(`[Producer Search Pagination] Reached end of available releases (offset ${currentOffset} >= total ${totalReleases})`)
+              debugLog(`[Producer Search Pagination] Reached end of available releases (offset ${currentOffset} >= total ${totalReleases})`)
               break
             }
           }
@@ -1662,7 +1663,7 @@ function AlbumPage() {
             const pageResults = filteredResults.slice(pageStart, pageEnd)
             setDisplayedResults(pageResults)
             setResultsPage(targetPage)
-            console.log(`[Producer Search Pagination] ✅ Displaying page ${targetPage}: ${pageResults.length} albums (indices ${pageStart}-${pageEnd - 1} of ${filteredResults.length})`)
+            debugLog(`[Producer Search Pagination] ✅ Displaying page ${targetPage}: ${pageResults.length} albums (indices ${pageStart}-${pageEnd - 1} of ${filteredResults.length})`)
             
             // Update URL with page number
             const resultsUrl = buildResultsUrl(targetPage)
@@ -1676,7 +1677,7 @@ function AlbumPage() {
             }
             try {
               window.history.pushState(resultsHistoryState, '', resultsUrl.toString())
-              console.log('[History] Pushed pagination history state (producer fetch):', { page: targetPage })
+              debugLog('[History] Pushed pagination history state (producer fetch):', { page: targetPage })
             } catch (error) {
               console.error('[History] Error pushing pagination state:', error)
             }
@@ -1697,7 +1698,7 @@ function AlbumPage() {
               hasMore: false // Explicitly set to false in fallback case
             }))
             
-            console.log(`[Producer Search Pagination] ⚠️ Fallback: displaying page ${lastValidPage} with ${lastPageResults.length} albums (reached end)`)
+            debugLog(`[Producer Search Pagination] ⚠️ Fallback: displaying page ${lastValidPage} with ${lastPageResults.length} albums (reached end)`)
           }
         } else {
           // Album search pagination (existing logic)
@@ -1752,7 +1753,7 @@ function AlbumPage() {
             }
             try {
               window.history.pushState(resultsHistoryState, '', resultsUrl.toString())
-              console.log('[History] Pushed pagination history state (album fetch):', { page: targetPage })
+              debugLog('[History] Pushed pagination history state (album fetch):', { page: targetPage })
             } catch (error) {
               console.error('[History] Error pushing pagination state:', error)
             }
@@ -1769,7 +1770,7 @@ function AlbumPage() {
       const filteredResults = filterBootlegs(searchResults)
       const pageStart = (targetPage - 1) * RESULTS_PER_PAGE
       
-      console.log(`[Pagination] Displaying page from memory: targetPage=${targetPage}, pageStart=${pageStart}, filteredResults.length=${filteredResults.length}`)
+      debugLog(`[Pagination] Displaying page from memory: targetPage=${targetPage}, pageStart=${pageStart}, filteredResults.length=${filteredResults.length}`)
       
       // Ensure we don't try to slice beyond available results
       if (pageStart >= filteredResults.length) {
@@ -1780,11 +1781,11 @@ function AlbumPage() {
         const lastPageResults = filteredResults.slice(lastPageStart, lastPageEnd)
         setDisplayedResults(lastPageResults)
         setResultsPage(lastValidPage)
-        console.log(`[Pagination] Not enough results for page ${targetPage} (have ${filteredResults.length} albums), displaying page ${lastValidPage}`)
+        debugLog(`[Pagination] Not enough results for page ${targetPage} (have ${filteredResults.length} albums), displaying page ${lastValidPage}`)
       } else {
         const pageEnd = Math.min(pageStart + RESULTS_PER_PAGE, filteredResults.length)
         const pageResults = filteredResults.slice(pageStart, pageEnd)
-        console.log(`[Pagination] Slicing results: pageStart=${pageStart}, pageEnd=${pageEnd}, pageResults.length=${pageResults.length}`)
+        debugLog(`[Pagination] Slicing results: pageStart=${pageStart}, pageEnd=${pageEnd}, pageResults.length=${pageResults.length}`)
         setDisplayedResults(pageResults)
         setResultsPage(targetPage)
         
@@ -1808,7 +1809,7 @@ function AlbumPage() {
             '',
             resultsUrl.toString()
           )
-          console.log('[History] Pushed pagination history state:', { page: targetPage, url: resultsUrl.toString() })
+          debugLog('[History] Pushed pagination history state:', { page: targetPage, url: resultsUrl.toString() })
         } catch (error) {
           console.error('[History] Error pushing pagination state:', error)
         }
@@ -1873,7 +1874,7 @@ function AlbumPage() {
       
       if (cachedAlbum) {
         // Cache hit - use cached data
-        console.log(`Loading album from cache: ${releaseGroupId}`)
+        debugLog(`Loading album from cache: ${releaseGroupId}`)
         
         // Update album with cached data
         if (hasBasicInfo) {
@@ -1894,10 +1895,10 @@ function AlbumPage() {
         if (cachedAlbum.coverArtUrl) {
           // Cached URL exists - use it immediately (already set via setAlbum above)
           // Browser HTTP cache will handle loading the image - no API call needed
-          console.log(`Using cached cover art URL: ${cachedAlbum.coverArtUrl}`)
+          debugLog(`Using cached cover art URL: ${cachedAlbum.coverArtUrl}`)
         } else if (cachedAlbum.albumId) {
           // No cached URL - fetch it in background
-          console.log(`No cached cover art URL, fetching from API...`)
+          debugLog(`No cached cover art URL, fetching from API...`)
           // Try to get selectedReleaseId from cached album if available
           const selectedReleaseId = cachedAlbum.selectedReleaseId || 
                                     cachedAlbum.editions?.[0]?.id || 
@@ -1906,16 +1907,16 @@ function AlbumPage() {
           fetchCoverArt(cachedAlbum.albumId, selectedReleaseId)
             .then(coverArtUrl => {
               if (coverArtUrl) {
-                console.log(`Fetched cover art URL: ${coverArtUrl}`)
+                debugLog(`Fetched cover art URL: ${coverArtUrl}`)
                 setAlbum(prev => prev ? { ...prev, coverArtUrl } : null)
                 // Update cache with the new cover art URL for future use
                 setCachedAlbum(cachedAlbum.albumId, { ...cachedAlbum, coverArtUrl })
               } else {
-                console.log(`No cover art URL found from API`)
+                debugLog(`No cover art URL found from API`)
               }
             })
             .catch(err => {
-              console.warn('Failed to load cover art:', err)
+              debugWarn('Failed to load cover art:', err)
             })
         }
         
@@ -1923,7 +1924,7 @@ function AlbumPage() {
       }
       
       // Cache miss - fetch from API
-      console.log(`Cache miss, fetching album from API: ${releaseGroupId}`)
+      debugLog(`Cache miss, fetching album from API: ${releaseGroupId}`)
       
       // Fetch basic info (without waiting for cover art)
       const basicData = await fetchAlbumBasicInfo(releaseGroupId)
@@ -1959,7 +1960,7 @@ function AlbumPage() {
         })
         .catch(err => {
           if (isMountedRef.current) {
-            console.warn('Failed to load cover art:', err)
+            debugWarn('Failed to load cover art:', err)
             // Don't show error - cover art is optional
           }
         })
@@ -2000,7 +2001,7 @@ function AlbumPage() {
     // Push browser history entry if we came from search results
     // This allows back button to return to search results
     if (searchResults && searchResults.length > 0) {
-      console.log('[History] loadAlbum: About to push album history state:', {
+      debugLog('[History] loadAlbum: About to push album history state:', {
         currentResultsPage: resultsPage,
         searchResultsLength: searchResults.length,
         fromPage: 'results'
@@ -2025,7 +2026,7 @@ function AlbumPage() {
           '',
           albumUrl.toString()
         )
-        console.log('[History] Pushed album details state:', {
+        debugLog('[History] Pushed album details state:', {
           ...albumHistoryState,
           preservedResultsPage: resultsPage,
           note: 'resultsPage should be preserved at this point'
@@ -2052,7 +2053,7 @@ function AlbumPage() {
         return
       }
     } catch (error) {
-      console.warn('[History] window.history.back() failed, using fallback navigation:', error)
+      debugWarn('[History] window.history.back() failed, using fallback navigation:', error)
     }
     
     // Fallback: Programmatic navigation based on current state/URL
@@ -2181,7 +2182,7 @@ function AlbumPage() {
           '',
           resultsUrl.toString()
         )
-        console.log('[History] Replaced results state from Back to Search Results button (already on results):', resultsHistoryState)
+        debugLog('[History] Replaced results state from Back to Search Results button (already on results):', resultsHistoryState)
       } else {
         // Coming from album page - push new history entry
         window.history.pushState(
@@ -2189,7 +2190,7 @@ function AlbumPage() {
           '',
           resultsUrl.toString()
         )
-        console.log('[History] Pushed results state from Back to Search Results button:', resultsHistoryState)
+        debugLog('[History] Pushed results state from Back to Search Results button:', resultsHistoryState)
       }
     } else {
       // Start completely fresh - clear everything
@@ -2212,7 +2213,7 @@ function AlbumPage() {
         '',
         searchUrl.toString()
       )
-      console.log('[History] Pushed search page state from New Search button')
+      debugLog('[History] Pushed search page state from New Search button')
     }
     setSortOption('newest') // Reset to default sort
     setExpandedTracks(new Set())
@@ -2240,7 +2241,7 @@ function AlbumPage() {
       const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent) && !/CriOS/.test(userAgent)
       const isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent)
       
-      console.log('[History] popstate event fired:', {
+      debugLog('[History] popstate event fired:', {
         browser: isChrome ? 'Chrome' : isSafari ? 'Safari' : 'Unknown',
         isMobile,
         userAgent: userAgent.substring(0, 100), // First 100 chars for privacy
@@ -2264,12 +2265,12 @@ function AlbumPage() {
       // Chrome-specific: Sometimes historyState can be undefined even when it should exist
       // Log a warning if we're in Chrome and historyState is unexpectedly null
       if (isChrome && !historyState && (album || searchResults)) {
-        console.warn('[History] Chrome: historyState is null but React state suggests we should have history. This may indicate a Chrome-specific issue.')
+        debugWarn('[History] Chrome: historyState is null but React state suggests we should have history. This may indicate a Chrome-specific issue.')
       }
       
       // Case 1: Lightbox is open → close lightbox and stay on album details page
       if (selectedImage !== null) {
-        console.log('[History] Closing lightbox, staying on album page')
+        debugLog('[History] Closing lightbox, staying on album page')
         setSelectedImage(null)
         // Don't push a new state - we're already on the album details page
         // The history stack is: search results → album details → lightbox open
@@ -2279,7 +2280,7 @@ function AlbumPage() {
       
       // Case 2: Coming back from help section → close help
       if (showHelp) {
-        console.log('[History] Closing help section')
+        debugLog('[History] Closing help section')
         setShowHelp(false)
         return
       }
@@ -2287,7 +2288,7 @@ function AlbumPage() {
       // Case 3: Navigating back to search results page (from album details)
       // Check history state first - this is the source of truth for what page we're navigating TO
       if (historyState && historyState.page === 'results') {
-        console.log('[History] Case 3 MATCHED: Navigating back to search results page:', {
+        debugLog('[History] Case 3 MATCHED: Navigating back to search results page:', {
           historyState,
           preservedResultsPage: resultsPage,
           searchResultsLength: searchResults?.length || 0
@@ -2316,10 +2317,10 @@ function AlbumPage() {
           
           setDisplayedResults(pageResults)
           setResultsPage(pageToRestore)
-          console.log('[History] Case 3: Restored search results from memory - page', pageToRestore, '(from', pageFromState ? 'historyState' : urlPage ? 'URL' : 'default', ')')
+          debugLog('[History] Case 3: Restored search results from memory - page', pageToRestore, '(from', pageFromState ? 'historyState' : urlPage ? 'URL' : 'default', ')')
         } else {
           // Search results not in memory - this shouldn't happen, but handle gracefully
-          console.warn('[History] Case 3: Search results not in memory when navigating back to results page')
+          debugWarn('[History] Case 3: Search results not in memory when navigating back to results page')
           setSearchResults(null)
           setSearchMeta(null)
           setDisplayedResults([])
@@ -2327,7 +2328,7 @@ function AlbumPage() {
         }
         return
       } else {
-        console.log('[History] Case 3 NOT MATCHED:', {
+        debugLog('[History] Case 3 NOT MATCHED:', {
           hasHistoryState: !!historyState,
           historyStatePage: historyState?.page,
           expectedPage: 'results',
@@ -2338,7 +2339,7 @@ function AlbumPage() {
       // Check BEFORE Case 4: Are we going back from album to results?
       // This should catch cases where historyState is missing/malformed but we have album + searchResults
       if (album && searchResults && searchResults.length > 0) {
-        console.log('[History] PRE-CASE 4 CHECK: Detected album → results navigation - RESTORING RESULTS PAGE:', {
+        debugLog('[History] PRE-CASE 4 CHECK: Detected album → results navigation - RESTORING RESULTS PAGE:', {
           hasAlbum: !!album,
           hasSearchResults: !!searchResults,
           searchResultsLength: searchResults.length,
@@ -2372,10 +2373,10 @@ function AlbumPage() {
         setDisplayedResults(pageResults)
         setResultsPage(pageToRestore)
         
-        console.log('[History] PRE-CASE 4 CHECK: Restored search results page', pageToRestore, 'with', pageResults.length, 'results (from', pageFromUrl ? 'URL' : 'preserved state', ')')
+        debugLog('[History] PRE-CASE 4 CHECK: Restored search results page', pageToRestore, 'with', pageResults.length, 'results (from', pageFromUrl ? 'URL' : 'preserved state', ')')
         return // Prevent Case 4 from executing
       } else {
-        console.log('[History] PRE-CASE 4 CHECK: NOT going back from album to results:', {
+        debugLog('[History] PRE-CASE 4 CHECK: NOT going back from album to results:', {
           hasAlbum: !!album,
           hasSearchResults: !!searchResults,
           searchResultsLength: searchResults?.length || 0,
@@ -2386,7 +2387,7 @@ function AlbumPage() {
       // Case 4: Navigating back to initial search page
       // Check if history state indicates we're going back to search page
       if (historyState && (historyState.page === 'search' || historyState.initialized === true)) {
-        console.log('[History] Case 4 MATCHED: Navigating back to initial search page:', {
+        debugLog('[History] Case 4 MATCHED: Navigating back to initial search page:', {
           historyState,
           historyStatePage: historyState.page,
           historyStateInitialized: historyState.initialized,
@@ -2421,7 +2422,7 @@ function AlbumPage() {
       // Case 5: Fallback - use URL parsing if history state is null or doesn't match expected structure
       // This handles edge cases where history state might be missing or malformed (e.g., iPhone Chrome)
       if (!historyState || (!historyState.page && !historyState.initialized)) {
-        console.log('[History] No valid history state, using URL parsing fallback')
+        debugLog('[History] No valid history state, using URL parsing fallback')
         
         const pathname = window.location.pathname
         const urlParams = new URLSearchParams(window.location.search)
@@ -2433,7 +2434,7 @@ function AlbumPage() {
           if (urlType === 'producer') {
             const producerName = urlParams.get('producer')
             if (producerName) {
-              console.log('[History] URL fallback: Restoring producer search from URL')
+              debugLog('[History] URL fallback: Restoring producer search from URL')
               setSearchType('producer')
               setSearchProducer(producerName)
               // Note: Can't restore full results from URL, but we can restore search params
@@ -2448,7 +2449,7 @@ function AlbumPage() {
           } else if (urlType === 'album') {
             const artist = urlParams.get('artist')
             if (artist) {
-              console.log('[History] URL fallback: Restoring album search from URL')
+              debugLog('[History] URL fallback: Restoring album search from URL')
               setSearchType('album')
               setSearchArtist(artist)
               const album = urlParams.get('album')
@@ -2465,7 +2466,7 @@ function AlbumPage() {
           }
         } else if (pathname === '/' || pathname === '') {
           // Navigating to search page
-          console.log('[History] URL fallback: Returning to search page')
+          debugLog('[History] URL fallback: Returning to search page')
           const urlType = urlParams.get('type')
           if (urlType) setSearchType(urlType)
           setAlbum(null)
@@ -2481,11 +2482,11 @@ function AlbumPage() {
         }
         
         // Final fallback - use React state if URL parsing doesn't help
-        console.log('[History] URL fallback failed, using React state fallback')
+        debugLog('[History] URL fallback failed, using React state fallback')
         
         // If we have an album, assume we're going back to search results
         if (album && searchResults && searchResults.length > 0) {
-          console.log('[History] Fallback: Returning to search results (album → results)')
+          debugLog('[History] Fallback: Returning to search results (album → results)')
           setAlbum(null)
           setAlbumError(null)
           setDisplayedResults(searchResults.slice(0, RESULTS_PER_PAGE))
@@ -2495,7 +2496,7 @@ function AlbumPage() {
         
         // If we have search results but no album, assume we're going back to search page
         if (!album && searchResults && searchResults.length > 0) {
-          console.log('[History] Fallback: Returning to search page (results → search)')
+          debugLog('[History] Fallback: Returning to search page (results → search)')
           // Restore search type from searchMeta if available
           if (searchMeta && searchMeta.isProducerSearch) {
             setSearchType('producer')
@@ -2515,7 +2516,7 @@ function AlbumPage() {
       }
       
       // Case 6: No special handling needed, let browser handle normally
-      console.log('[History] No special handling, letting browser handle normally')
+      debugLog('[History] No special handling, letting browser handle normally')
     }
     
     window.addEventListener('popstate', handlePopState)
@@ -2528,7 +2529,7 @@ function AlbumPage() {
   // Fetch gallery images in background after album loads
   useEffect(() => {
     if (album && album.albumId) {
-      console.log('[Gallery Debug] useEffect triggered - album.albumId:', album.albumId)
+      debugLog('[Gallery Debug] useEffect triggered - album.albumId:', album.albumId)
       
       // Reset gallery state when new album loads
       setGalleryImages([])
@@ -2542,63 +2543,63 @@ function AlbumPage() {
       
       // Set timeout to abort request
       const timeoutId = setTimeout(() => {
-        console.log('[Gallery Debug] Timeout reached - aborting request')
+        debugLog('[Gallery Debug] Timeout reached - aborting request')
         abortController.abort()
       }, TIMEOUT_MS)
       
       // Fetch gallery images in background with timeout
-      console.log('[Gallery Debug] Setting loadingGallery to true, clearing error')
+      debugLog('[Gallery Debug] Setting loadingGallery to true, clearing error')
       setLoadingGallery(true)
       setGalleryError(null)
       
-      console.log('[Gallery Debug] Calling fetchAllAlbumArt with albumId:', album.albumId)
+      debugLog('[Gallery Debug] Calling fetchAllAlbumArt with albumId:', album.albumId)
       fetchAllAlbumArt(album.albumId, abortController.signal)
         .then(images => {
-          console.log('[Gallery Debug] fetchAllAlbumArt SUCCESS - images received:', images.length)
-          console.log('[Gallery Debug] Aborted?', abortController.signal.aborted)
+          debugLog('[Gallery Debug] fetchAllAlbumArt SUCCESS - images received:', images.length)
+          debugLog('[Gallery Debug] Aborted?', abortController.signal.aborted)
           
           // Only update if this request hasn't been cancelled AND component is still mounted
           if (!abortController.signal.aborted && isMountedRef.current) {
             clearTimeout(timeoutId)
-            console.log('[Gallery Debug] Setting galleryImages to:', images.length, 'images')
+            debugLog('[Gallery Debug] Setting galleryImages to:', images.length, 'images')
             setGalleryImages(images)
             setGalleryError(null)
-            console.log('[Gallery Debug] State after success - images:', images.length, 'error:', null)
+            debugLog('[Gallery Debug] State after success - images:', images.length, 'error:', null)
           } else {
-            console.log('[Gallery Debug] Request was aborted or component unmounted - not updating state')
+            debugLog('[Gallery Debug] Request was aborted or component unmounted - not updating state')
           }
         })
         .catch(err => {
-          console.log('[Gallery Debug] fetchAllAlbumArt ERROR caught:', err)
-          console.log('[Gallery Debug] Error name:', err.name)
-          console.log('[Gallery Debug] Error message:', err.message)
-          console.log('[Gallery Debug] Aborted?', abortController.signal.aborted)
+          debugLog('[Gallery Debug] fetchAllAlbumArt ERROR caught:', err)
+          debugLog('[Gallery Debug] Error name:', err.name)
+          debugLog('[Gallery Debug] Error message:', err.message)
+          debugLog('[Gallery Debug] Aborted?', abortController.signal.aborted)
           
           // Only update if this request hasn't been cancelled AND component is still mounted
           if (!abortController.signal.aborted && isMountedRef.current) {
             clearTimeout(timeoutId)
-            console.warn('Error loading gallery images:', err)
+            debugWarn('Error loading gallery images:', err)
             const errorMessage = err.message || 'Failed to load album art gallery'
             const finalError = errorMessage.includes('timeout') 
               ? 'Gallery loading timed out. Please try again.' 
               : errorMessage
-            console.log('[Gallery Debug] Setting galleryError to:', finalError)
+            debugLog('[Gallery Debug] Setting galleryError to:', finalError)
             setGalleryError(finalError)
-            console.log('[Gallery Debug] State after error - images: 0, error:', finalError)
+            debugLog('[Gallery Debug] State after error - images: 0, error:', finalError)
           } else {
-            console.log('[Gallery Debug] Request was aborted or component unmounted - not updating error state')
+            debugLog('[Gallery Debug] Request was aborted or component unmounted - not updating error state')
           }
         })
         .finally(() => {
-          console.log('[Gallery Debug] finally() called - Aborted?', abortController.signal.aborted)
+          debugLog('[Gallery Debug] finally() called - Aborted?', abortController.signal.aborted)
           
           // Only update if this request hasn't been cancelled AND component is still mounted
           if (!abortController.signal.aborted && isMountedRef.current) {
             clearTimeout(timeoutId)
-            console.log('[Gallery Debug] Setting loadingGallery to false')
+            debugLog('[Gallery Debug] Setting loadingGallery to false')
             setLoadingGallery(false)
           } else {
-            console.log('[Gallery Debug] Request was aborted or component unmounted - not updating loading state')
+            debugLog('[Gallery Debug] Request was aborted or component unmounted - not updating loading state')
           }
         })
       
@@ -2655,7 +2656,7 @@ function AlbumPage() {
           // Only update if this request hasn't been cancelled AND component is still mounted
           if (!abortController.signal.aborted && isMountedRef.current) {
             clearTimeout(timeoutId)
-            console.warn('Error loading Wikipedia content:', err)
+            debugWarn('Error loading Wikipedia content:', err)
             const errorMessage = err.message || 'Failed to load Wikipedia content'
             setWikipediaError(errorMessage.includes('timeout') 
               ? 'Wikipedia loading timed out. Please try again.' 
@@ -2703,50 +2704,50 @@ function AlbumPage() {
   
   // Retry gallery fetch
   function retryGallery() {
-    console.log('[Gallery Debug] retryGallery called')
+    debugLog('[Gallery Debug] retryGallery called')
     if (album && album.albumId) {
-      console.log('[Gallery Debug] Retry - Clearing error, setting loading to true')
+      debugLog('[Gallery Debug] Retry - Clearing error, setting loading to true')
       setGalleryError(null)
       setLoadingGallery(true)
       const abortController = new AbortController()
       
-      console.log('[Gallery Debug] Retry - Calling fetchAllAlbumArt with albumId:', album.albumId)
+      debugLog('[Gallery Debug] Retry - Calling fetchAllAlbumArt with albumId:', album.albumId)
       fetchAllAlbumArt(album.albumId, abortController.signal)
         .then(images => {
-          console.log('[Gallery Debug] Retry SUCCESS - images received:', images.length)
+          debugLog('[Gallery Debug] Retry SUCCESS - images received:', images.length)
           if (!abortController.signal.aborted && isMountedRef.current) {
-            console.log('[Gallery Debug] Retry - Setting galleryImages to:', images.length)
+            debugLog('[Gallery Debug] Retry - Setting galleryImages to:', images.length)
             setGalleryImages(images)
             setGalleryError(null)
-            console.log('[Gallery Debug] Retry - State after success: images:', images.length, 'error:', null)
+            debugLog('[Gallery Debug] Retry - State after success: images:', images.length, 'error:', null)
           } else {
-            console.log('[Gallery Debug] Retry - Request was aborted or component unmounted')
+            debugLog('[Gallery Debug] Retry - Request was aborted or component unmounted')
           }
         })
         .catch(err => {
-          console.log('[Gallery Debug] Retry ERROR:', err)
-          console.log('[Gallery Debug] Retry ERROR name:', err.name)
-          console.log('[Gallery Debug] Retry ERROR message:', err.message)
-          console.log('[Gallery Debug] Retry ERROR stack:', err.stack)
+          debugLog('[Gallery Debug] Retry ERROR:', err)
+          debugLog('[Gallery Debug] Retry ERROR name:', err.name)
+          debugLog('[Gallery Debug] Retry ERROR message:', err.message)
+          debugLog('[Gallery Debug] Retry ERROR stack:', err.stack)
           if (!abortController.signal.aborted && isMountedRef.current) {
-            console.warn('Error loading gallery images:', err)
+            debugWarn('Error loading gallery images:', err)
             // Show more detailed error message for debugging
             const errorMsg = err.message || 'Failed to load album art gallery'
             const detailedError = `${errorMsg} (${err.name || 'Unknown error'})`
-            console.log('[Gallery Debug] Retry - Setting galleryError to:', detailedError)
+            debugLog('[Gallery Debug] Retry - Setting galleryError to:', detailedError)
             setGalleryError(detailedError)
           } else {
-            console.log('[Gallery Debug] Retry - Request was aborted or component unmounted, not setting error')
+            debugLog('[Gallery Debug] Retry - Request was aborted or component unmounted, not setting error')
           }
         })
         .finally(() => {
-          console.log('[Gallery Debug] Retry finally() - Setting loadingGallery to false')
+          debugLog('[Gallery Debug] Retry finally() - Setting loadingGallery to false')
           if (!abortController.signal.aborted && isMountedRef.current) {
             setLoadingGallery(false)
           }
         })
     } else {
-      console.log('[Gallery Debug] Retry - No album or albumId available')
+      debugLog('[Gallery Debug] Retry - No album or albumId available')
     }
   }
   
@@ -2770,7 +2771,7 @@ function AlbumPage() {
         })
         .catch(err => {
           if (!abortController.signal.aborted && isMountedRef.current) {
-            console.warn('Error loading Wikipedia content:', err)
+            debugWarn('Error loading Wikipedia content:', err)
             setWikipediaError(err.message || 'Failed to load Wikipedia content')
           }
         })
@@ -3136,7 +3137,7 @@ function AlbumPage() {
                   onClick={() => {
                     // Previous button is always enabled (on page 1 it returns to search form, on page 2+ it goes to previous page)
                     const buttonDisabled = loadingPage
-                    console.log('[Previous Button] Clicked!', {
+                    debugLog('[Previous Button] Clicked!', {
                       resultsPage,
                       searchResultsLength: searchResults?.length,
                       displayedResultsLength: displayedResults.length,
@@ -3148,7 +3149,7 @@ function AlbumPage() {
                     if (!buttonDisabled) {
                       handlePageChange('prev')
                     } else {
-                      console.log('[Previous Button] Button is disabled (loading), click ignored')
+                      debugLog('[Previous Button] Button is disabled (loading), click ignored')
                     }
                   }}
                   disabled={loadingPage}
@@ -3176,11 +3177,11 @@ function AlbumPage() {
                 <button
                   className="pagination-button pagination-next"
                   onClick={() => {
-                    console.log('[Next Button] Clicked! canGoNext() =', canGoNext())
+                    debugLog('[Next Button] Clicked! canGoNext() =', canGoNext())
                     if (canGoNext()) {
                       handlePageChange('next')
                     } else {
-                      console.log('[Next Button] Button is disabled, click ignored')
+                      debugLog('[Next Button] Button is disabled, click ignored')
                     }
                   }}
                   disabled={!canGoNext()}
@@ -3252,8 +3253,8 @@ function AlbumPage() {
   const trackCredits = album.credits?.trackCredits || {}
   
   // Debug: Log album credits to console
-  console.log('Album credits data:', albumCredits)
-  console.log('Album credits object:', album.credits)
+  debugLog('Album credits data:', albumCredits)
+  debugLog('Album credits object:', album.credits)
   
   return (
     <div className="album-page">
@@ -3350,12 +3351,12 @@ function AlbumPage() {
           // - We have an error, OR
           // - We've finished loading and have no images (successfully checked, no art available)
           const shouldRender = galleryImages.length > 0 || loadingGallery || galleryError || (!loadingGallery && !galleryError && album !== null)
-          console.log('[Gallery Debug] Conditional render check:')
-          console.log('[Gallery Debug]   galleryImages.length:', galleryImages.length)
-          console.log('[Gallery Debug]   loadingGallery:', loadingGallery)
-          console.log('[Gallery Debug]   galleryError:', galleryError)
-          console.log('[Gallery Debug]   album:', album !== null)
-          console.log('[Gallery Debug]   shouldRender:', shouldRender)
+          debugLog('[Gallery Debug] Conditional render check:')
+          debugLog('[Gallery Debug]   galleryImages.length:', galleryImages.length)
+          debugLog('[Gallery Debug]   loadingGallery:', loadingGallery)
+          debugLog('[Gallery Debug]   galleryError:', galleryError)
+          debugLog('[Gallery Debug]   album:', album !== null)
+          debugLog('[Gallery Debug]   shouldRender:', shouldRender)
           return shouldRender
         })() && (
           <section className="album-art-gallery-section">
@@ -3364,19 +3365,19 @@ function AlbumPage() {
               {(() => {
                 // Show button only if we have images or are loading (not for empty state or error)
                 const shouldShowButton = !galleryError && (galleryImages.length > 0 || loadingGallery)
-                console.log('[Gallery Debug] Button visibility check:')
-                console.log('[Gallery Debug]   galleryError:', galleryError)
-                console.log('[Gallery Debug]   galleryImages.length:', galleryImages.length)
-                console.log('[Gallery Debug]   loadingGallery:', loadingGallery)
-                console.log('[Gallery Debug]   shouldShowButton:', shouldShowButton)
+                debugLog('[Gallery Debug] Button visibility check:')
+                debugLog('[Gallery Debug]   galleryError:', galleryError)
+                debugLog('[Gallery Debug]   galleryImages.length:', galleryImages.length)
+                debugLog('[Gallery Debug]   loadingGallery:', loadingGallery)
+                debugLog('[Gallery Debug]   shouldShowButton:', shouldShowButton)
                 return shouldShowButton
               })() && (
                 <button
                   className="gallery-toggle-button"
                   onClick={() => {
-                    console.log('[Gallery Debug] Button clicked - galleryExpanded was:', galleryExpanded)
+                    debugLog('[Gallery Debug] Button clicked - galleryExpanded was:', galleryExpanded)
                     setGalleryExpanded(!galleryExpanded)
-                    console.log('[Gallery Debug] Button clicked - galleryExpanded now:', !galleryExpanded)
+                    debugLog('[Gallery Debug] Button clicked - galleryExpanded now:', !galleryExpanded)
                   }}
                   type="button"
                 >
@@ -3436,11 +3437,11 @@ function AlbumPage() {
               // Show content if:
               // - No error AND (expanded OR no images to show message directly)
               const shouldShowContent = !galleryError && (galleryExpanded || galleryImages.length === 0)
-              console.log('[Gallery Debug] Gallery content render check:')
-              console.log('[Gallery Debug]   galleryError:', galleryError)
-              console.log('[Gallery Debug]   galleryExpanded:', galleryExpanded)
-              console.log('[Gallery Debug]   galleryImages.length:', galleryImages.length)
-              console.log('[Gallery Debug]   shouldShowContent:', shouldShowContent)
+              debugLog('[Gallery Debug] Gallery content render check:')
+              debugLog('[Gallery Debug]   galleryError:', galleryError)
+              debugLog('[Gallery Debug]   galleryExpanded:', galleryExpanded)
+              debugLog('[Gallery Debug]   galleryImages.length:', galleryImages.length)
+              debugLog('[Gallery Debug]   shouldShowContent:', shouldShowContent)
               return shouldShowContent
             })() && (
               <div className="gallery-content">
@@ -3451,7 +3452,7 @@ function AlbumPage() {
                 ) : (
                   <div className="gallery-grid">
                     {(() => {
-                      console.log('[Gallery Debug] Rendering gallery grid with', galleryImages.length, 'images')
+                      debugLog('[Gallery Debug] Rendering gallery grid with', galleryImages.length, 'images')
                       return galleryImages.map((img, index) => {
                       // Use 500px thumbnail if available, fallback to 250px, then small, then full image
                       const thumbnailUrl = img.thumbnails?.['500'] || 

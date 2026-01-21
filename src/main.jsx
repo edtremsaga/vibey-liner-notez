@@ -3,11 +3,12 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
 import './styles/theme.css'
+import { debugLog } from './utils/debug'
 
 // [History] logging is still active - logs will appear in browser console
 // Removed ChromeDebugPanel log capture code - no longer needed
 
-console.log('🚀 Starting liner notez app...')
+debugLog('🚀 Starting liner notez app...')
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {

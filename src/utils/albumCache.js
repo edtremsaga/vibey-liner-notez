@@ -1,6 +1,8 @@
 // Album cache utility for localStorage
 // Caches album detail page data to improve performance on repeat views
 
+import { debugLog, debugWarn } from './debug'
+
 const CACHE_PREFIX = 'album_cache_'
 const CACHE_INDEX_KEY = 'album_cache_index'
 const CACHE_TTL_DAYS = 30
@@ -58,7 +60,7 @@ function getCachedAlbumIds() {
     const index = localStorage.getItem(CACHE_INDEX_KEY)
     return index ? JSON.parse(index) : []
   } catch (e) {
-    console.warn('Error reading cache index:', e)
+    debugWarn('Error reading cache index:', e)
     return []
   }
 }
@@ -76,7 +78,7 @@ function updateCacheIndex(releaseGroupId) {
       localStorage.setItem(CACHE_INDEX_KEY, JSON.stringify(ids))
     }
   } catch (e) {
-    console.warn('Error updating cache index:', e)
+    debugWarn('Error updating cache index:', e)
   }
 }
 
@@ -90,7 +92,7 @@ function removeFromCacheIndex(releaseGroupId) {
     const ids = getCachedAlbumIds().filter(id => id !== releaseGroupId)
     localStorage.setItem(CACHE_INDEX_KEY, JSON.stringify(ids))
   } catch (e) {
-    console.warn('Error removing from cache index:', e)
+    debugWarn('Error removing from cache index:', e)
   }
 }
 
@@ -137,7 +139,7 @@ export function getCachedAlbum(releaseGroupId) {
     
     return data.albumData
   } catch (e) {
-    console.warn('Error reading from cache:', e)
+    debugWarn('Error reading from cache:', e)
     // Remove corrupted entry
     removeCachedAlbum(releaseGroupId)
     return null
@@ -155,7 +157,7 @@ function removeCachedAlbum(releaseGroupId) {
     localStorage.removeItem(key)
     removeFromCacheIndex(releaseGroupId)
   } catch (e) {
-    console.warn('Error removing from cache:', e)
+    debugWarn('Error removing from cache:', e)
   }
 }
 
@@ -190,7 +192,7 @@ function cleanupCache() {
     
     expiredIds.forEach(id => {
       removeCachedAlbum(id)
-      console.log(`Removed expired cache entry: ${id}`)
+      debugLog(`Removed expired cache entry: ${id}`)
     })
     
     // Step 2: Check storage size after removing expired entries
@@ -226,7 +228,7 @@ function cleanupCache() {
       
       toRemove.forEach(entry => {
         removeCachedAlbum(entry.id)
-        console.log(`Removed least-recently-used cache entry: ${entry.id}`)
+        debugLog(`Removed least-recently-used cache entry: ${entry.id}`)
         currentSize = getStorageSizeMB()
         
         // Stop if we're below threshold
@@ -236,7 +238,7 @@ function cleanupCache() {
       })
     }
   } catch (e) {
-    console.warn('Error during cache cleanup:', e)
+    debugWarn('Error during cache cleanup:', e)
   }
 }
 
@@ -247,7 +249,7 @@ function cleanupCache() {
  */
 export function setCachedAlbum(releaseGroupId, albumData) {
   if (!isLocalStorageAvailable()) {
-    console.warn('localStorage not available, skipping cache')
+    debugWarn('localStorage not available, skipping cache')
     return
   }
   
@@ -255,7 +257,7 @@ export function setCachedAlbum(releaseGroupId, albumData) {
     // Check storage size and cleanup if needed (Trigger 1)
     const currentSize = getStorageSizeMB()
     if (currentSize > CLEANUP_THRESHOLD_MB) {
-      console.log(`Storage at ${currentSize.toFixed(2)}MB, triggering cleanup...`)
+      debugLog(`Storage at ${currentSize.toFixed(2)}MB, triggering cleanup...`)
       cleanupCache()
     }
     
@@ -275,20 +277,20 @@ export function setCachedAlbum(releaseGroupId, albumData) {
     try {
       localStorage.setItem(key, dataString)
       updateCacheIndex(releaseGroupId)
-      console.log(`Cached album: ${releaseGroupId}`)
+      debugLog(`Cached album: ${releaseGroupId}`)
     } catch (e) {
       if (e.name === 'QuotaExceededError' || e.code === 22) {
         // Storage full, try cleanup and retry once
-        console.warn('Storage quota exceeded, attempting cleanup...')
+        debugWarn('Storage quota exceeded, attempting cleanup...')
         cleanupCache()
         
         // Retry once
         try {
           localStorage.setItem(key, dataString)
           updateCacheIndex(releaseGroupId)
-          console.log(`Cached album after cleanup: ${releaseGroupId}`)
+          debugLog(`Cached album after cleanup: ${releaseGroupId}`)
         } catch (e2) {
-          console.warn('Failed to cache album after cleanup:', e2)
+          debugWarn('Failed to cache album after cleanup:', e2)
           // Give up, app still works without cache
         }
       } else {
@@ -296,7 +298,7 @@ export function setCachedAlbum(releaseGroupId, albumData) {
       }
     }
   } catch (e) {
-    console.warn('Error caching album:', e)
+    debugWarn('Error caching album:', e)
     // Don't throw - caching is optional, app should still work
   }
 }
@@ -314,9 +316,9 @@ export function clearCache() {
       localStorage.removeItem(key)
     })
     localStorage.removeItem(CACHE_INDEX_KEY)
-    console.log('Cache cleared')
+    debugLog('Cache cleared')
   } catch (e) {
-    console.warn('Error clearing cache:', e)
+    debugWarn('Error clearing cache:', e)
   }
 }
 

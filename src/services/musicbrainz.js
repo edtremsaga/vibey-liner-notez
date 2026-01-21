@@ -2,6 +2,8 @@
 // Fetches data from MusicBrainz and transforms to album.v1.json schema
 // No data invention - only uses values from MusicBrainz API responses
 
+import { debugLog, debugWarn } from '../utils/debug'
+
 const MB_API_BASE = 'https://musicbrainz.org/ws/2'
 const COVER_ART_BASE = 'https://coverartarchive.org'
 
@@ -455,7 +457,7 @@ async function getReleaseGroupInfo(releaseId) {
       return rgInfo
     } catch (error) {
       fetchPromises.delete(releaseId) // Clean up on error
-      console.warn(`[Release Cache] Error fetching release ${releaseId}:`, error.message)
+      debugWarn(`[Release Cache] Error fetching release ${releaseId}:`, error.message)
       return null
     }
   })()
@@ -544,7 +546,7 @@ function testReleaseGroupAvailability(artistJson) {
 
   const sampleRelease = releaseRels[0]?.release ?? null;
 
-  console.log("[RG Cheap Check]", {
+  debugLog("[RG Cheap Check]", {
     totalRelations: rels.length,
     releaseRelations: releaseRels.length,
     releaseRelationsWithNestedRG: withRgNested.length,
@@ -621,14 +623,14 @@ export async function searchByProducer(producerName, producerMBID = null, offset
     
     if (cachedReleaseRelations) {
       // Use cached release relations (for pagination performance)
-      console.log(`[Producer Search] Using cached release relations (${cachedReleaseRelations.length} releases)`)
+      debugLog(`[Producer Search] Using cached release relations (${cachedReleaseRelations.length} releases)`)
       releaseRelations = cachedReleaseRelations
       // For pagination, we don't need recording relations (they're slow and we skip them anyway)
       recordingRelations = []
     } else {
       // Fetch artist relationships (initial search only)
       const artistRelsStartTime = performance.now()
-      console.log(`[Producer Search] Fetching artist relationships for ${producerMBIDToUse}...`)
+      debugLog(`[Producer Search] Fetching artist relationships for ${producerMBIDToUse}...`)
       const artistRelsUrl = `${MB_API_BASE}/artist/${producerMBIDToUse}?inc=recording-rels+release-rels&fmt=json`
       const artistRelsResponse = await rateLimitedFetch(artistRelsUrl, {
         headers: {
@@ -645,7 +647,7 @@ export async function searchByProducer(producerName, producerMBID = null, offset
       const relations = artistRelsData.relations || []
       artistRelsDuration = ((performance.now() - artistRelsStartTime) / 1000).toFixed(2)
       
-      console.log(`[Producer Search] Found ${relations.length} total relationships (took ${artistRelsDuration}s)`)
+      debugLog(`[Producer Search] Found ${relations.length} total relationships (took ${artistRelsDuration}s)`)
       
       // POC TEST: Check if Release Group IDs are available in the relationships payload (cheap, no extra fetches)
       testReleaseGroupAvailability(artistRelsData)
@@ -656,7 +658,7 @@ export async function searchByProducer(producerName, producerMBID = null, offset
         return type.includes('producer')
       })
       
-      console.log(`[Producer Search] Found ${producerRelations.length} producer relationships`)
+      debugLog(`[Producer Search] Found ${producerRelations.length} producer relationships`)
       
       if (producerRelations.length === 0) {
         throw new Error(`No albums found for this producer. The producer exists but no production credits are documented.`)
@@ -666,7 +668,7 @@ export async function searchByProducer(producerName, producerMBID = null, offset
       releaseRelations = producerRelations.filter(r => r['target-type'] === 'release' && r.release)
       recordingRelations = producerRelations.filter(r => r['target-type'] === 'recording' && r.recording)
       
-      console.log(`[Producer Search] Release-level: ${releaseRelations.length}, Recording-level: ${recordingRelations.length}`)
+      debugLog(`[Producer Search] Release-level: ${releaseRelations.length}, Recording-level: ${recordingRelations.length}`)
     }
     
     // Step 5: Process release-level producer credits (strong signal - prioritize these)
@@ -701,9 +703,9 @@ export async function searchByProducer(producerName, producerMBID = null, offset
     
     const releasesStartTime = performance.now()
     const maxProgress = isInitialSearch ? MAX_RELEASES_INITIAL : totalToProcess
-    console.log(`[Producer Search] Processing ${totalToProcess} release-level producer credits (out of ${releaseRelations.length} total)...`)
+    debugLog(`[Producer Search] Processing ${totalToProcess} release-level producer credits (out of ${releaseRelations.length} total)...`)
     if (isInitialSearch) {
-      console.log(`[Producer Search] Initial search: will continue until ${MIN_ALBUMS_TARGET} albums found or ${MAX_RELEASES_INITIAL} releases processed`)
+      debugLog(`[Producer Search] Initial search: will continue until ${MIN_ALBUMS_TARGET} albums found or ${MAX_RELEASES_INITIAL} releases processed`)
     }
     
     let actuallyProcessed = 0
@@ -726,20 +728,20 @@ export async function searchByProducer(producerName, producerMBID = null, offset
         const releaseDuration = ((performance.now() - releaseStartTime) / 1000).toFixed(2)
         
         if (!rgInfo) {
-          console.log(`[Producer Search] Release ${current}/${totalToProcess} skipped (no RG info) - took ${releaseDuration}s`)
+          debugLog(`[Producer Search] Release ${current}/${totalToProcess} skipped (no RG info) - took ${releaseDuration}s`)
           continue
         }
         
         // Check if it's an Album type
         if (rgInfo.primaryType !== 'Album') {
-          console.log(`[Producer Search] Release ${current}/${totalToProcess} skipped (not Album type) - took ${releaseDuration}s`)
+          debugLog(`[Producer Search] Release ${current}/${totalToProcess} skipped (not Album type) - took ${releaseDuration}s`)
           continue
         }
         
         // Check if we've already seen this Release Group (using seenRgIds Set)
         const releaseGroupId = rgInfo.releaseGroupId
         if (seenRgIds.has(releaseGroupId)) {
-          console.log(`[Producer Search] Release ${current}/${totalToProcess} skipped (duplicate RG) - took ${releaseDuration}s`)
+          debugLog(`[Producer Search] Release ${current}/${totalToProcess} skipped (duplicate RG) - took ${releaseDuration}s`)
           continue
         }
         
@@ -757,11 +759,11 @@ export async function searchByProducer(producerName, producerMBID = null, offset
         
         // Log cache hit/miss for debugging
         const cacheStatus = globalReleaseCache.has(releaseId) ? 'cache hit' : 'cache miss'
-        console.log(`[Producer Search] Release ${current}/${totalToProcess}: Found album "${rgInfo.title}" - took ${releaseDuration}s (${cacheStatus}, total albums: ${releaseGroupMap.size})`)
+        debugLog(`[Producer Search] Release ${current}/${totalToProcess}: Found album "${rgInfo.title}" - took ${releaseDuration}s (${cacheStatus}, total albums: ${releaseGroupMap.size})`)
         
         // Early exit for initial search: stop if we found MIN_ALBUMS_TARGET albums
         if (isInitialSearch && releaseGroupMap.size >= MIN_ALBUMS_TARGET) {
-          console.log(`[Producer Search] Found ${releaseGroupMap.size} albums (target: ${MIN_ALBUMS_TARGET}) - stopping early`)
+          debugLog(`[Producer Search] Found ${releaseGroupMap.size} albums (target: ${MIN_ALBUMS_TARGET}) - stopping early`)
           // Report final progress showing completion
           if (onProgress) {
             onProgress({ current: actuallyProcessed, total: actuallyProcessed })
@@ -770,7 +772,7 @@ export async function searchByProducer(producerName, producerMBID = null, offset
         }
       } catch (err) {
         const releaseDuration = ((performance.now() - releaseStartTime) / 1000).toFixed(2)
-        console.warn(`[Producer Search] Error processing release ${current}/${totalToProcess} (took ${releaseDuration}s):`, err.message)
+        debugWarn(`[Producer Search] Error processing release ${current}/${totalToProcess} (took ${releaseDuration}s):`, err.message)
         continue
       }
     }
@@ -778,12 +780,12 @@ export async function searchByProducer(producerName, producerMBID = null, offset
     // Calculate timing after loop completes (whether we broke early or processed all)
     const releasesDuration = ((performance.now() - releasesStartTime) / 1000).toFixed(2)
     if (isInitialSearch && releaseGroupMap.size >= MIN_ALBUMS_TARGET && actuallyProcessed < totalToProcess) {
-      console.log(`[Producer Search] Found ${releaseGroupMap.size} albums (target: ${MIN_ALBUMS_TARGET}) - stopped early (processed ${actuallyProcessed} releases in ${releasesDuration}s)`)
+      debugLog(`[Producer Search] Found ${releaseGroupMap.size} albums (target: ${MIN_ALBUMS_TARGET}) - stopped early (processed ${actuallyProcessed} releases in ${releasesDuration}s)`)
     } else if (isInitialSearch && actuallyProcessed >= MAX_RELEASES_INITIAL) {
-      console.log(`[Producer Search] Reached maximum releases (${MAX_RELEASES_INITIAL}) - processed ${actuallyProcessed} releases in ${releasesDuration}s, found ${releaseGroupMap.size} unique albums`)
+      debugLog(`[Producer Search] Reached maximum releases (${MAX_RELEASES_INITIAL}) - processed ${actuallyProcessed} releases in ${releasesDuration}s, found ${releaseGroupMap.size} unique albums`)
     } else {
       const batchInfo = offset > 0 ? ` (batch starting at offset ${offset})` : ''
-      console.log(`[Producer Search] Processed ${actuallyProcessed} releases${batchInfo} in ${releasesDuration}s, found ${releaseGroupMap.size} unique albums`)
+      debugLog(`[Producer Search] Processed ${actuallyProcessed} releases${batchInfo} in ${releasesDuration}s, found ${releaseGroupMap.size} unique albums`)
     }
     
     // Step 6: Process recording-level producer credits ONLY if we don't have enough release-level results
@@ -795,15 +797,15 @@ export async function searchByProducer(producerName, producerMBID = null, offset
     // For pagination (offset > 0), it's expected to sometimes get 0 results (we've reached the end)
     // IMPORTANT: Skip recording-level for pagination (offset > 0) - we've reached the end
     if (releaseGroupMap.size === 0 && offset === 0 && recordingRelations && recordingRelations.length > 0) {
-      console.log(`[Producer Search] No albums found from release-level, trying recording-level credits...`)
-      console.log(`[Producer Search] WARNING: This may take a long time (${recordingRelations.length} recording relations found)`)
+      debugLog(`[Producer Search] No albums found from release-level, trying recording-level credits...`)
+      debugLog(`[Producer Search] WARNING: This may take a long time (${recordingRelations.length} recording relations found)`)
       
       // Limit to first 10 recording relations to keep it reasonably fast (10 seconds with rate limiting)
       // This is a fallback only if release-level returns nothing
       const recordingReleaseGroupMap = new Map()
       const recordingRelationsToProcess = recordingRelations.slice(0, 10) // Very limited for speed
       
-      console.log(`[Producer Search] Processing ${recordingRelationsToProcess.length} recording-level producer credits...`)
+      debugLog(`[Producer Search] Processing ${recordingRelationsToProcess.length} recording-level producer credits...`)
       
       for (const rel of recordingRelationsToProcess) {
         try {
@@ -844,7 +846,7 @@ export async function searchByProducer(producerName, producerMBID = null, offset
             }
           }
         } catch (err) {
-          console.warn(`[Producer Search] Error processing recording relation:`, err.message)
+          debugWarn(`[Producer Search] Error processing recording relation:`, err.message)
           continue
         }
       }
@@ -860,15 +862,15 @@ export async function searchByProducer(producerName, producerMBID = null, offset
         })
       }
       
-      console.log(`[Producer Search] Added ${recordingReleaseGroupMap.size} albums from recording-level credits`)
+      debugLog(`[Producer Search] Added ${recordingReleaseGroupMap.size} albums from recording-level credits`)
     } else if (releaseGroupMap.size === 0 && offset > 0) {
       // Pagination reached the end (no new albums found) - this is expected, not an error
-      console.log(`[Producer Search] Pagination: No new albums found at offset ${offset} (reached end of available releases)`)
+      debugLog(`[Producer Search] Pagination: No new albums found at offset ${offset} (reached end of available releases)`)
       // Don't try recording-level for pagination - just return empty results below
     } else {
-      console.log(`[Producer Search] Found ${releaseGroupMap.size} albums from release-level credits - skipping recording-level for speed`)
+      debugLog(`[Producer Search] Found ${releaseGroupMap.size} albums from release-level credits - skipping recording-level for speed`)
       if (recordingRelations && recordingRelations.length > 0) {
-        console.log(`[Producer Search] Note: ${recordingRelations.length} recording-level producer credits exist but were skipped to keep search fast`)
+        debugLog(`[Producer Search] Note: ${recordingRelations.length} recording-level producer credits exist but were skipped to keep search fast`)
       }
     }
     
@@ -886,7 +888,7 @@ export async function searchByProducer(producerName, producerMBID = null, offset
         throw new Error(`No albums found for this producer. The producer exists but no production credits are documented.`)
       } else {
         // Pagination reached the end - return empty results (this is expected, not an error)
-        console.log(`[Producer Search] Pagination: No new albums found at offset ${offset} (reached end of available releases)`)
+        debugLog(`[Producer Search] Pagination: No new albums found at offset ${offset} (reached end of available releases)`)
         return {
           results: [],
           totalCount: totalAvailableReleases,
@@ -917,12 +919,12 @@ export async function searchByProducer(producerName, producerMBID = null, offset
     
     const totalDuration = ((performance.now() - totalStartTime) / 1000).toFixed(2)
     const batchInfo = offset > 0 ? ` (batch offset: ${offset})` : ''
-    console.log(`[Producer Search] ✅ COMPLETE: Found ${results.length} albums with producer credits${batchInfo} in ${totalDuration}s total`)
+    debugLog(`[Producer Search] ✅ COMPLETE: Found ${results.length} albums with producer credits${batchInfo} in ${totalDuration}s total`)
     if (cachedReleaseRelations && artistRelsDuration === null) {
       // Estimate saved time based on typical fetch (usually ~1s)
-      console.log(`[Producer Search] Performance breakdown: Using cached relations (saved ~1.0s), Releases processing: ${releasesDuration}s`)
+      debugLog(`[Producer Search] Performance breakdown: Using cached relations (saved ~1.0s), Releases processing: ${releasesDuration}s`)
     } else {
-      console.log(`[Producer Search] Performance breakdown: Artist fetch: ${artistRelsDuration || '0.00'}s, Releases processing: ${releasesDuration}s`)
+      debugLog(`[Producer Search] Performance breakdown: Artist fetch: ${artistRelsDuration || '0.00'}s, Releases processing: ${releasesDuration}s`)
     }
     
     // Return total available count (total release relations available for this producer)
@@ -1031,7 +1033,7 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
   const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent) && !/CriOS/.test(userAgent)
   const isMobile = /iPad|iPhone|iPod|Android/.test(userAgent) || window.innerWidth <= 480
   
-  console.log('[CoverArt Debug] Browser detection:', { userAgent: userAgent.substring(0, 80), isIOS, isSafari, isMobile })
+  debugLog('[CoverArt Debug] Browser detection:', { userAgent: userAgent.substring(0, 80), isIOS, isSafari, isMobile })
   
   // iOS Safari workaround: Try direct image URLs first (they often work when fetch() doesn't)
   if (isIOS) {
@@ -1062,7 +1064,7 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
       ? { 'Accept': 'application/json' }
       : { 'User-Agent': 'liner-notez/1.0', 'Accept': 'application/json' }
     
-    console.log('[CoverArt Debug] Fetching release group cover art:', { 
+    debugLog('[CoverArt Debug] Fetching release group cover art:', { 
       url: releaseGroupUrl, 
       headers, 
       removedUserAgent: shouldRemoveUserAgent 
@@ -1087,7 +1089,7 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
       }
     }
   } catch (e) {
-    console.warn('Error fetching cover art from release group:', e)
+    debugWarn('Error fetching cover art from release group:', e)
     // Continue to try release-level
   }
   
@@ -1099,7 +1101,7 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
       const shouldRemoveUserAgent = isMobile || isSafari
       const headers = shouldRemoveUserAgent ? {} : { 'User-Agent': 'liner-notez/1.0' }
       
-      console.log('[CoverArt Debug] Fetching release cover art:', { 
+      debugLog('[CoverArt Debug] Fetching release cover art:', { 
         url: releaseUrl, 
         headers, 
         removedUserAgent: shouldRemoveUserAgent 
@@ -1124,7 +1126,7 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
         }
       }
     } catch (e) {
-      console.warn('Error fetching cover art from release:', e)
+      debugWarn('Error fetching cover art from release:', e)
       // Cover art is optional
     }
   }
@@ -1138,9 +1140,9 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
 // @param {AbortSignal} signal - Optional AbortSignal for request cancellation
 export async function fetchAllAlbumArt(releaseGroupId, signal = null) {
   const url = `${COVER_ART_BASE}/release-group/${releaseGroupId}`
-  console.log('[Gallery Debug] fetchAllAlbumArt called with releaseGroupId:', releaseGroupId)
-  console.log('[Gallery Debug] URL:', url)
-  console.log('[Gallery Debug] Signal aborted?', signal?.aborted)
+  debugLog('[Gallery Debug] fetchAllAlbumArt called with releaseGroupId:', releaseGroupId)
+  debugLog('[Gallery Debug] URL:', url)
+  debugLog('[Gallery Debug] Signal aborted?', signal?.aborted)
   
   // Detect Safari (iOS and desktop) and mobile for User-Agent header fix
   const userAgent = navigator.userAgent || ''
@@ -1148,52 +1150,52 @@ export async function fetchAllAlbumArt(releaseGroupId, signal = null) {
   const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent) && !/CriOS/.test(userAgent)
   
   try {
-    console.log('[Gallery Debug] Calling rateLimitedFetch...')
-    console.log('[Gallery Debug] Browser detection:', { userAgent: userAgent.substring(0, 80), isMobile, isSafari })
+    debugLog('[Gallery Debug] Calling rateLimitedFetch...')
+    debugLog('[Gallery Debug] Browser detection:', { userAgent: userAgent.substring(0, 80), isMobile, isSafari })
     // Remove User-Agent header on mobile OR Safari - causes CORS error: "Request header field User-Agent is not allowed by Access-Control-Allow-Headers"
     const shouldRemoveUserAgent = isMobile || isSafari
     const fetchHeaders = shouldRemoveUserAgent ? {} : { 'User-Agent': 'liner-notez/1.0' }
-    console.log('[Gallery Debug] Fetch headers:', fetchHeaders)
+    debugLog('[Gallery Debug] Fetch headers:', fetchHeaders)
     const response = await rateLimitedFetch(url, {
       headers: fetchHeaders,
       signal: signal || undefined
     })
     
-    console.log('[Gallery Debug] rateLimitedFetch completed')
-    console.log('[Gallery Debug] Response ok?', response.ok)
-    console.log('[Gallery Debug] Response status:', response.status)
-    console.log('[Gallery Debug] Response statusText:', response.statusText)
+    debugLog('[Gallery Debug] rateLimitedFetch completed')
+    debugLog('[Gallery Debug] Response ok?', response.ok)
+    debugLog('[Gallery Debug] Response status:', response.status)
+    debugLog('[Gallery Debug] Response statusText:', response.statusText)
     
     // Check if request was aborted (timeout or manual abort)
     if (signal && signal.aborted) {
-      console.log('[Gallery Debug] Signal was aborted - throwing error')
+      debugLog('[Gallery Debug] Signal was aborted - throwing error')
       throw new Error('Request aborted')
     }
     
     // Handle 404 gracefully - no album art available (not an error)
     if (response.status === 404) {
-      console.log('[Gallery Debug] 404 response - no album art available for this release')
+      debugLog('[Gallery Debug] 404 response - no album art available for this release')
       return [] // Return empty array instead of throwing error
     }
     
     // If response is not ok (and not 404), throw error
     if (!response.ok) {
-      console.log('[Gallery Debug] Response not ok - throwing error')
+      debugLog('[Gallery Debug] Response not ok - throwing error')
       throw new Error(`Failed to fetch album art: ${response.status} ${response.statusText}`)
     }
     
     const contentType = response.headers.get('content-type') || ''
-    console.log('[Gallery Debug] Content-Type:', contentType)
+    debugLog('[Gallery Debug] Content-Type:', contentType)
     
     if (!contentType.includes('application/json')) {
-      console.log('[Gallery Debug] Invalid content type - throwing error')
+      debugLog('[Gallery Debug] Invalid content type - throwing error')
       throw new Error('Invalid response format from album art API')
     }
     
-    console.log('[Gallery Debug] Parsing JSON response...')
+    debugLog('[Gallery Debug] Parsing JSON response...')
     const data = await response.json()
-    console.log('[Gallery Debug] JSON parsed successfully')
-    console.log('[Gallery Debug] Data.images length:', data.images?.length || 0)
+    debugLog('[Gallery Debug] JSON parsed successfully')
+    debugLog('[Gallery Debug] Data.images length:', data.images?.length || 0)
     
     const images = data.images || []
     
@@ -1214,35 +1216,35 @@ export async function fetchAllAlbumArt(releaseGroupId, signal = null) {
       approved: img.approved || false
     }))
     
-    console.log('[Gallery Debug] Returning', limitedImages.length, 'images')
+    debugLog('[Gallery Debug] Returning', limitedImages.length, 'images')
     // Return empty array only if API returned valid response with no images
     return limitedImages
   } catch (e) {
-    console.log('[Gallery Debug] fetchAllAlbumArt CATCH block - error:', e)
-    console.log('[Gallery Debug] Error name:', e.name)
-    console.log('[Gallery Debug] Error message:', e.message)
-    console.log('[Gallery Debug] Error stack:', e.stack)
+    debugLog('[Gallery Debug] fetchAllAlbumArt CATCH block - error:', e)
+    debugLog('[Gallery Debug] Error name:', e.name)
+    debugLog('[Gallery Debug] Error message:', e.message)
+    debugLog('[Gallery Debug] Error stack:', e.stack)
     
     // Re-throw abort errors (timeout or manual abort)
     if (e.name === 'AbortError' || e.message === 'Request aborted' || (signal && signal.aborted)) {
-      console.log('[Gallery Debug] AbortError detected - throwing timeout error')
+      debugLog('[Gallery Debug] AbortError detected - throwing timeout error')
       throw new Error('Gallery loading timed out. Please try again.')
     }
     
     // Re-throw network errors - preserve more error details for debugging
     if (e.message && (e.message.includes('Failed to fetch') || e.message.includes('Network') || e.message.includes('Load failed'))) {
-      console.log('[Gallery Debug] Network error detected - original error:', e.message)
+      debugLog('[Gallery Debug] Network error detected - original error:', e.message)
       // Preserve the original error message which may have more details
       const errorMsg = e.message.includes('Network request failed on iOS') 
         ? e.message 
         : `Network error: ${e.message}. Please check your connection.`
-      console.log('[Gallery Debug] Throwing network error:', errorMsg)
+      debugLog('[Gallery Debug] Throwing network error:', errorMsg)
       throw new Error(errorMsg)
     }
     
     // Re-throw all other errors
-    console.warn('Error fetching all album art from release group:', e)
-    console.log('[Gallery Debug] Re-throwing original error')
+    debugWarn('Error fetching all album art from release group:', e)
+    debugLog('[Gallery Debug] Re-throwing original error')
     throw e
   }
 }
@@ -1364,24 +1366,24 @@ function extractAlbumCredits(release) {
   const credits = []
   
   // Debug: Log release structure to understand what we're working with
-  console.log('Release object for album credits:', release)
-  console.log('Release relations:', release.relations)
+  debugLog('Release object for album credits:', release)
+  debugLog('Release relations:', release.relations)
   
   if (release.relations) {
-    console.log(`Processing ${release.relations.length} relations`)
+    debugLog(`Processing ${release.relations.length} relations`)
     for (let i = 0; i < release.relations.length; i++) {
       const relation = release.relations[i]
-      console.log(`Relation ${i}:`, relation)
-      console.log(`  - type: ${relation.type}`)
-      console.log(`  - target-type: ${relation['target-type']}`)
-      console.log(`  - artist:`, relation.artist)
-      console.log(`  - attributes:`, relation.attributes)
+      debugLog(`Relation ${i}:`, relation)
+      debugLog(`  - type: ${relation.type}`)
+      debugLog(`  - target-type: ${relation['target-type']}`)
+      debugLog(`  - artist:`, relation.artist)
+      debugLog(`  - attributes:`, relation.attributes)
       
       if (relation.type && relation['target-type'] === 'artist') {
         const name = relation.artist?.name || relation['target-credit'] || null
-        console.log(`  - extracted name: ${name}`)
+        debugLog(`  - extracted name: ${name}`)
         if (!name) {
-          console.log(`  - Skipping: no name found`)
+          debugLog(`  - Skipping: no name found`)
           continue
         }
         
@@ -1389,7 +1391,7 @@ function extractAlbumCredits(release) {
         
         // Handle instrument relations - attributes contain instrument names
         if (relationType === 'instrument' && relation.attributes && relation.attributes.length > 0) {
-          console.log(`  - Processing instrument relation with attributes:`, relation.attributes)
+          debugLog(`  - Processing instrument relation with attributes:`, relation.attributes)
           // Create one credit per instrument
           for (const instrument of relation.attributes) {
             credits.push({
@@ -1412,7 +1414,7 @@ function extractAlbumCredits(release) {
           })
         } else {
           // Other relation types (producer, engineer, etc.)
-          console.log(`  - Processing other relation type: ${relationType}`)
+          debugLog(`  - Processing other relation type: ${relationType}`)
           credits.push({
             personName: name,
             role: relationType,
@@ -1421,14 +1423,14 @@ function extractAlbumCredits(release) {
           })
         }
       } else {
-        console.log(`  - Skipping: type=${relation.type}, target-type=${relation['target-type']}`)
+        debugLog(`  - Skipping: type=${relation.type}, target-type=${relation['target-type']}`)
       }
     }
   } else {
-    console.log('No relations array found in release object')
+    debugLog('No relations array found in release object')
   }
   
-  console.log('Extracted album credits:', credits)
+  debugLog('Extracted album credits:', credits)
   return credits
 }
 
@@ -1538,7 +1540,7 @@ async function fetchWikipediaTitleFromWikidata(wikidataId, signal = null) {
       return entity.sitelinks.enwiki.title || null
     }
   } catch (error) {
-    console.warn('Error fetching Wikipedia title from Wikidata:', error)
+    debugWarn('Error fetching Wikipedia title from Wikidata:', error)
   }
   
   return null
@@ -1612,7 +1614,7 @@ export async function fetchWikipediaContent(pageTitle, signal = null) {
       }
     }
     
-    console.warn('Error fetching Wikipedia content:', error)
+    debugWarn('Error fetching Wikipedia content:', error)
     return null
   }
 }
@@ -1628,28 +1630,28 @@ export async function fetchWikipediaContentFromMusicBrainz(releaseGroupId, signa
     // Step 1: Extract Wikidata URL from release group
     const wikidataUrl = extractWikidataUrl(releaseGroup)
     if (!wikidataUrl) {
-      console.log('No Wikidata URL found in MusicBrainz relations')
+      debugLog('No Wikidata URL found in MusicBrainz relations')
       return null
     }
     
     // Step 2: Extract Wikidata ID
     const wikidataId = extractWikidataId(wikidataUrl)
     if (!wikidataId) {
-      console.log('Could not extract Wikidata ID from URL:', wikidataUrl)
+      debugLog('Could not extract Wikidata ID from URL:', wikidataUrl)
       return null
     }
     
     // Step 3: Fetch Wikipedia page title from Wikidata
     const wikipediaTitle = await fetchWikipediaTitleFromWikidata(wikidataId, signal)
     if (!wikipediaTitle) {
-      console.log('Could not find Wikipedia page for Wikidata ID:', wikidataId)
+      debugLog('Could not find Wikipedia page for Wikidata ID:', wikidataId)
       return null
     }
     
     // Step 4: Fetch Wikipedia content
     const wikipediaContent = await fetchWikipediaContent(wikipediaTitle, signal)
     if (!wikipediaContent) {
-      console.log('Could not fetch Wikipedia content for:', wikipediaTitle)
+      debugLog('Could not fetch Wikipedia content for:', wikipediaTitle)
       return null
     }
     
@@ -1659,7 +1661,7 @@ export async function fetchWikipediaContentFromMusicBrainz(releaseGroupId, signa
       wikidataId: wikidataId
     }
   } catch (error) {
-    console.warn('Error fetching Wikipedia content from MusicBrainz:', error)
+    debugWarn('Error fetching Wikipedia content from MusicBrainz:', error)
     return null
   }
 }
@@ -1800,17 +1802,17 @@ export async function fetchAlbumData(releaseGroupId, basicData = null) {
   let albumCredits = extractAlbumCredits(release)
   
   if (albumCredits.length === 0 && sortedReleases.length > 1) {
-    console.log('Selected release has no album credits, trying other releases...')
+    debugLog('Selected release has no album credits, trying other releases...')
     // Try up to 3 more releases (limit to avoid too many API calls)
     const releasesToTry = sortedReleases.slice(1, 4) // Skip first (already tried), try next 3
     
     for (const releaseInfo of releasesToTry) {
-      console.log(`Trying release ${releaseInfo.id} for album credits...`)
+      debugLog(`Trying release ${releaseInfo.id} for album credits...`)
       const candidateRelease = await fetchRelease(releaseInfo.id)
       const candidateCredits = extractAlbumCredits(candidateRelease)
       
       if (candidateCredits.length > 0) {
-        console.log(`Found album credits in release ${releaseInfo.id}`)
+        debugLog(`Found album credits in release ${releaseInfo.id}`)
         releaseWithCredits = candidateRelease
         albumCredits = candidateCredits
         break // Found credits, stop searching
@@ -1818,7 +1820,7 @@ export async function fetchAlbumData(releaseGroupId, basicData = null) {
     }
     
     if (albumCredits.length === 0) {
-      console.log('No album credits found in any of the checked releases')
+      debugLog('No album credits found in any of the checked releases')
     }
   }
   
