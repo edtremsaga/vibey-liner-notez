@@ -2887,26 +2887,52 @@ function AlbumPage() {
                 <h1 className="search-title">{isMobile ? 'Search Albums' : 'Search for an Album'}</h1>
               <div className="search-field">
                 <label htmlFor="artist-name">Artist Name</label>
-                <input
-                  id="artist-name"
-                  type="text"
-                  value={searchArtist}
-                  onChange={(e) => setSearchArtist(e.target.value)}
-                  placeholder="e.g., David Bowie"
-                  disabled={searching}
-                  required
-                />
+                <div className="input-with-clear">
+                  <input
+                    id="artist-name"
+                    type="text"
+                    value={searchArtist}
+                    onChange={(e) => setSearchArtist(e.target.value)}
+                    placeholder="e.g., David Bowie"
+                    disabled={searching}
+                    required
+                  />
+                  {searchArtist && (
+                    <button
+                      type="button"
+                      className="clear-input-button"
+                      onClick={() => setSearchArtist('')}
+                      disabled={searching}
+                      aria-label="Clear artist name"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="search-field">
                 <label htmlFor="album-name">Album Name <span className="optional-label">(optional)</span></label>
-                <input
-                  id="album-name"
-                  type="text"
-                  value={searchAlbum}
-                  onChange={(e) => setSearchAlbum(e.target.value)}
-                  placeholder={albumPlaceholder}
-                  disabled={searching}
-                />
+                <div className="input-with-clear">
+                  <input
+                    id="album-name"
+                    type="text"
+                    value={searchAlbum}
+                    onChange={(e) => setSearchAlbum(e.target.value)}
+                    placeholder={albumPlaceholder}
+                    disabled={searching}
+                  />
+                  {searchAlbum && (
+                    <button
+                      type="button"
+                      className="clear-input-button"
+                      onClick={() => setSearchAlbum('')}
+                      disabled={searching}
+                      aria-label="Clear album name"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
               </div>
               {!searchAlbum.trim() && (
                 <div className="search-field">
@@ -2986,15 +3012,28 @@ function AlbumPage() {
                 
                 <div className="search-field">
                   <label htmlFor="producer-name">Producer Name</label>
-                  <input
-                    id="producer-name"
-                    type="text"
-                    value={searchProducer}
-                    onChange={(e) => setSearchProducer(e.target.value)}
-                    placeholder="e.g., Quincy Jones"
-                    disabled={searching || !!multipleProducerMatches}
-                    required
-                  />
+                  <div className="input-with-clear">
+                    <input
+                      id="producer-name"
+                      type="text"
+                      value={searchProducer}
+                      onChange={(e) => setSearchProducer(e.target.value)}
+                      placeholder="e.g., Quincy Jones"
+                      disabled={searching || !!multipleProducerMatches}
+                      required
+                    />
+                    {searchProducer && (
+                      <button
+                        type="button"
+                        className="clear-input-button"
+                        onClick={() => setSearchProducer('')}
+                        disabled={searching || !!multipleProducerMatches}
+                        aria-label="Clear producer name"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
                 </div>
                 
                 <button 
