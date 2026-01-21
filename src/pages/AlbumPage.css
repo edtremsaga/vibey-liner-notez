@@ -540,6 +540,22 @@
   cursor: not-allowed;
 }
 
+/* Animated ellipsis for producer search */
+.animated-ellipsis {
+  font-size: 1.5em;
+  display: inline-block;
+  animation: ellipsis-bounce 1.4s ease-in-out infinite;
+}
+
+@keyframes ellipsis-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.3em);
+  }
+}
+
 .search-error {
   padding: 0.75rem;
   background-color: #ffe6e6;

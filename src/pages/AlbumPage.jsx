@@ -187,10 +187,13 @@ function AlbumPage() {
             setSearchProducer(producerName)
             // Note: We can't restore full search results from URL, user would need to search again
             // But we can restore the search type and producer name
+            const pageFromUrl = urlParams.get('page')
+            const pageNumber = pageFromUrl ? parseInt(pageFromUrl, 10) : 1
             const historyState = {
               page: 'results',
               searchType: 'producer',
               fromPage: 'search',
+              pageNumber: pageNumber,
               producerName,
               producerMBID
             }
@@ -207,10 +210,13 @@ function AlbumPage() {
             if (album) setSearchAlbum(album)
             if (releaseType) setReleaseType(releaseType)
             // Note: We can't restore full search results from URL, user would need to search again
+            const pageFromUrl = urlParams.get('page')
+            const pageNumber = pageFromUrl ? parseInt(pageFromUrl, 10) : 1
             const historyState = {
               page: 'results',
               searchType: 'album',
               fromPage: 'search',
+              pageNumber: pageNumber,
               artist,
               album: album || null,
               releaseType: releaseType || null
@@ -627,27 +633,26 @@ function AlbumPage() {
           producerName,
           producerMBID
         }
-        // Build URL with search parameters
-        const resultsUrl = new URL(window.location.origin + '/results')
-        resultsUrl.searchParams.set('type', 'producer')
-        resultsUrl.searchParams.set('producer', encodeURIComponent(producerName))
-        if (producerMBID) {
-          resultsUrl.searchParams.set('mbid', producerMBID)
+        // Build URL with search parameters (page 1 is implicit)
+        const resultsUrl = buildResultsUrl(1)
+        const producerResultsHistoryStateWithPage = {
+          ...producerResultsHistoryState,
+          pageNumber: 1
         }
-        console.log('[History] Pushing new history state for producer search results:', producerResultsHistoryState)
+        console.log('[History] Pushing new history state for producer search results:', producerResultsHistoryStateWithPage)
         try {
           window.history.pushState(
-            producerResultsHistoryState,
+            producerResultsHistoryStateWithPage,
             '',
             resultsUrl.toString()
           )
           // Verify the state was actually set (Chrome sometimes has issues)
           const verifyState = window.history.state
           if (!verifyState || verifyState.page !== 'results') {
-            console.error('[History] WARNING: pushState may have failed. Expected state:', producerResultsHistoryState, 'Actual state:', verifyState)
+            console.error('[History] WARNING: pushState may have failed. Expected state:', producerResultsHistoryStateWithPage, 'Actual state:', verifyState)
           }
         } catch (error) {
-          console.error('[History] Error pushing producer search results state:', error, producerResultsHistoryState)
+          console.error('[History] Error pushing producer search results state:', error, producerResultsHistoryStateWithPage)
         }
         
         // Explicitly trigger prefetch immediately after search completes (if Next button would be enabled)
@@ -774,21 +779,16 @@ function AlbumPage() {
           producerName: searchMeta?.producerName || producerName,
           producerMBID: searchMeta?.producerMBID || producerMBID
         }
-        // Build URL with search parameters
-        const resultsUrl = new URL(window.location.origin + '/results')
-        resultsUrl.searchParams.set('type', 'producer')
-        const producerNameForUrl = searchMeta?.producerName || producerName
-        if (producerNameForUrl) {
-          resultsUrl.searchParams.set('producer', encodeURIComponent(producerNameForUrl))
+        // Build URL with search parameters (page 1 is implicit)
+        const resultsUrl = buildResultsUrl(1)
+        const producerResultsHistoryStateWithPage = {
+          ...producerResultsHistoryState,
+          pageNumber: 1
         }
-        const producerMBIDForUrl = searchMeta?.producerMBID || producerMBID
-        if (producerMBIDForUrl) {
-          resultsUrl.searchParams.set('mbid', producerMBIDForUrl)
-        }
-        console.log('[History] Pushing new history state for producer search results:', producerResultsHistoryState)
+        console.log('[History] Pushing new history state for producer search results (pagination):', producerResultsHistoryStateWithPage)
         try {
           window.history.pushState(
-            producerResultsHistoryState,
+            producerResultsHistoryStateWithPage,
             '',
             resultsUrl.toString()
           )
@@ -937,20 +937,13 @@ function AlbumPage() {
           page: 'results',
           searchType: 'album',
           fromPage: 'search',
+          pageNumber: 1,
           artist: searchArtist.trim(),
           album: searchAlbum.trim() || null,
           releaseType: typeFilter || null
         }
-        // Build URL with search parameters
-        const resultsUrl = new URL(window.location.origin + '/results')
-        resultsUrl.searchParams.set('type', 'album')
-        resultsUrl.searchParams.set('artist', encodeURIComponent(searchArtist.trim()))
-        if (searchAlbum.trim()) {
-          resultsUrl.searchParams.set('album', encodeURIComponent(searchAlbum.trim()))
-        }
-        if (typeFilter) {
-          resultsUrl.searchParams.set('releaseType', typeFilter)
-        }
+        // Build URL with search parameters (page 1 is implicit, no need to add ?page=1)
+        const resultsUrl = buildResultsUrl(1)
         try {
           window.history.pushState(
             resultsHistoryState,
@@ -1510,6 +1503,23 @@ function AlbumPage() {
               console.log(`[Producer Search Pagination] ✅ Displaying page ${targetPage} from prefetch: ${pageResults.length} albums (indices ${pageStart}-${pageEnd - 1} of ${filteredCombined.length}, page1Length=${actualPage1Length})`)
               setDisplayedResults(pageResults)
               setResultsPage(targetPage)
+              
+              // Update URL with page number
+              const resultsUrl = buildResultsUrl(targetPage)
+              const resultsHistoryState = {
+                page: 'results',
+                searchType: 'producer',
+                fromPage: 'search',
+                pageNumber: targetPage,
+                producerName: searchMeta?.producerName,
+                producerMBID: searchMeta?.producerMBID
+              }
+              try {
+                window.history.pushState(resultsHistoryState, '', resultsUrl.toString())
+                console.log('[History] Pushed pagination history state (prefetch):', { page: targetPage })
+              } catch (error) {
+                console.error('[History] Error pushing pagination state:', error)
+              }
             } else {
               // Fallback: calculate last valid page (shouldn't happen with prefetch, but handle it)
               const lastValidPage = Math.max(1, Math.ceil(filteredCombined.length / RESULTS_PER_PAGE))
@@ -1653,6 +1663,23 @@ function AlbumPage() {
             setDisplayedResults(pageResults)
             setResultsPage(targetPage)
             console.log(`[Producer Search Pagination] ✅ Displaying page ${targetPage}: ${pageResults.length} albums (indices ${pageStart}-${pageEnd - 1} of ${filteredResults.length})`)
+            
+            // Update URL with page number
+            const resultsUrl = buildResultsUrl(targetPage)
+            const resultsHistoryState = {
+              page: 'results',
+              searchType: 'producer',
+              fromPage: 'search',
+              pageNumber: targetPage,
+              producerName: searchMeta?.producerName,
+              producerMBID: searchMeta?.producerMBID
+            }
+            try {
+              window.history.pushState(resultsHistoryState, '', resultsUrl.toString())
+              console.log('[History] Pushed pagination history state (producer fetch):', { page: targetPage })
+            } catch (error) {
+              console.error('[History] Error pushing pagination state:', error)
+            }
           } else {
             // This shouldn't happen since we fetched until we had enough, but handle it anyway
             // This fallback occurs when we've reached the end but don't have enough for the target page
@@ -1711,6 +1738,24 @@ function AlbumPage() {
             
             setDisplayedResults(pageResults)
             setResultsPage(targetPage)
+            
+            // Update URL with page number
+            const resultsUrl = buildResultsUrl(targetPage)
+            const resultsHistoryState = {
+              page: 'results',
+              searchType: 'album',
+              fromPage: 'search',
+              pageNumber: targetPage,
+              artist: searchArtist || null,
+              album: searchAlbum || null,
+              releaseType: releaseType || null
+            }
+            try {
+              window.history.pushState(resultsHistoryState, '', resultsUrl.toString())
+              console.log('[History] Pushed pagination history state (album fetch):', { page: targetPage })
+            } catch (error) {
+              console.error('[History] Error pushing pagination state:', error)
+            }
           }
         }
       } catch (err) {
@@ -1742,8 +1787,66 @@ function AlbumPage() {
         console.log(`[Pagination] Slicing results: pageStart=${pageStart}, pageEnd=${pageEnd}, pageResults.length=${pageResults.length}`)
         setDisplayedResults(pageResults)
         setResultsPage(targetPage)
+        
+        // Update URL with page number and create history entry
+        const resultsUrl = buildResultsUrl(targetPage)
+        const resultsHistoryState = {
+          page: 'results',
+          searchType: searchMeta?.isProducerSearch ? 'producer' : 'album',
+          fromPage: 'search',
+          pageNumber: targetPage,
+          producerName: searchMeta?.producerName,
+          producerMBID: searchMeta?.producerMBID,
+          artist: searchMeta?.isProducerSearch ? null : (searchArtist || null),
+          album: searchMeta?.isProducerSearch ? null : (searchAlbum || null),
+          releaseType: searchMeta?.isProducerSearch ? null : (releaseType || null)
+        }
+        
+        try {
+          window.history.pushState(
+            resultsHistoryState,
+            '',
+            resultsUrl.toString()
+          )
+          console.log('[History] Pushed pagination history state:', { page: targetPage, url: resultsUrl.toString() })
+        } catch (error) {
+          console.error('[History] Error pushing pagination state:', error)
+        }
       }
     }
+  }
+  
+  // Helper function to build results URL with page number
+  function buildResultsUrl(pageNumber = 1) {
+    const resultsUrl = new URL(window.location.origin + '/results')
+    
+    if (searchMeta?.isProducerSearch) {
+      resultsUrl.searchParams.set('type', 'producer')
+      if (searchMeta.producerName) {
+        resultsUrl.searchParams.set('producer', encodeURIComponent(searchMeta.producerName))
+      }
+      if (searchMeta.producerMBID) {
+        resultsUrl.searchParams.set('mbid', searchMeta.producerMBID)
+      }
+    } else {
+      resultsUrl.searchParams.set('type', 'album')
+      if (searchArtist) {
+        resultsUrl.searchParams.set('artist', encodeURIComponent(searchArtist.trim()))
+      }
+      if (searchAlbum && searchAlbum.trim()) {
+        resultsUrl.searchParams.set('album', encodeURIComponent(searchAlbum.trim()))
+      }
+      if (releaseType && releaseType !== 'Album') {
+        resultsUrl.searchParams.set('releaseType', releaseType)
+      }
+    }
+    
+    // Add page number to URL (page 1 is implicit, but we'll include it for consistency)
+    if (pageNumber > 1) {
+      resultsUrl.searchParams.set('page', pageNumber.toString())
+    }
+    
+    return resultsUrl
   }
   
   // Load full album details with progressive loading
@@ -1897,6 +2000,12 @@ function AlbumPage() {
     // Push browser history entry if we came from search results
     // This allows back button to return to search results
     if (searchResults && searchResults.length > 0) {
+      console.log('[History] loadAlbum: About to push album history state:', {
+        currentResultsPage: resultsPage,
+        searchResultsLength: searchResults.length,
+        fromPage: 'results'
+      })
+      
       const albumHistoryState = {
         page: 'album',
         albumId: releaseGroupId,
@@ -1916,7 +2025,11 @@ function AlbumPage() {
           '',
           albumUrl.toString()
         )
-        console.log('[History] Pushed album details state:', albumHistoryState)
+        console.log('[History] Pushed album details state:', {
+          ...albumHistoryState,
+          preservedResultsPage: resultsPage,
+          note: 'resultsPage should be preserved at this point'
+        })
         
         // Verify the state was actually set (Chrome sometimes has issues)
         const verifyState = window.history.state
@@ -2043,33 +2156,13 @@ function AlbumPage() {
       setDisplayedResults(searchResults.slice(0, RESULTS_PER_PAGE))
       setResultsPage(1)
       
-      // Update browser URL to match the results page
-      const resultsUrl = new URL(window.location.origin + '/results')
-      if (searchMeta?.isProducerSearch) {
-        resultsUrl.searchParams.set('type', 'producer')
-        if (searchMeta.producerName) {
-          resultsUrl.searchParams.set('producer', encodeURIComponent(searchMeta.producerName))
-        }
-        if (searchMeta.producerMBID) {
-          resultsUrl.searchParams.set('mbid', searchMeta.producerMBID)
-        }
-      } else {
-        resultsUrl.searchParams.set('type', 'album')
-        if (searchArtist) {
-          resultsUrl.searchParams.set('artist', encodeURIComponent(searchArtist))
-        }
-        if (searchAlbum) {
-          resultsUrl.searchParams.set('album', encodeURIComponent(searchAlbum))
-        }
-        if (releaseType && releaseType !== 'Album') {
-          resultsUrl.searchParams.set('releaseType', releaseType)
-        }
-      }
-      
+      // Update browser URL to match the results page (page 1)
+      const resultsUrl = buildResultsUrl(1)
       const resultsHistoryState = {
         page: 'results',
         searchType: searchMeta?.isProducerSearch ? 'producer' : 'album',
         fromPage: 'search',
+        pageNumber: 1,
         producerName: searchMeta?.producerName,
         producerMBID: searchMeta?.producerMBID,
         artist: searchMeta?.isProducerSearch ? null : (searchArtist || null),
@@ -2154,12 +2247,17 @@ function AlbumPage() {
         historyState,
         historyStateType: typeof historyState,
         historyStateKeys: historyState ? Object.keys(historyState) : null,
+        historyStatePage: historyState?.page,
+        historyStateInitialized: historyState?.initialized,
         currentReactState: {
           hasAlbum: !!album,
           hasSearchResults: !!searchResults,
           searchResultsLength: searchResults?.length || 0,
+          resultsPage: resultsPage,
           showHelp,
-          hasSelectedImage: selectedImage !== null
+          hasSelectedImage: selectedImage !== null,
+          currentPathname: window.location.pathname,
+          currentSearch: window.location.search
         }
       })
       
@@ -2189,7 +2287,11 @@ function AlbumPage() {
       // Case 3: Navigating back to search results page (from album details)
       // Check history state first - this is the source of truth for what page we're navigating TO
       if (historyState && historyState.page === 'results') {
-        console.log('[History] Navigating back to search results page:', historyState)
+        console.log('[History] Case 3 MATCHED: Navigating back to search results page:', {
+          historyState,
+          preservedResultsPage: resultsPage,
+          searchResultsLength: searchResults?.length || 0
+        })
         
         // Restore search type if available
         if (historyState.searchType) {
@@ -2202,24 +2304,97 @@ function AlbumPage() {
         
         // Restore displayed results if we have search results in memory
         if (searchResults && searchResults.length > 0) {
-          setDisplayedResults(searchResults.slice(0, RESULTS_PER_PAGE))
-          setResultsPage(1)
-          console.log('[History] Restored search results from memory')
+          // Read page number from URL or history state
+          const urlParams = new URLSearchParams(window.location.search)
+          const urlPage = urlParams.get('page')
+          const pageFromState = historyState.pageNumber
+          const pageToRestore = pageFromState || (urlPage ? parseInt(urlPage, 10) : 1) || 1
+          
+          const pageStart = (pageToRestore - 1) * RESULTS_PER_PAGE
+          const pageEnd = Math.min(pageStart + RESULTS_PER_PAGE, searchResults.length)
+          const pageResults = searchResults.slice(pageStart, pageEnd)
+          
+          setDisplayedResults(pageResults)
+          setResultsPage(pageToRestore)
+          console.log('[History] Case 3: Restored search results from memory - page', pageToRestore, '(from', pageFromState ? 'historyState' : urlPage ? 'URL' : 'default', ')')
         } else {
           // Search results not in memory - this shouldn't happen, but handle gracefully
-          console.warn('[History] Search results not in memory when navigating back to results page')
+          console.warn('[History] Case 3: Search results not in memory when navigating back to results page')
           setSearchResults(null)
           setSearchMeta(null)
           setDisplayedResults([])
           setResultsPage(1)
         }
         return
+      } else {
+        console.log('[History] Case 3 NOT MATCHED:', {
+          hasHistoryState: !!historyState,
+          historyStatePage: historyState?.page,
+          expectedPage: 'results',
+          reason: !historyState ? 'historyState is null' : `historyState.page is "${historyState.page}" not "results"`
+        })
+      }
+      
+      // Check BEFORE Case 4: Are we going back from album to results?
+      // This should catch cases where historyState is missing/malformed but we have album + searchResults
+      if (album && searchResults && searchResults.length > 0) {
+        console.log('[History] PRE-CASE 4 CHECK: Detected album → results navigation - RESTORING RESULTS PAGE:', {
+          hasAlbum: !!album,
+          hasSearchResults: !!searchResults,
+          searchResultsLength: searchResults.length,
+          preservedResultsPage: resultsPage,
+          historyState,
+          historyStatePage: historyState?.page,
+          reason: 'Album and searchResults both present - restoring results page instead of going to search'
+        })
+        
+        // Restore search type from searchMeta if available
+        if (searchMeta && searchMeta.isProducerSearch) {
+          setSearchType('producer')
+        } else if (searchMeta && !searchMeta.isProducerSearch) {
+          setSearchType('album')
+        }
+        
+        // Clear album state to show search results
+        setAlbum(null)
+        setAlbumError(null)
+        
+        // Restore the correct results page - try URL first, then preserved state, then default to 1
+        const urlParams = new URLSearchParams(window.location.search)
+        const urlPage = urlParams.get('page')
+        const pageFromUrl = urlPage ? parseInt(urlPage, 10) : null
+        const pageToRestore = pageFromUrl || resultsPage || 1
+        
+        const pageStart = (pageToRestore - 1) * RESULTS_PER_PAGE
+        const pageEnd = Math.min(pageStart + RESULTS_PER_PAGE, searchResults.length)
+        const pageResults = searchResults.slice(pageStart, pageEnd)
+        
+        setDisplayedResults(pageResults)
+        setResultsPage(pageToRestore)
+        
+        console.log('[History] PRE-CASE 4 CHECK: Restored search results page', pageToRestore, 'with', pageResults.length, 'results (from', pageFromUrl ? 'URL' : 'preserved state', ')')
+        return // Prevent Case 4 from executing
+      } else {
+        console.log('[History] PRE-CASE 4 CHECK: NOT going back from album to results:', {
+          hasAlbum: !!album,
+          hasSearchResults: !!searchResults,
+          searchResultsLength: searchResults?.length || 0,
+          preservedResultsPage: resultsPage
+        })
       }
       
       // Case 4: Navigating back to initial search page
       // Check if history state indicates we're going back to search page
       if (historyState && (historyState.page === 'search' || historyState.initialized === true)) {
-        console.log('[History] Navigating back to initial search page:', historyState)
+        console.log('[History] Case 4 MATCHED: Navigating back to initial search page:', {
+          historyState,
+          historyStatePage: historyState.page,
+          historyStateInitialized: historyState.initialized,
+          hasAlbum: !!album,
+          hasSearchResults: !!searchResults,
+          preservedResultsPage: resultsPage,
+          warning: album && searchResults ? '⚠️ BUG: Has album + searchResults but going to search page!' : 'OK'
+        })
         
         // Restore search type from history state if available
         // Support both 'searchType' (new) and 'type' (old) for backward compatibility
@@ -2827,7 +3002,7 @@ function AlbumPage() {
                   disabled={searching || !!multipleProducerMatches}
                 >
                   {searching && searchType === 'producer'
-                    ? 'Searching music archives...'
+                    ? <>Searching music archives<span className="animated-ellipsis">...</span></>
                     : searching
                     ? 'Searching...'
                     : 'Search'}
@@ -2874,15 +3049,13 @@ function AlbumPage() {
     return (
       <div className="album-page">
         <div className="album-container">
-          {(isIPhoneChrome || (isMobile && new URLSearchParams(window.location.search).get('debug') === 'back')) && (
-            <button 
-              className="back-link"
-              onClick={handleBackNavigation}
-              style={{ marginBottom: '1rem', display: 'block' }}
-            >
-              ← Back
-            </button>
-          )}
+          <button 
+            className="back-link"
+            onClick={handleBackNavigation}
+            style={{ marginBottom: '1rem', display: 'block' }}
+          >
+            ← Back
+          </button>
           <section className="search-results-section">
             <div className="search-results-header">
               <h2>{getResultsHeading(searchMeta?.releaseType || 'Album', searchMeta?.isProducerSearch ? searchMeta?.producerName : null)}</h2>
@@ -3085,15 +3258,13 @@ function AlbumPage() {
   return (
     <div className="album-page">
       <div className="album-container">
-        {(isIPhoneChrome || (isMobile && new URLSearchParams(window.location.search).get('debug') === 'back')) && (
-          <button 
-            className="back-link"
-            onClick={handleBackNavigation}
-            style={{ marginBottom: '1rem', display: 'block' }}
-          >
-            ← Back
-          </button>
-        )}
+        <button 
+          className="back-link"
+          onClick={handleBackNavigation}
+          style={{ marginBottom: '1rem', display: 'block' }}
+        >
+          ← Back
+        </button>
         {/* Hide "Back to Search Results" on desktop - browser back button is sufficient */}
         {(isMobile || !searchResults || searchResults.length === 0) && (
           <button 
