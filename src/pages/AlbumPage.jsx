@@ -83,6 +83,7 @@ function AlbumPage() {
   const [galleryError, setGalleryError] = useState(null) // Error state for gallery
   const [galleryExpanded, setGalleryExpanded] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null) // For lightbox view
+  const [currentImageIndex, setCurrentImageIndex] = useState(null) // Index of currently displayed image in gallery
   
   // Wikipedia content state
   const [wikipediaContent, setWikipediaContent] = useState(null)
@@ -2221,6 +2222,7 @@ function AlbumPage() {
     setAlbumCreditsExpanded(true) // Reset album credits to expanded
     setGalleryExpanded(false) // Reset gallery to collapsed
     setSelectedImage(null) // Clear selected image
+    setCurrentImageIndex(null) // Clear image index
     setWikipediaContent(null) // Clear Wikipedia content
     setLoadingWikipedia(false) // Reset Wikipedia loading state
   }
@@ -2272,6 +2274,7 @@ function AlbumPage() {
       if (selectedImage !== null) {
         debugLog('[History] Closing lightbox, staying on album page')
         setSelectedImage(null)
+        setCurrentImageIndex(null)
         // Don't push a new state - we're already on the album details page
         // The history stack is: search results → album details → lightbox open
         // After closing lightbox, we're back to album details page
@@ -2535,6 +2538,7 @@ function AlbumPage() {
       setGalleryImages([])
       setGalleryExpanded(false)
       setSelectedImage(null)
+      setCurrentImageIndex(null)
       setGalleryError(null) // Clear previous errors
       
       // Create AbortController for this request
@@ -2613,6 +2617,7 @@ function AlbumPage() {
       setGalleryImages([])
       setGalleryExpanded(false)
       setSelectedImage(null)
+      setCurrentImageIndex(null)
       setLoadingGallery(false)
       setGalleryError(null)
     }
@@ -2834,6 +2839,146 @@ function AlbumPage() {
       }
     }
   }, [selectedImage])
+  
+  // Lightbox navigation functions
+  const goToNextImage = () => {
+    if (currentImageIndex !== null && galleryImages.length > 0) {
+      const nextIndex = currentImageIndex + 1
+      if (nextIndex < galleryImages.length) {
+        setCurrentImageIndex(nextIndex)
+        setSelectedImage(galleryImages[nextIndex])
+      }
+    }
+  }
+  
+  const goToPreviousImage = () => {
+    if (currentImageIndex !== null && galleryImages.length > 0) {
+      const prevIndex = currentImageIndex - 1
+      if (prevIndex >= 0) {
+        setCurrentImageIndex(prevIndex)
+        setSelectedImage(galleryImages[prevIndex])
+      }
+    }
+  }
+  
+  // Swipe gesture handlers
+  const swipeStartRef = useRef(null)
+  const swipeDistanceRef = useRef(0)
+  
+  const handleTouchStart = (e) => {
+    if (galleryImages.length <= 1) return
+    const touch = e.touches[0]
+    swipeStartRef.current = { x: touch.clientX, y: touch.clientY }
+    swipeDistanceRef.current = 0
+  }
+  
+  const handleTouchMove = (e) => {
+    if (!swipeStartRef.current || galleryImages.length <= 1) return
+    const touch = e.touches[0]
+    const deltaX = touch.clientX - swipeStartRef.current.x
+    const deltaY = touch.clientY - swipeStartRef.current.y
+    
+    // Only prevent default if horizontal swipe is dominant
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+      e.preventDefault()
+    }
+    
+    swipeDistanceRef.current = deltaX
+  }
+  
+  const handleTouchEnd = (e) => {
+    if (!swipeStartRef.current || galleryImages.length <= 1) {
+      swipeStartRef.current = null
+      swipeDistanceRef.current = 0
+      return
+    }
+    
+    const swipeThreshold = 50 // Minimum pixels for swipe
+    const distance = swipeDistanceRef.current
+    
+    if (Math.abs(distance) > swipeThreshold) {
+      if (distance > 0) {
+        // Swiped right - go to previous
+        goToPreviousImage()
+      } else {
+        // Swiped left - go to next
+        goToNextImage()
+      }
+    }
+    
+    swipeStartRef.current = null
+    swipeDistanceRef.current = 0
+  }
+  
+  // Mouse drag handlers for desktop trackpad
+  const handleMouseDown = (e) => {
+    if (galleryImages.length <= 1) return
+    swipeStartRef.current = { x: e.clientX, y: e.clientY }
+    swipeDistanceRef.current = 0
+  }
+  
+  const handleMouseMove = (e) => {
+    if (!swipeStartRef.current || galleryImages.length <= 1) return
+    const deltaX = e.clientX - swipeStartRef.current.x
+    swipeDistanceRef.current = deltaX
+  }
+  
+  const handleMouseUp = (e) => {
+    if (!swipeStartRef.current || galleryImages.length <= 1) {
+      swipeStartRef.current = null
+      swipeDistanceRef.current = 0
+      return
+    }
+    
+    const swipeThreshold = 50
+    const distance = swipeDistanceRef.current
+    
+    if (Math.abs(distance) > swipeThreshold) {
+      if (distance > 0) {
+        goToPreviousImage()
+      } else {
+        goToNextImage()
+      }
+    }
+    
+    swipeStartRef.current = null
+    swipeDistanceRef.current = 0
+  }
+  
+  const handleMouseLeave = () => {
+    swipeStartRef.current = null
+    swipeDistanceRef.current = 0
+  }
+  
+  // Keyboard navigation
+  useEffect(() => {
+    if (!selectedImage || galleryImages.length <= 1) return
+    
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        if (currentImageIndex !== null && currentImageIndex > 0) {
+          const prevIndex = currentImageIndex - 1
+          setCurrentImageIndex(prevIndex)
+          setSelectedImage(galleryImages[prevIndex])
+        }
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        if (currentImageIndex !== null && currentImageIndex < galleryImages.length - 1) {
+          const nextIndex = currentImageIndex + 1
+          setCurrentImageIndex(nextIndex)
+          setSelectedImage(galleryImages[nextIndex])
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        setSelectedImage(null)
+        setCurrentImageIndex(null)
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedImage, currentImageIndex, galleryImages])
   
   // Show help section (replaces all other views)
   if (showHelp) {
@@ -3206,7 +3351,7 @@ function AlbumPage() {
                     // Option 4: Progressive pagination messaging
                     // If we're on page 1 with only 1 page, but more releases are available for producer search, show "Loading more..."
                     if (isProducerSearch && resultsPage === 1 && totalPages === 1 && hasMoreReleases) {
-                      return <>Page 1 • Loading more...</>
+                      return <>Page 1 • Loading more<span className="animated-ellipsis">...</span></>
                     }
                     
                     // Normal pagination display
@@ -3225,7 +3370,7 @@ function AlbumPage() {
                   }}
                   disabled={!canGoNext()}
                 >
-                  {loadingPage ? 'Loading...' : 'Next'}
+                  {loadingPage ? <>Loading<span className="animated-ellipsis">...</span></> : 'Next'}
                 </button>
               </div>
             )}
@@ -3508,6 +3653,8 @@ function AlbumPage() {
                           key={img.id || index} 
                           className="gallery-item"
                           onClick={() => {
+                            const imageIndex = galleryImages.findIndex(g => g.id === img.id || g.image === img.image)
+                            setCurrentImageIndex(imageIndex >= 0 ? imageIndex : 0)
                             setSelectedImage(img)
                             // Push history state when lightbox opens so back button closes it first
                             window.history.pushState(
@@ -3544,29 +3691,77 @@ function AlbumPage() {
         {selectedImage && (
           <div 
             className="image-lightbox"
-            onClick={() => setSelectedImage(null)}
+            onClick={() => {
+              setSelectedImage(null)
+              setCurrentImageIndex(null)
+            }}
           >
-            <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <div 
+              className="lightbox-content" 
+              onClick={(e) => e.stopPropagation()}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseLeave}
+            >
               <button 
                 className="lightbox-close"
-                onClick={() => setSelectedImage(null)}
+                onClick={() => {
+                  setSelectedImage(null)
+                  setCurrentImageIndex(null)
+                }}
                 aria-label="Close"
               >
                 ×
               </button>
+              
+              {/* Navigation buttons */}
+              {galleryImages.length > 1 && (
+                <>
+                  <button
+                    className="lightbox-nav lightbox-nav-prev"
+                    onClick={goToPreviousImage}
+                    disabled={currentImageIndex === 0}
+                    aria-label="Previous image"
+                  >
+                    ←
+                  </button>
+                  <button
+                    className="lightbox-nav lightbox-nav-next"
+                    onClick={goToNextImage}
+                    disabled={currentImageIndex === galleryImages.length - 1}
+                    aria-label="Next image"
+                  >
+                    →
+                  </button>
+                </>
+              )}
+              
               <img
                 src={selectedImage.image}
                 alt={selectedImage.types?.join(', ') || 'Album art'}
                 onError={(e) => {
-                  console.error('Failed to load full-size image:', selectedImage.image)
+                  debugWarn('Failed to load full-size image:', selectedImage.image)
                   e.target.style.display = 'none'
                 }}
               />
-              {selectedImage.types && selectedImage.types.length > 0 && (
-                <div className="lightbox-caption">
-                  {selectedImage.types.join(', ')}
-                </div>
-              )}
+              
+              {/* Caption and counter */}
+              <div className="lightbox-footer">
+                {selectedImage.types && selectedImage.types.length > 0 && (
+                  <div className="lightbox-caption">
+                    {selectedImage.types.join(', ')}
+                  </div>
+                )}
+                {galleryImages.length > 1 && (
+                  <div className="lightbox-counter">
+                    Image {currentImageIndex !== null ? currentImageIndex + 1 : 1} of {galleryImages.length}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -1477,6 +1477,71 @@
   text-align: center;
 }
 
+/* Lightbox navigation buttons */
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  color: white;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 1rem 1.5rem;
+  border-radius: 50%;
+  width: 3.5rem;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 10;
+  user-select: none;
+}
+
+.lightbox-nav:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-color: white;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.lightbox-nav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.lightbox-nav-prev {
+  left: 1rem;
+}
+
+.lightbox-nav-next {
+  right: 1rem;
+}
+
+/* Lightbox footer (caption + counter) */
+.lightbox-footer {
+  margin-top: 1rem;
+  text-align: center;
+  color: white;
+}
+
+.lightbox-counter {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Touch action for swipe gestures */
+.lightbox-content {
+  touch-action: pan-y; /* Allow vertical scroll, prevent horizontal browser gestures */
+}
+
+/* Smooth image transitions */
+.lightbox-content img {
+  transition: opacity 0.3s ease-in-out;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   /* Hide "Back to Results" button on mobile to save vertical space */
@@ -1522,6 +1587,28 @@
   
   .lightbox-content img {
     max-height: 80vh; /* Slightly smaller on mobile to account for close button */
+  }
+  
+  /* Smaller navigation buttons on mobile */
+  .lightbox-nav {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.5rem;
+    font-size: 1.5rem;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-width: 1px;
+  }
+  
+  .lightbox-nav-prev {
+    left: 0.5rem;
+  }
+  
+  .lightbox-nav-next {
+    right: 0.5rem;
+  }
+  
+  .lightbox-counter {
+    font-size: 0.85rem;
   }
 
   .cover-art {
