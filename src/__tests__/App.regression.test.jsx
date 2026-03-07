@@ -100,13 +100,13 @@ describe('App Regression Tests - Verify ErrorBoundary Does Not Break Existing Fu
   })
 
   describe('No Console Errors in Normal Operation', () => {
-    it('should not log errors when app works normally', () => {
+    it('should not log errors when app works normally', async () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
       render(<App />)
 
       // Wait a bit for any async operations
-      waitFor(() => {
+      await waitFor(() => {
         // In normal operation, console.error should not be called
         // (except for the initial render which might have some warnings)
         expect(consoleErrorSpy).not.toHaveBeenCalled()
@@ -143,4 +143,3 @@ describe('App Regression Tests - Verify ErrorBoundary Does Not Break Existing Fu
     })
   })
 })
-
