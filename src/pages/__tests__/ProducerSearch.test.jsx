@@ -111,7 +111,7 @@ describe('Producer Search Functionality', () => {
       renderAlbumPage()
       
       // Enter artist name
-      const artistInput = screen.getByLabelText(/Artist Name/i)
+      const artistInput = screen.getByRole('textbox', { name: /Artist Name/i })
       await user.type(artistInput, 'David Bowie')
       
       // Switch to producer search
@@ -120,10 +120,10 @@ describe('Producer Search Functionality', () => {
       
       // Enter producer name
       await waitFor(() => {
-        const producerInput = screen.getByLabelText(/Producer Name/i)
+        const producerInput = screen.getByRole('textbox', { name: /Producer Name/i })
         expect(producerInput).toBeInTheDocument()
       })
-      const producerInput = screen.getByLabelText(/Producer Name/i)
+      const producerInput = screen.getByRole('textbox', { name: /Producer Name/i })
       await user.type(producerInput, 'Tony Visconti')
       
       // Switch back to album search - artist name should still be there
@@ -131,7 +131,7 @@ describe('Producer Search Functionality', () => {
       await user.click(albumTab)
       
       await waitFor(() => {
-        const artistInputAfter = screen.getByLabelText(/Artist Name/i)
+        const artistInputAfter = screen.getByRole('textbox', { name: /Artist Name/i })
         expect(artistInputAfter).toHaveValue('David Bowie')
       })
     })
@@ -243,7 +243,7 @@ describe('Producer Search Functionality', () => {
       await user.click(searchButton)
       
       await waitFor(() => {
-        expect(mockSearchByProducer).toHaveBeenCalledWith('Quincy Jones', null, 0)
+        expect(mockSearchByProducer).toHaveBeenCalledWith('Quincy Jones', null, 0, expect.any(Function))
       })
     })
 
@@ -422,12 +422,7 @@ describe('Producer Search Functionality', () => {
       
       // Should search with selected producer MBID
       await waitFor(() => {
-        expect(mockSearchByProducer).toHaveBeenCalledWith('Quincy Jones', 'producer-mbid-1', 0)
-      })
-      
-      // Should search with selected producer MBID
-      await waitFor(() => {
-        expect(mockSearchByProducer).toHaveBeenCalledWith('Quincy Jones', 'producer-mbid-1', 0)
+        expect(mockSearchByProducer).toHaveBeenCalledWith('Quincy Jones', 'producer-mbid-1', 0, expect.any(Function))
       }, { timeout: 2000 })
       
       // Note: With 1 result, the component tries to load it as an album
@@ -457,7 +452,7 @@ describe('Producer Search Functionality', () => {
       
       await waitFor(() => {
         expect(screen.getByText(/Multiple producers found/i)).toBeInTheDocument()
-        const producerInputAfter = screen.getByLabelText(/Producer Name/i)
+        const producerInputAfter = screen.getByRole('textbox', { name: /Producer Name/i })
         expect(producerInputAfter).toBeDisabled()
       })
     })
@@ -484,6 +479,7 @@ describe('Producer Search Functionality', () => {
 
     it('should update URL when switching tabs', async () => {
       const user = userEvent.setup()
+      window.history.replaceState({ page: 'search' }, '', '/')
       renderAlbumPage()
       
       const producerTab = screen.getByText('Search by Producer')
@@ -541,7 +537,7 @@ describe('Producer Search Functionality', () => {
       
       // Verify producer search was called correctly
       await waitFor(() => {
-        expect(mockSearchByProducer).toHaveBeenCalledWith('Quincy Jones', null, 0)
+        expect(mockSearchByProducer).toHaveBeenCalledWith('Quincy Jones', null, 0, expect.any(Function))
       })
       
       // Wait for results to be displayed (results list should appear when > 1 result)

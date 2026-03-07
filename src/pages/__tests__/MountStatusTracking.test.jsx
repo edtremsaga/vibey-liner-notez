@@ -134,9 +134,6 @@ describe('Mount Status Tracking', () => {
     render(<AlbumPage />)
     
     // Wait for async operations to complete
-    await waitFor(() => {
-      // Component should render without errors
-      expect(screen.getByText(/liner notez/i)).toBeInTheDocument()
-    }, { timeout: 2000 })
+    expect(await screen.findByText(/Search for an Album/i)).toBeInTheDocument()
   })
 })

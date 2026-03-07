@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AlbumPage from '../AlbumPage'
+import { HelpProvider } from '../../contexts/HelpContext'
 import * as musicbrainz from '../../services/musicbrainz'
 
 // Mock the services
@@ -32,11 +33,15 @@ describe('Error State Clearing (P1 Fix)', () => {
         isArtistOnly: true
       })
 
-      render(<AlbumPage />)
+      render(
+        <HelpProvider>
+          <AlbumPage />
+        </HelpProvider>
+      )
 
       // Perform a search
       const artistInput = screen.getByLabelText(/Artist Name/i)
-      const searchButton = screen.getByRole('button', { name: /Search/i })
+      const searchButton = screen.getByRole('button', { name: /^Search$/i })
       
       await user.type(artistInput, 'Test Artist')
       await user.click(searchButton)
@@ -72,11 +77,15 @@ describe('Error State Clearing (P1 Fix)', () => {
         isArtistOnly: true
       })
 
-      render(<AlbumPage />)
+      render(
+        <HelpProvider>
+          <AlbumPage />
+        </HelpProvider>
+      )
 
       // Perform a search
       const artistInput = screen.getByLabelText(/Artist Name/i)
-      const searchButton = screen.getByRole('button', { name: /Search/i })
+      const searchButton = screen.getByRole('button', { name: /^Search$/i })
       
       await user.type(artistInput, 'Test Artist')
       await user.click(searchButton)
