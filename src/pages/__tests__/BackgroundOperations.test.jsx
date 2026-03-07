@@ -77,6 +77,7 @@ describe('Background Operations - Error Handling (Fix #2)', () => {
     })
 
     mockFetchCoverArt.mockResolvedValue(null)
+    mockFetchAllAlbumArt.mockResolvedValue([])
     mockFetchWikipediaContentFromMusicBrainz.mockResolvedValue(null)
   })
 
@@ -134,10 +135,51 @@ describe('Background Operations - Error Handling (Fix #2)', () => {
   })
 
   describe('Wikipedia Error Handling', () => {
-    it.todo('displays Wikipedia error indicator when summary fetch fails after album load')
+    it('displays Wikipedia error indicator and retry button when summary fetch fails', async () => {
+      mockFetchWikipediaContentFromMusicBrainz
+        .mockRejectedValueOnce(new Error('Wikipedia network error'))
+        .mockRejectedValueOnce(new Error('Wikipedia network error'))
+
+      renderAlbumPage()
+
+      await waitFor(() => {
+        expect(mockFetchWikipediaContentFromMusicBrainz).toHaveBeenCalledWith('test-album-id', expect.any(AbortSignal))
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText(/Wikipedia network error/i)).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /Retry/i })).toBeInTheDocument()
+      })
+    })
+
     it.todo('clears Wikipedia error when user navigates to a different album')
     it.todo('shows Wikipedia retry button when summary load fails')
-    it.todo('retries Wikipedia fetch when retry button is clicked')
+
+    it('retries Wikipedia fetch and clears error state after retry succeeds', async () => {
+      const user = userEvent.setup()
+
+      mockFetchWikipediaContentFromMusicBrainz
+        .mockRejectedValueOnce(new Error('Wikipedia network error'))
+        .mockRejectedValueOnce(new Error('Wikipedia network error'))
+        .mockResolvedValueOnce({
+          extract: 'Recovered Wikipedia summary text.',
+          title: 'Test Album',
+          url: 'https://en.wikipedia.org/wiki/Test_Album'
+        })
+
+      renderAlbumPage()
+
+      const retryButton = await screen.findByRole('button', { name: /Retry/i })
+      const wikipediaCallsBeforeRetry = mockFetchWikipediaContentFromMusicBrainz.mock.calls.length
+      await user.click(retryButton)
+
+      await waitFor(() => {
+        expect(mockFetchWikipediaContentFromMusicBrainz.mock.calls.length).toBeGreaterThan(wikipediaCallsBeforeRetry)
+        expect(screen.queryByText(/Wikipedia network error/i)).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: /Retry/i })).not.toBeInTheDocument()
+        expect(screen.getByText(/Recovered Wikipedia summary text\./i)).toBeInTheDocument()
+      })
+    })
   })
 
   describe('Race Condition Prevention', () => {
