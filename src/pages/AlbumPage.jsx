@@ -3923,7 +3923,9 @@ function AlbumPage() {
                     >
                       <span className="track-credit-main">
                         {trackNumber && <span className="track-credit-number">{trackNumber}</span>}
-                        <span className="track-credit-title-text">{track.title}</span>
+                        <span className="track-title-leader">
+                          <span className="track-credit-title-text">{track.title}</span>
+                        </span>
                       </span>
                       <span className="track-credit-meta">
                         {trackDuration && <span className="track-credit-duration">{trackDuration}</span>}

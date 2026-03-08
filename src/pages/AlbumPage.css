@@ -1271,6 +1271,22 @@
 }
 
 .track-credit-title-text {
+  flex: 0 1 auto;
+}
+
+.track-title-leader {
+  display: flex;
+  align-items: baseline;
+  flex: 1;
+  min-width: 0;
+}
+
+.track-title-leader::after {
+  content: "................................................................................................................................";
+  color: var(--muted2);
+  margin: 0 0.5rem;
+  overflow: hidden;
+  white-space: nowrap;
   flex: 1;
 }
 
