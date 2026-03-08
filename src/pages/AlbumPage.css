@@ -1231,6 +1231,18 @@
   font-weight: 400;
 }
 
+.track-contributor-name {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.track-contributor-name:hover {
+  color: var(--accent);
+}
+
 .credit-role {
   color: var(--muted);
   text-transform: capitalize;
@@ -1242,6 +1254,11 @@
   padding-bottom: 1rem;
   border-left: 2px solid var(--border);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.track-highlighted {
+  background: rgba(0, 255, 160, 0.06);
+  border-left-color: rgba(0, 255, 160, 0.4);
 }
 
 .track-credits:last-child {

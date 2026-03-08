@@ -82,6 +82,7 @@ function AlbumPage() {
   const [loadingGallery, setLoadingGallery] = useState(false)
   const [galleryError, setGalleryError] = useState(null) // Error state for gallery
   const [galleryExpanded, setGalleryExpanded] = useState(false)
+  const [activeContributor, setActiveContributor] = useState(null) // Track-level contributor highlight
   const [selectedImage, setSelectedImage] = useState(null) // For lightbox view
   const [currentImageIndex, setCurrentImageIndex] = useState(null) // Index of currently displayed image in gallery
   
@@ -2701,6 +2702,10 @@ function AlbumPage() {
       return newSet
     })
   }
+
+  function toggleActiveContributor(name) {
+    setActiveContributor(prev => (prev === name ? null : name))
+  }
   
   // Toggle album credits expanded state
   function toggleAlbumCreditsExpanded() {
@@ -3911,11 +3916,24 @@ function AlbumPage() {
                   !performers.includes(c) && 
                   !production.includes(c)
                 )
+                const recordingDetails = album.recordingInfo && album.recordingInfo[track.trackId]
+                const trackContributors = [
+                  ...credits.map(c => c.personName),
+                  ...(track.songwriting?.writers || []),
+                  ...(track.songwriting?.composers || []),
+                  ...(track.songwriting?.lyricists || []),
+                  ...(track.publishing?.publishers || []),
+                  ...(recordingDetails?.studios || []),
+                  ...(recordingDetails?.locations || [])
+                ]
+                const isTrackHighlighted = activeContributor
+                  ? trackContributors.some(name => name === activeContributor)
+                  : false
 
                 const isExpanded = expandedTracks.has(track.trackId)
                 
                 return (
-                  <div key={track.trackId} className="track-credits">
+                  <div key={track.trackId} className={`track-credits ${isTrackHighlighted ? 'track-highlighted' : ''}`}>
                     <button
                       className="track-credit-title-button track-credit-row-button"
                       onClick={() => toggleTrackExpanded(track.trackId)}
@@ -3942,19 +3960,19 @@ function AlbumPage() {
                         <ul className="credits-list">
                           {track.songwriting.writers && track.songwriting.writers.map((name, idx) => (
                             <li key={idx} className="credit-item">
-                              <span className="credit-name">{name}</span>
+                              <button type="button" className="credit-name track-contributor-name" onClick={() => toggleActiveContributor(name)}>{name}</button>
                               <span className="credit-role">Writer</span>
                             </li>
                           ))}
                           {track.songwriting.composers && track.songwriting.composers.map((name, idx) => (
                             <li key={idx} className="credit-item">
-                              <span className="credit-name">{name}</span>
+                              <button type="button" className="credit-name track-contributor-name" onClick={() => toggleActiveContributor(name)}>{name}</button>
                               <span className="credit-role">Composer</span>
                             </li>
                           ))}
                           {track.songwriting.lyricists && track.songwriting.lyricists.map((name, idx) => (
                             <li key={idx} className="credit-item">
-                              <span className="credit-name">{name}</span>
+                              <button type="button" className="credit-name track-contributor-name" onClick={() => toggleActiveContributor(name)}>{name}</button>
                               <span className="credit-role">Lyricist</span>
                             </li>
                           ))}
@@ -3969,7 +3987,7 @@ function AlbumPage() {
                         <ul className="credits-list">
                           {track.publishing.publishers.map((name, idx) => (
                             <li key={idx} className="credit-item">
-                              <span className="credit-name">{name}</span>
+                              <button type="button" className="credit-name track-contributor-name" onClick={() => toggleActiveContributor(name)}>{name}</button>
                               <span className="credit-role">Publisher</span>
                             </li>
                           ))}
@@ -3984,13 +4002,13 @@ function AlbumPage() {
                         <ul className="credits-list">
                           {album.recordingInfo[track.trackId].studios && album.recordingInfo[track.trackId].studios.map((studio, idx) => (
                             <li key={idx} className="credit-item">
-                              <span className="credit-name">{studio}</span>
+                              <button type="button" className="credit-name track-contributor-name" onClick={() => toggleActiveContributor(studio)}>{studio}</button>
                               <span className="credit-role">Studio</span>
                             </li>
                           ))}
                           {album.recordingInfo[track.trackId].locations && album.recordingInfo[track.trackId].locations.map((location, idx) => (
                             <li key={idx} className="credit-item">
-                              <span className="credit-name">{location}</span>
+                              <button type="button" className="credit-name track-contributor-name" onClick={() => toggleActiveContributor(location)}>{location}</button>
                               <span className="credit-role">Location</span>
                             </li>
                           ))}
@@ -4004,7 +4022,7 @@ function AlbumPage() {
                         <ul className="credits-list">
                           {performers.map((credit, idx) => (
                             <li key={idx} className="credit-item">
-                              <span className="credit-name">{credit.personName}</span>
+                              <button type="button" className="credit-name track-contributor-name" onClick={() => toggleActiveContributor(credit.personName)}>{credit.personName}</button>
                               <span className="credit-role">{credit.role}</span>
                             </li>
                           ))}
@@ -4018,7 +4036,7 @@ function AlbumPage() {
                         <ul className="credits-list">
                           {production.map((credit, idx) => (
                             <li key={idx} className="credit-item">
-                              <span className="credit-name">{credit.personName}</span>
+                              <button type="button" className="credit-name track-contributor-name" onClick={() => toggleActiveContributor(credit.personName)}>{credit.personName}</button>
                               <span className="credit-role">{credit.role}</span>
                             </li>
                           ))}
@@ -4030,7 +4048,7 @@ function AlbumPage() {
                           <ul className="credits-list">
                             {other.map((credit, idx) => (
                               <li key={idx} className="credit-item">
-                                <span className="credit-name">{credit.personName}</span>
+                                <button type="button" className="credit-name track-contributor-name" onClick={() => toggleActiveContributor(credit.personName)}>{credit.personName}</button>
                                 <span className="credit-role">{credit.role}</span>
                               </li>
                             ))}
