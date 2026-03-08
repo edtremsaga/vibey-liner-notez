@@ -3882,12 +3882,14 @@ function AlbumPage() {
 
           {/* Track-level credits */}
           {album.tracks && album.tracks.length > 0 && album.tracks.some(t => t && t.trackId && trackCredits[t.trackId] && trackCredits[t.trackId].length > 0) && (
-            <div className="credits-group">
-              <h3>Tracks</h3>
+            <div className="credits-group track-credits-group">
+              <h3 className="track-credits-header">Tracks</h3>
               {album.tracks.map((track) => {
                 if (!track || !track.trackId) return null
                 const credits = trackCredits[track.trackId]
                 if (!credits || credits.length === 0) return null
+                const trackNumber = track.position || null
+                const trackDuration = track.durationMs ? formatDuration(track.durationMs) : null
                 
                 // Group credits by role type
                 const performers = credits.filter(c => 
@@ -3915,28 +3917,18 @@ function AlbumPage() {
                 return (
                   <div key={track.trackId} className="track-credits">
                     <button
-                      className="track-credit-title-button"
+                      className="track-credit-title-button track-credit-row-button"
                       onClick={() => toggleTrackExpanded(track.trackId)}
                       aria-expanded={isExpanded}
                     >
-                      <span className="track-credit-title-text">{track.title}</span>
-                      <svg
-                        className={`track-credit-chevron ${isExpanded ? 'expanded' : ''}`}
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M4 6L8 10L12 6"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
+                      <span className="track-credit-main">
+                        {trackNumber && <span className="track-credit-number">{trackNumber}</span>}
+                        <span className="track-credit-title-text">{track.title}</span>
+                      </span>
+                      <span className="track-credit-meta">
+                        {trackDuration && <span className="track-credit-duration">{trackDuration}</span>}
+                        <span className="track-credit-arrow" aria-hidden="true">{isExpanded ? '▼' : '▶'}</span>
+                      </span>
                     </button>
                     
                     {isExpanded && (

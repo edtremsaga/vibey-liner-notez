@@ -1239,7 +1239,14 @@
 .track-credits {
   margin-bottom: 2rem;
   padding-left: 1rem;
+  padding-bottom: 1rem;
   border-left: 2px solid var(--border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.track-credits:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .track-credit-title-button {
@@ -1267,6 +1274,53 @@
   flex: 1;
 }
 
+.track-credits-header {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+}
+
+.track-credit-row-button {
+  justify-content: space-between;
+}
+
+.track-credit-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.track-credit-number {
+  color: var(--muted);
+  min-width: 2.75rem;
+  text-align: left;
+  flex-shrink: 0;
+}
+
+.track-credit-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: 1rem;
+  flex-shrink: 0;
+}
+
+.track-credit-duration {
+  color: var(--muted);
+  text-align: right;
+  min-width: 3.25rem;
+}
+
+.track-credit-arrow {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1;
+  width: 1ch;
+  text-align: center;
+}
+
 /* Make "Album" text green - target specifically by class, not by position */
 .album-credit-title-button .track-credit-title-text {
   color: var(--accent);
@@ -1285,6 +1339,10 @@
 
 .credit-category {
   margin-bottom: 1rem;
+}
+
+.track-credit-details {
+  padding-left: 0.75rem;
 }
 
 .category-label {
@@ -1666,4 +1724,3 @@
     flex-wrap: wrap;
   }
 }
-
