@@ -3829,30 +3829,6 @@ function AlbumPage() {
           </section>
         )}
 
-        {/* Tracklist */}
-        {loadingTracklist && (
-          <section className="tracklist-section">
-            <h2>Tracklist</h2>
-            <div className="loading">Loading tracklist...</div>
-          </section>
-        )}
-        {!loadingTracklist && album.tracks && album.tracks.length > 0 && (
-          <section className="tracklist-section">
-            <h2>Tracklist</h2>
-            <ol className="tracklist">
-              {album.tracks.map((track) => (
-                <li key={track.trackId} className="track-item">
-                  <span className="track-position">{track.position}</span>
-                  <span className="track-title">{track.title}</span>
-                  {track.durationMs && (
-                    <span className="track-duration">{formatDuration(track.durationMs)}</span>
-                  )}
-                </li>
-              ))}
-            </ol>
-          </section>
-        )}
-
         {/* Credits */}
         <section className="credits-section">
           <h2>Credits</h2>
