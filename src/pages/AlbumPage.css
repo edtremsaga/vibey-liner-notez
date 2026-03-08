@@ -1370,6 +1370,8 @@
 }
 
 .track-credit-details {
+  border-left: 2px solid rgba(255, 255, 255, 0.08);
+  margin-left: 0.625rem;
   padding-left: 0.75rem;
 }
 
