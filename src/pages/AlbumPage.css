@@ -975,16 +975,11 @@
   display: flex;
   gap: 2rem;
   align-items: flex-start;
-  position: -webkit-sticky; /* Safari support */
-  position: sticky;
-  top: 0;
-  z-index: 5;
+  position: static;
   background-color: var(--bg);
   padding-top: 1rem;
   padding-bottom: 1rem;
-  margin-top: -1rem; /* Offset the padding-top to maintain spacing */
-  /* Add a border or shadow to make it more visible when stuck */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 0;
 }
 
 .cover-art {
