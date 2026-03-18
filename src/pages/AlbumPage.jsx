@@ -101,6 +101,16 @@ function AlbumPage() {
   
   // iPhone Chrome detection for back link visibility
   const [isIPhoneChrome, setIsIPhoneChrome] = useState(false)
+
+  function normalizeQueryParamValue(value) {
+    if (typeof value !== 'string' || value.length === 0) return value
+    if (!/%[0-9A-Fa-f]{2}/.test(value)) return value
+    try {
+      return decodeURIComponent(value)
+    } catch {
+      return value
+    }
+  }
   
   // Detect mobile screen size and iPhone Chrome
   useEffect(() => {
@@ -184,7 +194,7 @@ function AlbumPage() {
       if (pathname === '/results') {
         const urlType = urlParams.get('type')
         if (urlType === 'producer') {
-          const producerName = urlParams.get('producer')
+          const producerName = normalizeQueryParamValue(urlParams.get('producer'))
           const producerMBID = urlParams.get('mbid')
           if (producerName) {
             debugLog('[History] Restoring producer search from URL:', { producerName, producerMBID })
@@ -205,8 +215,8 @@ function AlbumPage() {
             window.history.replaceState(historyState, '', window.location.href)
           }
         } else if (urlType === 'album') {
-          const artist = urlParams.get('artist')
-          const album = urlParams.get('album')
+          const artist = normalizeQueryParamValue(urlParams.get('artist'))
+          const album = normalizeQueryParamValue(urlParams.get('album'))
           const releaseType = urlParams.get('releaseType')
           if (artist) {
             debugLog('[History] Restoring album search from URL:', { artist, album, releaseType })
@@ -1825,10 +1835,10 @@ function AlbumPage() {
   function buildResultsUrl(pageNumber = 1) {
     const resultsUrl = new URL(window.location.origin + '/results')
     
-    if (searchMeta?.isProducerSearch) {
+      if (searchMeta?.isProducerSearch) {
       resultsUrl.searchParams.set('type', 'producer')
       if (searchMeta.producerName) {
-        resultsUrl.searchParams.set('producer', encodeURIComponent(searchMeta.producerName))
+        resultsUrl.searchParams.set('producer', searchMeta.producerName)
       }
       if (searchMeta.producerMBID) {
         resultsUrl.searchParams.set('mbid', searchMeta.producerMBID)
@@ -1836,10 +1846,10 @@ function AlbumPage() {
     } else {
       resultsUrl.searchParams.set('type', 'album')
       if (searchArtist) {
-        resultsUrl.searchParams.set('artist', encodeURIComponent(searchArtist.trim()))
+        resultsUrl.searchParams.set('artist', searchArtist.trim())
       }
       if (searchAlbum && searchAlbum.trim()) {
-        resultsUrl.searchParams.set('album', encodeURIComponent(searchAlbum.trim()))
+        resultsUrl.searchParams.set('album', searchAlbum.trim())
       }
       if (releaseType && releaseType !== 'Album') {
         resultsUrl.searchParams.set('releaseType', releaseType)
@@ -2071,7 +2081,7 @@ function AlbumPage() {
         if (currentState.searchType === 'producer' && currentState.producerName) {
           const resultsUrl = new URL(window.location.origin + '/results')
           resultsUrl.searchParams.set('type', 'producer')
-          resultsUrl.searchParams.set('producer', encodeURIComponent(currentState.producerName))
+          resultsUrl.searchParams.set('producer', currentState.producerName)
           if (currentState.producerMBID) {
             resultsUrl.searchParams.set('mbid', currentState.producerMBID)
           }
@@ -2091,9 +2101,9 @@ function AlbumPage() {
         } else if (currentState.searchType === 'album' && currentState.artist) {
           const resultsUrl = new URL(window.location.origin + '/results')
           resultsUrl.searchParams.set('type', 'album')
-          resultsUrl.searchParams.set('artist', encodeURIComponent(currentState.artist))
+          resultsUrl.searchParams.set('artist', currentState.artist)
           if (currentState.album) {
-            resultsUrl.searchParams.set('album', encodeURIComponent(currentState.album))
+            resultsUrl.searchParams.set('album', currentState.album)
           }
           if (currentState.releaseType) {
             resultsUrl.searchParams.set('releaseType', currentState.releaseType)
@@ -2438,7 +2448,7 @@ function AlbumPage() {
           // Navigating to results page - restore from URL params
           const urlType = urlParams.get('type')
           if (urlType === 'producer') {
-            const producerName = urlParams.get('producer')
+            const producerName = normalizeQueryParamValue(urlParams.get('producer'))
             if (producerName) {
               debugLog('[History] URL fallback: Restoring producer search from URL')
               setSearchType('producer')
@@ -2453,12 +2463,12 @@ function AlbumPage() {
               return
             }
           } else if (urlType === 'album') {
-            const artist = urlParams.get('artist')
+            const artist = normalizeQueryParamValue(urlParams.get('artist'))
             if (artist) {
               debugLog('[History] URL fallback: Restoring album search from URL')
               setSearchType('album')
               setSearchArtist(artist)
-              const album = urlParams.get('album')
+              const album = normalizeQueryParamValue(urlParams.get('album'))
               if (album) setSearchAlbum(album)
               const releaseType = urlParams.get('releaseType')
               if (releaseType) setReleaseType(releaseType)

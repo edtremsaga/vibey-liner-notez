@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AlbumPage from '../AlbumPage'
 import { HelpProvider } from '../../contexts/HelpContext'
@@ -488,6 +488,45 @@ describe('Producer Search Functionality', () => {
       await waitFor(() => {
         expect(window.location.search).toContain('type=producer')
       })
+    })
+
+    it('should decode legacy double-encoded artist query params on restore', async () => {
+      renderAlbumPage()
+
+      window.history.replaceState(null, '', '/results?type=album&artist=The%2520Rolling%2520Stones&album=Aftermath')
+      act(() => {
+        window.dispatchEvent(new PopStateEvent('popstate', { state: null }))
+      })
+
+      await waitFor(() => {
+        const artistInput = screen.getByRole('textbox', { name: /Artist Name/i })
+        expect(artistInput).toHaveValue('The Rolling Stones')
+      })
+    })
+
+    it('should not double-encode artist query params when writing results URL', async () => {
+      const user = userEvent.setup()
+      mockSearchReleaseGroups.mockResolvedValueOnce({
+        results: [
+          { releaseGroupId: 'rg-1', title: 'A', artistName: 'The Rolling Stones', releaseYear: 1966, isBootleg: false },
+          { releaseGroupId: 'rg-2', title: 'B', artistName: 'The Rolling Stones', releaseYear: 1967, isBootleg: false }
+        ],
+        totalCount: 2,
+        isArtistOnly: true
+      })
+
+      window.history.replaceState({ page: 'search' }, '', '/')
+      renderAlbumPage()
+
+      const artistInput = screen.getByRole('textbox', { name: /Artist Name/i })
+      await user.type(artistInput, 'The Rolling Stones')
+      await user.click(screen.getByRole('button', { name: /^Search$/ }))
+
+      await waitFor(() => {
+        expect(window.location.pathname).toBe('/results')
+      })
+      expect(window.location.search).toContain('artist=The+Rolling+Stones')
+      expect(window.location.search).not.toContain('%2520')
     })
   })
 
