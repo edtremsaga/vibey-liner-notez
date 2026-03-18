@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, searchByProducer, fetchCoverArt, fetchAllAlbumArt, fetchWikipediaContentFromMusicBrainz, clearProducerSeenRgIds } from '../services/musicbrainz'
 import { formatDuration } from '../utils/formatDuration'
 import { getCachedAlbum, setCachedAlbum } from '../utils/albumCache'
@@ -85,6 +86,7 @@ function AlbumPage() {
   const [activeContributor, setActiveContributor] = useState(null) // Track-level contributor highlight
   const [selectedImage, setSelectedImage] = useState(null) // For lightbox view
   const [currentImageIndex, setCurrentImageIndex] = useState(null) // Index of currently displayed image in gallery
+  const [lightboxScale, setLightboxScale] = useState(1)
   
   // Wikipedia content state
   const [wikipediaContent, setWikipediaContent] = useState(null)
@@ -2871,6 +2873,11 @@ function AlbumPage() {
   const swipeDistanceRef = useRef(0)
   
   const handleTouchStart = (e) => {
+    if (lightboxScale > 1) {
+      swipeStartRef.current = null
+      swipeDistanceRef.current = 0
+      return
+    }
     if (galleryImages.length <= 1) return
     const touch = e.touches[0]
     swipeStartRef.current = { x: touch.clientX, y: touch.clientY }
@@ -2878,6 +2885,7 @@ function AlbumPage() {
   }
   
   const handleTouchMove = (e) => {
+    if (lightboxScale > 1) return
     if (!swipeStartRef.current || galleryImages.length <= 1) return
     const touch = e.touches[0]
     const deltaX = touch.clientX - swipeStartRef.current.x
@@ -2892,6 +2900,11 @@ function AlbumPage() {
   }
   
   const handleTouchEnd = (e) => {
+    if (lightboxScale > 1) {
+      swipeStartRef.current = null
+      swipeDistanceRef.current = 0
+      return
+    }
     if (!swipeStartRef.current || galleryImages.length <= 1) {
       swipeStartRef.current = null
       swipeDistanceRef.current = 0
@@ -2917,18 +2930,29 @@ function AlbumPage() {
   
   // Mouse drag handlers for desktop trackpad
   const handleMouseDown = (e) => {
+    if (lightboxScale > 1) {
+      swipeStartRef.current = null
+      swipeDistanceRef.current = 0
+      return
+    }
     if (galleryImages.length <= 1) return
     swipeStartRef.current = { x: e.clientX, y: e.clientY }
     swipeDistanceRef.current = 0
   }
   
   const handleMouseMove = (e) => {
+    if (lightboxScale > 1) return
     if (!swipeStartRef.current || galleryImages.length <= 1) return
     const deltaX = e.clientX - swipeStartRef.current.x
     swipeDistanceRef.current = deltaX
   }
   
   const handleMouseUp = (e) => {
+    if (lightboxScale > 1) {
+      swipeStartRef.current = null
+      swipeDistanceRef.current = 0
+      return
+    }
     if (!swipeStartRef.current || galleryImages.length <= 1) {
       swipeStartRef.current = null
       swipeDistanceRef.current = 0
@@ -2954,6 +2978,11 @@ function AlbumPage() {
     swipeStartRef.current = null
     swipeDistanceRef.current = 0
   }
+
+  useEffect(() => {
+    // Reset zoom state when lightbox closes or image changes
+    setLightboxScale(1)
+  }, [selectedImage?.image])
   
   // Keyboard navigation
   useEffect(() => {
@@ -3697,6 +3726,7 @@ function AlbumPage() {
           <div 
             className="image-lightbox"
             onClick={() => {
+              setLightboxScale(1)
               setSelectedImage(null)
               setCurrentImageIndex(null)
             }}
@@ -3715,6 +3745,7 @@ function AlbumPage() {
               <button 
                 className="lightbox-close"
                 onClick={() => {
+                  setLightboxScale(1)
                   setSelectedImage(null)
                   setCurrentImageIndex(null)
                 }}
@@ -3745,14 +3776,66 @@ function AlbumPage() {
                 </>
               )}
               
-              <img
-                src={selectedImage.image}
-                alt={selectedImage.types?.join(', ') || 'Album art'}
-                onError={(e) => {
-                  debugWarn('Failed to load full-size image:', selectedImage.image)
-                  e.target.style.display = 'none'
-                }}
-              />
+              <TransformWrapper
+                key={selectedImage.image}
+                initialScale={1}
+                minScale={1}
+                maxScale={6}
+                wheel={{ step: 0.25 }}
+                doubleClick={{ mode: 'toggle', step: 1 }}
+                pinch={{ step: 5 }}
+                onTransformed={(_, state) => setLightboxScale(state.scale)}
+              >
+                {({ zoomIn, zoomOut, resetTransform }) => (
+                  <>
+                    <div className="lightbox-zoom-controls" role="group" aria-label="Image zoom controls">
+                      <button
+                        type="button"
+                        className="lightbox-zoom-button"
+                        onClick={() => zoomIn()}
+                        aria-label="Zoom in"
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        className="lightbox-zoom-button"
+                        onClick={() => zoomOut()}
+                        aria-label="Zoom out"
+                      >
+                        -
+                      </button>
+                      <button
+                        type="button"
+                        className="lightbox-zoom-button lightbox-zoom-reset"
+                        onClick={() => {
+                          resetTransform()
+                          setLightboxScale(1)
+                        }}
+                        aria-label="Reset view"
+                      >
+                        Reset view
+                      </button>
+                    </div>
+
+                    <div className="lightbox-zoom-area">
+                      <TransformComponent
+                        wrapperClass="lightbox-transform-wrapper"
+                        contentClass="lightbox-transform-content"
+                      >
+                        <img
+                          src={selectedImage.image}
+                          alt={selectedImage.types?.join(', ') || 'Album art'}
+                          onError={(e) => {
+                            debugWarn('Failed to load full-size image:', selectedImage.image)
+                            e.target.style.display = 'none'
+                          }}
+                        />
+                      </TransformComponent>
+                    </div>
+                  </>
+                )}
+              </TransformWrapper>
               
               {/* Caption and counter */}
               <div className="lightbox-footer">
