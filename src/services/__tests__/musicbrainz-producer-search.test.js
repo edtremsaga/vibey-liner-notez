@@ -1,18 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { searchByProducer } from '../musicbrainz'
 
-// Mock rateLimitedFetch and global fetch
-const mockRateLimitedFetch = vi.fn()
+// Mock global fetch used by internal rateLimitedFetch
 const mockFetch = vi.fn()
-
-// Mock the module before importing
-vi.mock('../musicbrainz', async () => {
-  const actual = await vi.importActual('../musicbrainz')
-  return {
-    ...actual,
-    rateLimitedFetch: mockRateLimitedFetch
-  }
-})
 
 // Mock global fetch
 global.fetch = mockFetch
@@ -119,6 +109,8 @@ const mockMultipleProducersResponse = {
 describe('Producer Search Service', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockFetch.mockReset()
+    global.fetch = mockFetch
     // Reset window.history and navigator
     Object.defineProperty(window, 'innerWidth', {
       writable: true,
@@ -140,12 +132,12 @@ describe('Producer Search Service', () => {
     it('should find a single producer MBID', async () => {
       // We'll test the internal helper indirectly through searchByProducer
       // Since findProducerMBIDs is not exported, we test via searchByProducer
-      mockRateLimitedFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockProducerSearchResponse
       })
 
-      mockRateLimitedFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockReleasesResponse
       })
@@ -157,7 +149,7 @@ describe('Producer Search Service', () => {
 
   describe('searchByProducer', () => {
     it('should return multiple matches when multiple producers found', async () => {
-      mockRateLimitedFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockMultipleProducersResponse
       })
@@ -172,7 +164,7 @@ describe('Producer Search Service', () => {
     })
 
     it('should throw error when no producer found', async () => {
-      mockRateLimitedFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ artists: [] })
       })
