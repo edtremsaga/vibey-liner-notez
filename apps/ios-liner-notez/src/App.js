@@ -5,7 +5,7 @@ import { ResultsScreen } from './screens/ResultsScreen'
 import { AlbumDetailScreen } from './screens/AlbumDetailScreen'
 import { ProducerSearchScreen } from './screens/ProducerSearchScreen'
 import { HelpDataSourcesScreen } from './screens/HelpDataSourcesScreen'
-import { mockAlbumFixture } from 'core-liner-notez'
+import { getMockAlbumById, getMockAlbums } from 'core-liner-notez'
 
 const ROUTES = ['Search', 'Results', 'Album Detail', 'Producer Search', 'Help / Data Sources']
 
@@ -34,7 +34,7 @@ function ScreenRouter({
 
 export default function App() {
   const [route, setRoute] = useState('Search')
-  const [mockResults] = useState([mockAlbumFixture])
+  const [mockResults] = useState(getMockAlbums())
   const [selectedAlbum, setSelectedAlbum] = useState(null)
   const tabs = useMemo(() => ROUTES, [])
 
@@ -43,7 +43,8 @@ export default function App() {
   }
 
   function handleSelectAlbum(album) {
-    setSelectedAlbum(album)
+    const selected = getMockAlbumById(album.albumId)
+    setSelectedAlbum(selected ?? album)
     setRoute('Album Detail')
   }
 
