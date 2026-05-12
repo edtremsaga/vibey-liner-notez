@@ -41,5 +41,31 @@ if (!searchScreenSource.includes("from 'core-liner-notez'")) {
 if (!searchScreenSource.includes('Mock album preview (shared core fixture)')) {
   throw new Error('SearchScreen does not render mock album preview marker')
 }
+if (!searchScreenSource.includes('View Mock Results')) {
+  throw new Error('SearchScreen does not include View Mock Results action')
+}
 
-console.log('PASS Expo scaffold files, placeholder routes, and shared core mock album wiring verified')
+const resultsScreenSource = readFileSync(path.join(appRoot, 'src/screens/ResultsScreen.js'), 'utf8')
+if (!resultsScreenSource.includes('albums.map')) {
+  throw new Error('ResultsScreen does not render result list from shared fixture data')
+}
+if (!resultsScreenSource.includes('onSelectAlbum')) {
+  throw new Error('ResultsScreen does not wire album selection handler')
+}
+
+const albumDetailScreenSource = readFileSync(path.join(appRoot, 'src/screens/AlbumDetailScreen.js'), 'utf8')
+if (!albumDetailScreenSource.includes('Back to Results')) {
+  throw new Error('AlbumDetailScreen does not include back-to-results action')
+}
+if (!albumDetailScreenSource.includes('album.title')) {
+  throw new Error('AlbumDetailScreen does not render selected album data')
+}
+
+if (!appSource.includes('handleSelectAlbum') || !appSource.includes('setRoute(\'Album Detail\')')) {
+  throw new Error('App router does not navigate from results to album detail')
+}
+if (!appSource.includes('handleBackToResults') || !appSource.includes('setRoute(\'Results\')')) {
+  throw new Error('App router does not restore results route from album detail')
+}
+
+console.log('PASS Expo scaffold files, route shell, and Search -> Results -> Album Detail mock flow wiring verified')

@@ -1,8 +1,8 @@
 import React from 'react'
-import { Text, View } from 'react-native'
+import { Text, TouchableOpacity, View } from 'react-native'
 import { mockAlbumFixture } from 'core-liner-notez'
 
-export function SearchScreen() {
+export function SearchScreen({ onViewMockResults }) {
   return (
     <View>
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Search</Text>
@@ -24,6 +24,21 @@ export function SearchScreen() {
         <Text style={{ color: '#d1d5db', marginTop: 4 }}>{mockAlbumFixture.artistName}</Text>
         <Text style={{ color: '#9ca3af', marginTop: 4 }}>{mockAlbumFixture.releaseYear}</Text>
       </View>
+      <TouchableOpacity
+        accessibilityRole="button"
+        onPress={onViewMockResults}
+        style={{
+          marginTop: 16,
+          borderWidth: 1,
+          borderColor: '#4b5563',
+          borderRadius: 8,
+          paddingVertical: 10,
+          paddingHorizontal: 12,
+          alignSelf: 'flex-start'
+        }}
+      >
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>View Mock Results</Text>
+      </TouchableOpacity>
     </View>
   )
 }
