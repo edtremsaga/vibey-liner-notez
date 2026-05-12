@@ -35,6 +35,9 @@ const searchScreenSource = readFileSync(path.join(appRoot, 'src/screens/SearchSc
 if (!searchScreenSource.includes('mockAlbumFixture')) {
   throw new Error('SearchScreen does not import shared core mockAlbumFixture')
 }
+if (!searchScreenSource.includes("from 'core-liner-notez'")) {
+  throw new Error('SearchScreen does not use stable shared core package import')
+}
 if (!searchScreenSource.includes('Mock album preview (shared core fixture)')) {
   throw new Error('SearchScreen does not render mock album preview marker')
 }

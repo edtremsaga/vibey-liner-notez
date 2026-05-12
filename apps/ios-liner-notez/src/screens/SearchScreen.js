@@ -1,6 +1,6 @@
 import React from 'react'
 import { Text, View } from 'react-native'
-import { mockAlbumFixture } from '../../../../packages/core-liner-notez/src/index.js'
+import { mockAlbumFixture } from 'core-liner-notez'
 
 export function SearchScreen() {
   return (
