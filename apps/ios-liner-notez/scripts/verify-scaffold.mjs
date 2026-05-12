@@ -31,4 +31,15 @@ for (const route of requiredRoutes) {
   }
 }
 
-console.log('PASS Expo scaffold files and placeholder navigation routes verified')
+const searchScreenSource = readFileSync(path.join(appRoot, 'src/screens/SearchScreen.js'), 'utf8')
+if (!searchScreenSource.includes('mockAlbumFixture')) {
+  throw new Error('SearchScreen does not import shared core mockAlbumFixture')
+}
+if (!searchScreenSource.includes("from 'core-liner-notez'")) {
+  throw new Error('SearchScreen does not use stable shared core package import')
+}
+if (!searchScreenSource.includes('Mock album preview (shared core fixture)')) {
+  throw new Error('SearchScreen does not render mock album preview marker')
+}
+
+console.log('PASS Expo scaffold files, placeholder routes, and shared core mock album wiring verified')
