@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://linernotez.example/schemas/album.v1.json",
+  "title": "LinerNotez Album v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "albumId",
+    "title",
+    "artistName",
+    "albumType",
+    "editions",
+    "tracks",
+    "credits",
+    "externalLinks",
+    "sources"
+  ],
+  "properties": {
+    "albumId": {
+      "type": "string",
+      "description": "Canonical album identifier. Use MusicBrainz Release Group MBID."
+    },
+    "title": { "type": "string" },
+    "artistName": { "type": "string" },
+    "releaseYear": {
+      "type": ["integer", "null"],
+      "minimum": 1000,
+      "maximum": 3000
+    },
+    "albumType": {
+      "type": "string",
+      "description": "LinerNotez UI type. Keep as 'album' even if MusicBrainz classifies as EP for early-era artifacts.",
+      "enum": ["album"]
+    },
+    "coverArtUrl": { "type": ["string", "null"], "format": "uri" },
+
+    "editions": {
+      "type": "array",
+      "description": "Physical/digital editions (MusicBrainz Releases) within the release group.",
+      "items": { "$ref": "#/$defs/Edition" }
+    },
+
+    "tracks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Track" }
+    },
+
+    "credits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "albumCredits": {
+          "type": ["array", "null"],
+          "items": { "$ref": "#/$defs/Credit" }
+        },
+        "trackCredits": {
+          "type": ["object", "null"],
+          "description": "Map of trackId -> array of credits",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/Credit" }
+          }
+        }
+      }
+    },
+
+    "recordingInfo": {
+      "type": ["object", "null"],
+      "description": "Optional map of trackId -> recording session info (studios/locations/dates) when explicitly present.",
+      "additionalProperties": { "$ref": "#/$defs/RecordingInfo" }
+    },
+
+    "externalLinks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["musicbrainzReleaseGroupUrl", "musicbrainzSelectedReleaseUrl"],
+      "properties": {
+        "musicbrainzReleaseGroupUrl": { "type": "string", "format": "uri" },
+        "musicbrainzSelectedReleaseUrl": { "type": "string", "format": "uri" },
+        "wikidataUrl": { "type": ["string", "null"], "format": "uri" },
+        "discogsUrl": { "type": ["string", "null"], "format": "uri" }
+      }
+    },
+
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/Source" }
+    },
+
+    "dataNotes": { "type": ["string", "null"] }
+  },
+
+  "$defs": {
+    "Edition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["editionId"],
+      "properties": {
+        "editionId": {
+          "type": "string",
+          "description": "MusicBrainz Release MBID."
+        },
+        "status": { "type": ["string", "null"] },
+        "country": { "type": ["string", "null"] },
+        "date": {
+          "type": ["string", "null"],
+          "description": "Release date as YYYY-MM-DD or YYYY-MM or YYYY.",
+          "pattern": "^(\\d{4})(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\\d|3[01]))?)?$"
+        },
+        "label": { "type": ["string", "null"] },
+        "catalogNumber": { "type": ["string", "null"] },
+        "barcode": { "type": ["string", "null"] },
+        "formatSummary": { "type": ["string", "null"] },
+        "packaging": { "type": ["string", "null"] }
+      }
+    },
+
+    "Track": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trackId", "position", "title"],
+      "properties": {
+        "trackId": {
+          "type": "string",
+          "description": "Prefer MusicBrainz Recording MBID."
+        },
+        "position": {
+          "type": "string",
+          "description": "Liner-note style position, e.g., 'A1', 'B3', or '1'."
+        },
+        "title": { "type": "string" },
+        "durationMs": { "type": ["integer", "null"], "minimum": 0 },
+
+        "songwriting": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "writers": { "$ref": "#/$defs/NameArrayNullable" },
+            "composers": { "$ref": "#/$defs/NameArrayNullable" },
+            "lyricists": { "$ref": "#/$defs/NameArrayNullable" }
+          }
+        },
+
+        "publishing": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "publishers": { "$ref": "#/$defs/NameArrayNullable" }
+          }
+        }
+      }
+    },
+
+    "Credit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["personName", "role"],
+      "properties": {
+        "personName": { "type": "string" },
+        "role": {
+          "type": "string",
+          "description": "Liner-note plausible role (producer, engineer, mixer, guitar, bass, vocals, arranger, mastering, etc.)."
+        },
+        "instrument": { "type": ["string", "null"] },
+        "notes": { "type": ["string", "null"] }
+      }
+    },
+
+    "RecordingInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "studios": { "$ref": "#/$defs/NameArrayNullable" },
+        "locations": { "$ref": "#/$defs/NameArrayNullable" },
+        "recordingDates": {
+          "type": ["array", "null"],
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "Source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceName", "license", "retrievedAt"],
+      "properties": {
+        "sourceName": {
+          "type": "string",
+          "enum": ["MusicBrainz", "Wikidata", "Discogs", "Cover Art Archive"],
+          "description": "Data source used to populate this Album object."
+        },
+        "license": {
+          "type": "string",
+          "description": "License for the source data (e.g., CC0 for MusicBrainz and Wikidata)."
+        },
+        "retrievedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+
+    "NameArrayNullable": {
+      "type": ["array", "null"],
+      "items": { "type": "string" }
+    }
+  }
+}
