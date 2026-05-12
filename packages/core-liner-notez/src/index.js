@@ -1,2 +1,1 @@
-export { mockAlbumFixture } from './fixtures/mockAlbumFixture.js'
-
+export { mockAlbumFixture, getMockAlbums, getMockAlbumById } from './fixtures/mockAlbumFixture.js'

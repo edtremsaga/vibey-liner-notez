@@ -32,8 +32,8 @@ for (const route of requiredRoutes) {
 }
 
 const searchScreenSource = readFileSync(path.join(appRoot, 'src/screens/SearchScreen.js'), 'utf8')
-if (!searchScreenSource.includes('mockAlbumFixture')) {
-  throw new Error('SearchScreen does not import shared core mockAlbumFixture')
+if (!searchScreenSource.includes('getMockAlbums')) {
+  throw new Error('SearchScreen does not use shared core getMockAlbums')
 }
 if (!searchScreenSource.includes("from 'core-liner-notez'")) {
   throw new Error('SearchScreen does not use stable shared core package import')
@@ -52,6 +52,12 @@ if (!resultsScreenSource.includes('albums.map')) {
 if (!resultsScreenSource.includes('onSelectAlbum')) {
   throw new Error('ResultsScreen does not wire album selection handler')
 }
+if (!resultsScreenSource.includes('No albums found (mock empty state)')) {
+  throw new Error('ResultsScreen does not include mock empty state text')
+}
+if (!resultsScreenSource.includes('Mock error state')) {
+  throw new Error('ResultsScreen does not include mock error state text')
+}
 
 const albumDetailScreenSource = readFileSync(path.join(appRoot, 'src/screens/AlbumDetailScreen.js'), 'utf8')
 if (!albumDetailScreenSource.includes('Back to Results')) {
@@ -63,6 +69,9 @@ if (!albumDetailScreenSource.includes('album.title')) {
 
 if (!appSource.includes('handleSelectAlbum') || !appSource.includes('setRoute(\'Album Detail\')')) {
   throw new Error('App router does not navigate from results to album detail')
+}
+if (!appSource.includes('getMockAlbumById')) {
+  throw new Error('App router does not use shared core getMockAlbumById accessor')
 }
 if (!appSource.includes('handleBackToResults') || !appSource.includes('setRoute(\'Results\')')) {
   throw new Error('App router does not restore results route from album detail')
