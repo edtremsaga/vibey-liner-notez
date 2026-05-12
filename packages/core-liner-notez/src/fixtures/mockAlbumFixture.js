@@ -65,3 +65,10 @@ export const mockAlbumFixture = {
   dataNotes: null
 }
 
+export function getMockAlbums() {
+  return [mockAlbumFixture]
+}
+
+export function getMockAlbumById(albumId) {
+  return getMockAlbums().find((album) => album.albumId === albumId) ?? null
+}

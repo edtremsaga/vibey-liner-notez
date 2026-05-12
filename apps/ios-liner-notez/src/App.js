@@ -5,28 +5,52 @@ import { ResultsScreen } from './screens/ResultsScreen'
 import { AlbumDetailScreen } from './screens/AlbumDetailScreen'
 import { ProducerSearchScreen } from './screens/ProducerSearchScreen'
 import { HelpDataSourcesScreen } from './screens/HelpDataSourcesScreen'
+import { getMockAlbumById, getMockAlbums } from 'core-liner-notez'
 
 const ROUTES = ['Search', 'Results', 'Album Detail', 'Producer Search', 'Help / Data Sources']
 
-function ScreenRouter({ route }) {
+function ScreenRouter({
+  route,
+  mockResults,
+  selectedAlbum,
+  onViewMockResults,
+  onSelectAlbum,
+  onBackToResults
+}) {
   switch (route) {
     case 'Results':
-      return <ResultsScreen />
+      return <ResultsScreen albums={mockResults} onSelectAlbum={onSelectAlbum} />
     case 'Album Detail':
-      return <AlbumDetailScreen />
+      return <AlbumDetailScreen album={selectedAlbum} onBackToResults={onBackToResults} />
     case 'Producer Search':
       return <ProducerSearchScreen />
     case 'Help / Data Sources':
       return <HelpDataSourcesScreen />
     case 'Search':
     default:
-      return <SearchScreen />
+      return <SearchScreen onViewMockResults={onViewMockResults} />
   }
 }
 
 export default function App() {
   const [route, setRoute] = useState('Search')
+  const [mockResults] = useState(getMockAlbums())
+  const [selectedAlbum, setSelectedAlbum] = useState(null)
   const tabs = useMemo(() => ROUTES, [])
+
+  function handleViewMockResults() {
+    setRoute('Results')
+  }
+
+  function handleSelectAlbum(album) {
+    const selected = getMockAlbumById(album.albumId)
+    setSelectedAlbum(selected ?? album)
+    setRoute('Album Detail')
+  }
+
+  function handleBackToResults() {
+    setRoute('Results')
+  }
 
   return (
     <SafeAreaView style={styles.root}>
@@ -46,7 +70,14 @@ export default function App() {
         ))}
       </View>
       <View style={styles.content}>
-        <ScreenRouter route={route} />
+        <ScreenRouter
+          route={route}
+          mockResults={mockResults}
+          selectedAlbum={selectedAlbum}
+          onViewMockResults={handleViewMockResults}
+          onSelectAlbum={handleSelectAlbum}
+          onBackToResults={handleBackToResults}
+        />
       </View>
     </SafeAreaView>
   )
