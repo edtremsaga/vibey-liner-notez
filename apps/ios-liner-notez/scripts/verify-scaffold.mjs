@@ -58,6 +58,9 @@ if (!resultsScreenSource.includes('No albums found (mock empty state)')) {
 if (!resultsScreenSource.includes('Mock error state')) {
   throw new Error('ResultsScreen does not include mock error state text')
 }
+if (!resultsScreenSource.includes('Loading mock album results...')) {
+  throw new Error('ResultsScreen does not include mock loading state text')
+}
 
 const albumDetailScreenSource = readFileSync(path.join(appRoot, 'src/screens/AlbumDetailScreen.js'), 'utf8')
 if (!albumDetailScreenSource.includes('Back to Results')) {
@@ -65,6 +68,9 @@ if (!albumDetailScreenSource.includes('Back to Results')) {
 }
 if (!albumDetailScreenSource.includes('album.title')) {
   throw new Error('AlbumDetailScreen does not render selected album data')
+}
+if (!albumDetailScreenSource.includes('Loading mock album detail...')) {
+  throw new Error('AlbumDetailScreen does not include mock loading state text')
 }
 
 if (!appSource.includes('handleSelectAlbum') || !appSource.includes('setRoute(\'Album Detail\')')) {
