@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    ".": "./src/index.js",
     "./schema/album.v1.json": "./schema/album.v1.json",
-    "./models": "./src/models.ts"
+    "./models": "./src/models.ts",
+    "./fixtures/mockAlbum": "./src/fixtures/mockAlbumFixture.js"
   },
   "scripts": {
     "test:contract": "node tests/album-contract.contract.mjs"
