@@ -1,0 +1,13 @@
+{
+  "name": "@liner-notez/core",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./schema/album.v1.json": "./schema/album.v1.json",
+    "./models": "./src/models.ts"
+  },
+  "scripts": {
+    "test:contract": "node tests/album-contract.contract.mjs"
+  }
+}
