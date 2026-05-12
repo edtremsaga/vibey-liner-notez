@@ -52,6 +52,9 @@ if (!resultsScreenSource.includes('albums.map')) {
 if (!resultsScreenSource.includes('onSelectAlbum')) {
   throw new Error('ResultsScreen does not wire album selection handler')
 }
+if (!resultsScreenSource.includes('onSelectAlbum(album.albumId)')) {
+  throw new Error('ResultsScreen does not pass albumId-only selection state')
+}
 if (!resultsScreenSource.includes('No albums found (mock empty state)')) {
   throw new Error('ResultsScreen does not include mock empty state text')
 }
@@ -63,15 +66,21 @@ const albumDetailScreenSource = readFileSync(path.join(appRoot, 'src/screens/Alb
 if (!albumDetailScreenSource.includes('Back to Results')) {
   throw new Error('AlbumDetailScreen does not include back-to-results action')
 }
+if (!albumDetailScreenSource.includes('getMockAlbumById(albumId)')) {
+  throw new Error('AlbumDetailScreen does not resolve album from albumId')
+}
 if (!albumDetailScreenSource.includes('album.title')) {
-  throw new Error('AlbumDetailScreen does not render selected album data')
+  throw new Error('AlbumDetailScreen does not render resolved album data')
+}
+if (!albumDetailScreenSource.includes('Album unavailable (mock not found)')) {
+  throw new Error('AlbumDetailScreen does not include not-found album state')
 }
 
 if (!appSource.includes('handleSelectAlbum') || !appSource.includes('setRoute(\'Album Detail\')')) {
   throw new Error('App router does not navigate from results to album detail')
 }
-if (!appSource.includes('getMockAlbumById')) {
-  throw new Error('App router does not use shared core getMockAlbumById accessor')
+if (!appSource.includes('selectedAlbumId')) {
+  throw new Error('App router does not maintain selected albumId state')
 }
 if (!appSource.includes('handleBackToResults') || !appSource.includes('setRoute(\'Results\')')) {
   throw new Error('App router does not restore results route from album detail')
