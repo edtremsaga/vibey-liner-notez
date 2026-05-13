@@ -10,7 +10,7 @@
   "dependencies": {
     "core-liner-notez": "file:../../packages/core-liner-notez",
     "expo": "~53.0.0",
-    "react": "18.3.1",
-    "react-native": "0.76.3"
+    "react": "19.0.0",
+    "react-native": "0.79.6"
   }
 }
