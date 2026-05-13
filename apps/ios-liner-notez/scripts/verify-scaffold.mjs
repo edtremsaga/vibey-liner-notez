@@ -65,6 +65,32 @@ if (!resultsScreenSource.includes('Loading mock album results...')) {
   throw new Error('ResultsScreen does not include mock loading state text')
 }
 
+const producerSearchScreenSource = readFileSync(
+  path.join(appRoot, 'src/screens/ProducerSearchScreen.js'),
+  'utf8'
+)
+if (!producerSearchScreenSource.includes('Producer search input')) {
+  throw new Error('ProducerSearchScreen does not include producer input')
+}
+if (!producerSearchScreenSource.includes('Search Mock Producers')) {
+  throw new Error('ProducerSearchScreen does not include mock producer search action')
+}
+if (!producerSearchScreenSource.includes('Please enter a producer name to continue.')) {
+  throw new Error('ProducerSearchScreen does not include required-field validation message')
+}
+if (!producerSearchScreenSource.includes('Loading mock producer results...')) {
+  throw new Error('ProducerSearchScreen does not include mock loading state text')
+}
+if (!producerSearchScreenSource.includes('Mock producer error state')) {
+  throw new Error('ProducerSearchScreen does not include mock error state text')
+}
+if (!producerSearchScreenSource.includes('No producer results found (mock empty state)')) {
+  throw new Error('ProducerSearchScreen does not include mock empty state text')
+}
+if (!producerSearchScreenSource.includes('Producer shell only. Real producer traversal is not implemented yet.')) {
+  throw new Error('ProducerSearchScreen does not include explicit mock-only results copy')
+}
+
 const albumDetailScreenSource = readFileSync(path.join(appRoot, 'src/screens/AlbumDetailScreen.js'), 'utf8')
 if (!albumDetailScreenSource.includes('Back to Results')) {
   throw new Error('AlbumDetailScreen does not include back-to-results action')
