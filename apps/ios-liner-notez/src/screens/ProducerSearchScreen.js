@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
 
 const MOCK_PRODUCER_RESULTS = [
   {
@@ -45,7 +45,8 @@ export function ProducerSearchScreen({ onSelectAlbum }) {
   }
 
   return (
-    <View>
+    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 24 }}>
+      <View>
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Producer Search</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Mock-only producer search shell (no API calls).
@@ -226,7 +227,7 @@ export function ProducerSearchScreen({ onSelectAlbum }) {
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityLabel={`Open producer mock album result ${index + 1}`}
-              key={`${result.title}-${result.year}`}
+              key={`${result.albumId}-${result.label}-${index}`}
               onPress={() => onSelectAlbum?.(result.albumId)}
               style={{
                 marginTop: 10,
@@ -246,6 +247,7 @@ export function ProducerSearchScreen({ onSelectAlbum }) {
           ))}
         </View>
       ) : null}
-    </View>
+      </View>
+    </ScrollView>
   )
 }
