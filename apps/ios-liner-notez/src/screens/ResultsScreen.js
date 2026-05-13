@@ -127,7 +127,7 @@ export function ResultsScreen({ albums, onSelectAlbum }) {
           <TouchableOpacity
             key={album.albumId}
             accessibilityRole="button"
-            onPress={() => onSelectAlbum(album)}
+            onPress={() => onSelectAlbum(album.albumId)}
             style={{
               marginTop: 12,
               borderWidth: 1,

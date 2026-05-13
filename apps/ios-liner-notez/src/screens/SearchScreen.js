@@ -1,9 +1,22 @@
-import React from 'react'
-import { Text, TouchableOpacity, View } from 'react-native'
+import React, { useState } from 'react'
+import { Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { getMockAlbums } from 'core-liner-notez'
 
-export function SearchScreen({ onViewMockResults }) {
+export function SearchScreen({ onSubmitMockSearch }) {
+  const [artistInput, setArtistInput] = useState('')
+  const [validationMessage, setValidationMessage] = useState('')
   const mockAlbumPreview = getMockAlbums()[0]
+
+  function handleSearchPress() {
+    const trimmedArtist = artistInput.trim()
+    if (!trimmedArtist) {
+      setValidationMessage('Please enter an artist name to continue.')
+      return
+    }
+
+    setValidationMessage('')
+    onSubmitMockSearch(trimmedArtist)
+  }
 
   return (
     <View>
@@ -26,9 +39,35 @@ export function SearchScreen({ onViewMockResults }) {
         <Text style={{ color: '#d1d5db', marginTop: 4 }}>{mockAlbumPreview.artistName}</Text>
         <Text style={{ color: '#9ca3af', marginTop: 4 }}>{mockAlbumPreview.releaseYear}</Text>
       </View>
+
+      <Text style={{ color: '#d1d5db', marginTop: 16, marginBottom: 6 }}>Artist (mock)</Text>
+      <TextInput
+        accessibilityLabel="Artist search input"
+        autoCapitalize="words"
+        onChangeText={(value) => {
+          setArtistInput(value)
+          if (validationMessage) {
+            setValidationMessage('')
+          }
+        }}
+        placeholder="e.g. R.E.M."
+        placeholderTextColor="#6b7280"
+        style={{
+          borderWidth: 1,
+          borderColor: '#4b5563',
+          borderRadius: 8,
+          paddingVertical: 10,
+          paddingHorizontal: 12,
+          color: '#f3f4f6'
+        }}
+        value={artistInput}
+      />
+
+      {!!validationMessage && <Text style={{ color: '#fca5a5', marginTop: 8 }}>{validationMessage}</Text>}
+
       <TouchableOpacity
         accessibilityRole="button"
-        onPress={onViewMockResults}
+        onPress={handleSearchPress}
         style={{
           marginTop: 16,
           borderWidth: 1,
@@ -39,7 +78,7 @@ export function SearchScreen({ onViewMockResults }) {
           alignSelf: 'flex-start'
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>View Mock Results</Text>
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Search Mock Albums</Text>
       </TouchableOpacity>
     </View>
   )

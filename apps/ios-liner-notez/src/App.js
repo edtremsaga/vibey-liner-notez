@@ -13,7 +13,7 @@ function ScreenRouter({
   route,
   mockResults,
   selectedAlbum,
-  onViewMockResults,
+  onSubmitMockSearch,
   onSelectAlbum,
   onBackToResults
 }) {
@@ -28,7 +28,7 @@ function ScreenRouter({
       return <HelpDataSourcesScreen />
     case 'Search':
     default:
-      return <SearchScreen onViewMockResults={onViewMockResults} />
+      return <SearchScreen onSubmitMockSearch={onSubmitMockSearch} />
   }
 }
 
@@ -36,16 +36,20 @@ export default function App() {
   const [route, setRoute] = useState('Search')
   const [mockResults] = useState(getMockAlbums())
   const [selectedAlbum, setSelectedAlbum] = useState(null)
+  const [lastMockSearchArtist, setLastMockSearchArtist] = useState('')
   const tabs = useMemo(() => ROUTES, [])
 
-  function handleViewMockResults() {
+  function handleSubmitMockSearch(artistName) {
+    setLastMockSearchArtist(artistName)
     setRoute('Results')
   }
 
-  function handleSelectAlbum(album) {
-    const selected = getMockAlbumById(album.albumId)
-    setSelectedAlbum(selected ?? album)
-    setRoute('Album Detail')
+  function handleSelectAlbum(albumId) {
+    const selected = getMockAlbumById(albumId)
+    if (selected) {
+      setSelectedAlbum(selected)
+      setRoute('Album Detail')
+    }
   }
 
   function handleBackToResults() {
@@ -56,6 +60,9 @@ export default function App() {
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
         <Text style={styles.title}>liner notez (iOS scaffold)</Text>
+        {!!lastMockSearchArtist && (
+          <Text style={styles.subtitle}>Mock search artist: {lastMockSearchArtist}</Text>
+        )}
       </View>
       <View style={styles.tabs}>
         {tabs.map((tab) => (
@@ -74,7 +81,7 @@ export default function App() {
           route={route}
           mockResults={mockResults}
           selectedAlbum={selectedAlbum}
-          onViewMockResults={handleViewMockResults}
+          onSubmitMockSearch={handleSubmitMockSearch}
           onSelectAlbum={handleSelectAlbum}
           onBackToResults={handleBackToResults}
         />
@@ -87,6 +94,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#101114' },
   header: { paddingHorizontal: 16, paddingVertical: 12 },
   title: { color: '#f3f4f6', fontSize: 22, fontWeight: '600' },
+  subtitle: { color: '#9ca3af', marginTop: 6, fontSize: 12 },
   tabs: {
     flexDirection: 'row',
     flexWrap: 'wrap',
