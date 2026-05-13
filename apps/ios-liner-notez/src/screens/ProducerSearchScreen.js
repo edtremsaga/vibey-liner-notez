@@ -1,6 +1,12 @@
 import React, { useState } from 'react'
 import { Text, TextInput, TouchableOpacity, View } from 'react-native'
 
+const MOCK_PRODUCER_RESULTS = [
+  { title: "Life's Rich Pageant", artist: 'R.E.M.', year: '1986', label: 'Producer match' },
+  { title: 'Document', artist: 'R.E.M.', year: '1987', label: 'Producer match' },
+  { title: 'Automatic for the People', artist: 'R.E.M.', year: '1992', label: 'Producer match' }
+]
+
 export function ProducerSearchScreen() {
   const [producerName, setProducerName] = useState('')
   const [showValidation, setShowValidation] = useState(false)
@@ -198,6 +204,25 @@ export function ProducerSearchScreen() {
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
             Producer shell only. Real producer traversal is not implemented yet.
           </Text>
+          {MOCK_PRODUCER_RESULTS.map((result) => (
+            <View
+              key={`${result.title}-${result.year}`}
+              style={{
+                marginTop: 10,
+                borderWidth: 1,
+                borderColor: '#374151',
+                borderRadius: 8,
+                padding: 10,
+                backgroundColor: '#111827'
+              }}
+            >
+              <Text style={{ color: '#e5e7eb', fontWeight: '600' }}>{result.title}</Text>
+              <Text style={{ color: '#9ca3af', marginTop: 2 }}>
+                {result.artist} · {result.year}
+              </Text>
+              <Text style={{ color: '#86efac', marginTop: 4, fontSize: 12 }}>{result.label}</Text>
+            </View>
+          ))}
         </View>
       ) : null}
     </View>

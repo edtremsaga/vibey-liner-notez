@@ -99,6 +99,14 @@ if (!producerSearchScreenSource.includes('No producer results found (mock empty 
 if (!producerSearchScreenSource.includes('Producer shell only. Real producer traversal is not implemented yet.')) {
   throw new Error('ProducerSearchScreen does not include explicit mock-only results copy')
 }
+for (const producerRowText of ["Life's Rich Pageant", 'Document', 'Automatic for the People']) {
+  if (!producerSearchScreenSource.includes(producerRowText)) {
+    throw new Error(`ProducerSearchScreen is missing mock producer result row title: ${producerRowText}`)
+  }
+}
+if (!producerSearchScreenSource.includes('Producer match')) {
+  throw new Error('ProducerSearchScreen does not include producer match label in mock rows')
+}
 
 const helpDataSourcesScreenSource = readFileSync(
   path.join(appRoot, 'src/screens/HelpDataSourcesScreen.js'),
