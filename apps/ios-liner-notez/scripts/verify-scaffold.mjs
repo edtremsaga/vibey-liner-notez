@@ -38,9 +38,6 @@ if (!searchScreenSource.includes('getMockAlbums')) {
 if (!searchScreenSource.includes("from 'core-liner-notez'")) {
   throw new Error('SearchScreen does not use stable shared core package import')
 }
-if (!searchScreenSource.includes('Mock album preview (shared core fixture)')) {
-  throw new Error('SearchScreen does not render mock album preview marker')
-}
 if (!searchScreenSource.includes('Artist search input')) {
   throw new Error('SearchScreen does not include artist search input marker')
 }
@@ -55,8 +52,8 @@ const resultsScreenSource = readFileSync(path.join(appRoot, 'src/screens/Results
 if (!resultsScreenSource.includes('albums.map')) {
   throw new Error('ResultsScreen does not render result list from shared fixture data')
 }
-if (!resultsScreenSource.includes('onSelectAlbum')) {
-  throw new Error('ResultsScreen does not wire album selection handler')
+if (!resultsScreenSource.includes('onSelectAlbum(album.albumId)')) {
+  throw new Error('ResultsScreen does not pass albumId-only selection handler')
 }
 if (!resultsScreenSource.includes('No albums found (mock empty state)')) {
   throw new Error('ResultsScreen does not include mock empty state text')
@@ -72,11 +69,20 @@ const albumDetailScreenSource = readFileSync(path.join(appRoot, 'src/screens/Alb
 if (!albumDetailScreenSource.includes('Back to Results')) {
   throw new Error('AlbumDetailScreen does not include back-to-results action')
 }
-if (!albumDetailScreenSource.includes('album.title')) {
-  throw new Error('AlbumDetailScreen does not render selected album data')
-}
 if (!albumDetailScreenSource.includes('Loading mock album detail...')) {
   throw new Error('AlbumDetailScreen does not include mock loading state text')
+}
+if (!albumDetailScreenSource.includes('TRACKLIST_PREVIEW_MARKER')) {
+  throw new Error('AlbumDetailScreen does not include tracklist preview marker')
+}
+if (!albumDetailScreenSource.includes('CREDITS_PREVIEW_MARKER')) {
+  throw new Error('AlbumDetailScreen does not include credits preview marker')
+}
+if (!albumDetailScreenSource.includes('EDITIONS_SOURCES_PREVIEW_MARKER')) {
+  throw new Error('AlbumDetailScreen does not include editions/sources preview marker')
+}
+if (!albumDetailScreenSource.includes('mock not-found state')) {
+  throw new Error('AlbumDetailScreen does not include not-found/unavailable state')
 }
 
 if (!appSource.includes('handleSubmitMockSearch') || !appSource.includes("setRoute('Results')")) {
