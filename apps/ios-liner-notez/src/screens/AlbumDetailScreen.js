@@ -99,9 +99,6 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
             }}
           >
             <Text style={{ color: '#f3f4f6', fontWeight: '600', marginBottom: 8 }}>Tracklist</Text>
-            <Text style={{ color: '#9ca3af', fontSize: 12, marginBottom: 8 }}>
-              TRACKLIST_MOCK_DATA_MARKER
-            </Text>
             {hasTracks ? (
               album.tracks.map((track) => (
                 <View
@@ -133,9 +130,6 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
             }}
           >
             <Text style={{ color: '#f3f4f6', fontWeight: '600', marginBottom: 8 }}>Credits</Text>
-            <Text style={{ color: '#9ca3af', fontSize: 12, marginBottom: 8 }}>
-              CREDITS_MOCK_DATA_MARKER
-            </Text>
             {hasAlbumCredits ? (
               album.credits.albumCredits.slice(0, 3).map((credit, index) => (
                 <Text
@@ -179,9 +173,6 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
           >
             <Text style={{ color: '#f3f4f6', fontWeight: '600', marginBottom: 8 }}>
               Editions & Sources
-            </Text>
-            <Text style={{ color: '#9ca3af', fontSize: 12, marginBottom: 8 }}>
-              EDITIONS_SOURCES_PREVIEW_MARKER
             </Text>
             {hasEditions ? (
               <Text style={{ color: '#d1d5db' }}>
