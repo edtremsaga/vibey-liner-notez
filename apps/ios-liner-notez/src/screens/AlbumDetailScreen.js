@@ -23,6 +23,10 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
     album.credits.albumCredits.length > 0
   const hasEditions = hasAlbum && Array.isArray(album.editions) && album.editions.length > 0
   const hasSources = hasAlbum && Array.isArray(album.sources) && album.sources.length > 0
+  const trackCreditsByTrackId = hasAlbum && album.credits?.trackCredits ? album.credits.trackCredits : {}
+  const hasTrackCredits =
+    hasTracks &&
+    album.tracks.some((track) => Array.isArray(trackCreditsByTrackId[track.trackId]) && trackCreditsByTrackId[track.trackId].length > 0)
 
   return (
     <View>
@@ -129,16 +133,38 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
             }}
           >
             <Text style={{ color: '#f3f4f6', fontWeight: '600', marginBottom: 8 }}>Credits</Text>
-            <Text style={{ color: '#9ca3af', fontSize: 12, marginBottom: 8 }}>CREDITS_PREVIEW_MARKER</Text>
+            <Text style={{ color: '#9ca3af', fontSize: 12, marginBottom: 8 }}>
+              CREDITS_MOCK_DATA_MARKER
+            </Text>
             {hasAlbumCredits ? (
-              album.credits.albumCredits.slice(0, 2).map((credit, index) => (
-                <Text key={`${credit.personName}-${credit.role}-${index}`} style={{ color: '#d1d5db', marginTop: 4 }}>
-                  {credit.personName} — {credit.role}
+              album.credits.albumCredits.slice(0, 3).map((credit, index) => (
+                <Text
+                  key={`album-${credit.personName}-${credit.role}-${index}`}
+                  style={{ color: '#d1d5db', marginTop: 4 }}
+                >
+                  {credit.personName}
+                  {credit.role ? ` — ${credit.role}` : ''}
+                  {credit.instrument ? ` (${credit.instrument})` : ''}
                 </Text>
               ))
-            ) : (
+            ) : null}
+            {hasTrackCredits
+              ? album.tracks.slice(0, 3).map((track) =>
+                  (trackCreditsByTrackId[track.trackId] ?? []).slice(0, 2).map((credit, index) => (
+                    <Text
+                      key={`track-${track.trackId}-${credit.personName}-${credit.role}-${index}`}
+                      style={{ color: '#9ca3af', marginTop: 4 }}
+                    >
+                      {track.title}: {credit.personName}
+                      {credit.role ? ` — ${credit.role}` : ''}
+                      {credit.instrument ? ` (${credit.instrument})` : ''}
+                    </Text>
+                  ))
+                )
+              : null}
+            {!hasAlbumCredits && !hasTrackCredits ? (
               <Text style={{ color: '#9ca3af' }}>Credits preview placeholder</Text>
-            )}
+            ) : null}
           </View>
 
           <View
