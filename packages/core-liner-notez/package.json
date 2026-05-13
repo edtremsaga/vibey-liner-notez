@@ -3,6 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "main": "./src/index.js",
+  "react-native": "./src/index.js",
   "exports": {
     ".": "./src/index.js",
     "./schema/album.v1.json": "./schema/album.v1.json",
