@@ -91,6 +91,34 @@ if (!producerSearchScreenSource.includes('Producer shell only. Real producer tra
   throw new Error('ProducerSearchScreen does not include explicit mock-only results copy')
 }
 
+const helpDataSourcesScreenSource = readFileSync(
+  path.join(appRoot, 'src/screens/HelpDataSourcesScreen.js'),
+  'utf8'
+)
+if (!helpDataSourcesScreenSource.includes('mock-data-only')) {
+  throw new Error('HelpDataSourcesScreen does not include explicit mock-data-only scope copy')
+}
+if (!helpDataSourcesScreenSource.includes('No real API calls are active yet.')) {
+  throw new Error('HelpDataSourcesScreen does not include no-real-API copy')
+}
+if (!helpDataSourcesScreenSource.includes('No producer traversal is implemented yet.')) {
+  throw new Error('HelpDataSourcesScreen does not include no-producer-traversal copy')
+}
+for (const source of ['MusicBrainz', 'Cover Art Archive', 'Wikidata', 'Wikipedia']) {
+  if (!helpDataSourcesScreenSource.includes(source)) {
+    throw new Error(`HelpDataSourcesScreen is missing planned real source: ${source}`)
+  }
+}
+if (!helpDataSourcesScreenSource.includes('We do not invent credits.')) {
+  throw new Error('HelpDataSourcesScreen does not include no-invented-credits trust rule')
+}
+if (
+  !helpDataSourcesScreenSource.includes('unavailable') ||
+  !helpDataSourcesScreenSource.includes('not documented')
+) {
+  throw new Error('HelpDataSourcesScreen does not include missing-data trust rule')
+}
+
 const albumDetailScreenSource = readFileSync(path.join(appRoot, 'src/screens/AlbumDetailScreen.js'), 'utf8')
 if (!albumDetailScreenSource.includes('Back to Results')) {
   throw new Error('AlbumDetailScreen does not include back-to-results action')
