@@ -175,19 +175,22 @@ export function ProducerSearchScreen({ onSelectAlbum }) {
               key={`${result.albumId}-${result.label}-${index}`}
               onPress={() => onSelectAlbum?.(result.albumId)}
               style={{
-                marginTop: 10,
+                marginTop: 8,
                 borderWidth: 1,
                 borderColor: '#374151',
                 borderRadius: 8,
-                padding: 10,
+                paddingVertical: 8,
+                paddingHorizontal: 10,
                 backgroundColor: '#111827'
               }}
             >
-              <Text style={{ color: '#e5e7eb', fontWeight: '600' }}>{result.title}</Text>
-              <Text style={{ color: '#9ca3af', marginTop: 2 }}>
+              <Text style={{ color: '#e5e7eb', fontWeight: '600', fontSize: 16 }}>{result.title}</Text>
+              <Text style={{ color: '#9ca3af', marginTop: 1 }}>
                 {result.artist} · {result.year}
               </Text>
-              <Text style={{ color: '#86efac', marginTop: 4, fontSize: 12 }}>{result.label}</Text>
+              <Text style={{ color: '#a7f3d0', marginTop: 4, fontSize: 12 }}>
+                Producer match: {result.label.replace('Producer match', '').trim() || 'album credits'}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
