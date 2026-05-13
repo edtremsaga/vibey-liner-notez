@@ -78,8 +78,20 @@ if (!albumDetailScreenSource.includes('TRACKLIST_MOCK_DATA_MARKER')) {
 if (!albumDetailScreenSource.includes('track.position') || !albumDetailScreenSource.includes('track.title')) {
   throw new Error('AlbumDetailScreen does not render track number/title from mock data')
 }
-if (!albumDetailScreenSource.includes('CREDITS_PREVIEW_MARKER')) {
-  throw new Error('AlbumDetailScreen does not include credits preview marker')
+if (!albumDetailScreenSource.includes('CREDITS_MOCK_DATA_MARKER')) {
+  throw new Error('AlbumDetailScreen does not include mock credits data marker')
+}
+if (
+  !albumDetailScreenSource.includes('credit.personName') ||
+  !albumDetailScreenSource.includes('credit.role')
+) {
+  throw new Error('AlbumDetailScreen does not render mock credit person/role data')
+}
+if (
+  !albumDetailScreenSource.includes('track.title') ||
+  !albumDetailScreenSource.includes('trackCreditsByTrackId')
+) {
+  throw new Error('AlbumDetailScreen does not render track-associated credit rows')
 }
 if (!albumDetailScreenSource.includes('EDITIONS_SOURCES_PREVIEW_MARKER')) {
   throw new Error('AlbumDetailScreen does not include editions/sources preview marker')
