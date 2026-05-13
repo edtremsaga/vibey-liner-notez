@@ -25,7 +25,7 @@ function ScreenRouter({
     case 'Album Detail':
       return <AlbumDetailScreen album={selectedAlbum} onBackToResults={onBackToResults} />
     case 'Producer Search':
-      return <ProducerSearchScreen />
+      return <ProducerSearchScreen onSelectAlbum={onSelectAlbum} />
     case 'Help / Data Sources':
       return <HelpDataSourcesScreen />
     case 'Search':

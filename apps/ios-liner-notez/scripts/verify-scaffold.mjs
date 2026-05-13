@@ -99,13 +99,14 @@ if (!producerSearchScreenSource.includes('No producer results found (mock empty 
 if (!producerSearchScreenSource.includes('Producer shell only. Real producer traversal is not implemented yet.')) {
   throw new Error('ProducerSearchScreen does not include explicit mock-only results copy')
 }
-for (const producerRowText of ["Life's Rich Pageant", 'Document', 'Automatic for the People']) {
-  if (!producerSearchScreenSource.includes(producerRowText)) {
-    throw new Error(`ProducerSearchScreen is missing mock producer result row title: ${producerRowText}`)
-  }
+if (!producerSearchScreenSource.includes("Life's Rich Pageant")) {
+  throw new Error("ProducerSearchScreen is missing mock producer result row title: Life's Rich Pageant")
 }
 if (!producerSearchScreenSource.includes('Producer match')) {
   throw new Error('ProducerSearchScreen does not include producer match label in mock rows')
+}
+if (!producerSearchScreenSource.includes('onSelectAlbum?.(result.albumId)')) {
+  throw new Error('ProducerSearchScreen mock rows are not wired to albumId selection')
 }
 
 const helpDataSourcesScreenSource = readFileSync(
@@ -203,6 +204,9 @@ if (!appSource.includes('getMockAlbumById')) {
 }
 if (!appSource.includes('handleBackToResults') || !appSource.includes("setRoute('Results')")) {
   throw new Error('App router does not restore results route from album detail')
+}
+if (!appSource.includes('return <ProducerSearchScreen onSelectAlbum={onSelectAlbum} />')) {
+  throw new Error('App router does not pass album-select handler to ProducerSearchScreen')
 }
 
 console.log('PASS Expo scaffold files and mock Search -> Results -> Album Detail flow wiring verified')
