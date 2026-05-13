@@ -99,6 +99,15 @@ if (!albumDetailScreenSource.includes('Editions & Sources')) {
 if (!albumDetailScreenSource.includes('album.editions[0].status') || !albumDetailScreenSource.includes('album.sources[0].sourceName')) {
   throw new Error('AlbumDetailScreen does not render editions/source mock fields')
 }
+if (
+  !albumDetailScreenSource.includes('externalLinks.musicbrainzReleaseGroupUrl') ||
+  !albumDetailScreenSource.includes('externalLinks.musicbrainzSelectedReleaseUrl')
+) {
+  throw new Error('AlbumDetailScreen does not render external link rows from mock data')
+}
+if (!albumDetailScreenSource.includes('MusicBrainz release group')) {
+  throw new Error('AlbumDetailScreen does not include external link labels in Editions & Sources')
+}
 if (!albumDetailScreenSource.includes('mock not-found state')) {
   throw new Error('AlbumDetailScreen does not include not-found/unavailable state')
 }

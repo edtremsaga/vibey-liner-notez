@@ -23,6 +23,13 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
     album.credits.albumCredits.length > 0
   const hasEditions = hasAlbum && Array.isArray(album.editions) && album.editions.length > 0
   const hasSources = hasAlbum && Array.isArray(album.sources) && album.sources.length > 0
+  const externalLinks = hasAlbum && album.externalLinks ? album.externalLinks : {}
+  const externalLinkRows = [
+    ['MusicBrainz release group', externalLinks.musicbrainzReleaseGroupUrl],
+    ['MusicBrainz selected release', externalLinks.musicbrainzSelectedReleaseUrl],
+    ['Wikidata', externalLinks.wikidataUrl],
+    ['Discogs', externalLinks.discogsUrl]
+  ].filter(([, value]) => !!value)
   const trackCreditsByTrackId = hasAlbum && album.credits?.trackCredits ? album.credits.trackCredits : {}
   const hasTrackCredits =
     hasTracks &&
@@ -185,6 +192,17 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
               <Text style={{ color: '#9ca3af', marginTop: 6 }}>Source: {album.sources[0].sourceName}</Text>
             ) : (
               <Text style={{ color: '#9ca3af', marginTop: 6 }}>Source attribution placeholder</Text>
+            )}
+            {externalLinkRows.length > 0 ? (
+              <View style={{ marginTop: 10 }}>
+                {externalLinkRows.map(([label, value]) => (
+                  <Text key={label} style={{ color: '#9ca3af', marginTop: 4 }}>
+                    {label}: {value}
+                  </Text>
+                ))}
+              </View>
+            ) : (
+              <Text style={{ color: '#9ca3af', marginTop: 6 }}>External links unavailable</Text>
             )}
           </View>
         </>
