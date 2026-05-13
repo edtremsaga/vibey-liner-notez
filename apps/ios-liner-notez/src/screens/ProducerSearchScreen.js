@@ -97,61 +97,6 @@ export function ProducerSearchScreen({ onSelectAlbum }) {
         <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Search Mock Producers</Text>
       </TouchableOpacity>
 
-      <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-        <TouchableOpacity
-          accessibilityRole="button"
-          onPress={() => setMockState('loading')}
-          style={{
-            borderWidth: 1,
-            borderColor: mockState === 'loading' ? '#f3f4f6' : '#4b5563',
-            borderRadius: 8,
-            paddingVertical: 8,
-            paddingHorizontal: 10
-          }}
-        >
-          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Loading</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          accessibilityRole="button"
-          onPress={() => setMockState('results')}
-          style={{
-            borderWidth: 1,
-            borderColor: mockState === 'results' ? '#f3f4f6' : '#4b5563',
-            borderRadius: 8,
-            paddingVertical: 8,
-            paddingHorizontal: 10
-          }}
-        >
-          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Results</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          accessibilityRole="button"
-          onPress={() => setMockState('empty')}
-          style={{
-            borderWidth: 1,
-            borderColor: mockState === 'empty' ? '#f3f4f6' : '#4b5563',
-            borderRadius: 8,
-            paddingVertical: 8,
-            paddingHorizontal: 10
-          }}
-        >
-          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Empty</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          accessibilityRole="button"
-          onPress={() => setMockState('error')}
-          style={{
-            borderWidth: 1,
-            borderColor: mockState === 'error' ? '#f3f4f6' : '#4b5563',
-            borderRadius: 8,
-            paddingVertical: 8,
-            paddingHorizontal: 10
-          }}
-        >
-          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Error</Text>
-        </TouchableOpacity>
-      </View>
-
       {showLoading ? (
         <View
           style={{
@@ -247,6 +192,61 @@ export function ProducerSearchScreen({ onSelectAlbum }) {
           ))}
         </View>
       ) : null}
+
+      <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={() => setMockState('loading')}
+          style={{
+            borderWidth: 1,
+            borderColor: mockState === 'loading' ? '#f3f4f6' : '#4b5563',
+            borderRadius: 8,
+            paddingVertical: 8,
+            paddingHorizontal: 10
+          }}
+        >
+          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Loading</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={() => setMockState('results')}
+          style={{
+            borderWidth: 1,
+            borderColor: mockState === 'results' ? '#f3f4f6' : '#4b5563',
+            borderRadius: 8,
+            paddingVertical: 8,
+            paddingHorizontal: 10
+          }}
+        >
+          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Results</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={() => setMockState('empty')}
+          style={{
+            borderWidth: 1,
+            borderColor: mockState === 'empty' ? '#f3f4f6' : '#4b5563',
+            borderRadius: 8,
+            paddingVertical: 8,
+            paddingHorizontal: 10
+          }}
+        >
+          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Empty</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={() => setMockState('error')}
+          style={{
+            borderWidth: 1,
+            borderColor: mockState === 'error' ? '#f3f4f6' : '#4b5563',
+            borderRadius: 8,
+            paddingVertical: 8,
+            paddingHorizontal: 10
+          }}
+        >
+          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Error</Text>
+        </TouchableOpacity>
+      </View>
       </View>
     </ScrollView>
   )
