@@ -4,6 +4,7 @@ import { Text, TouchableOpacity, View } from 'react-native'
 export function ResultsScreen({ albums, onSelectAlbum }) {
   const [mockState, setMockState] = useState('results')
 
+  const showLoading = mockState === 'loading'
   const showResults = mockState === 'results'
   const showEmpty = mockState === 'empty'
   const showError = mockState === 'error'
@@ -13,6 +14,19 @@ export function ResultsScreen({ albums, onSelectAlbum }) {
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Results</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>Mock results only (shared core fixture data).</Text>
       <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={() => setMockState('loading')}
+          style={{
+            borderWidth: 1,
+            borderColor: mockState === 'loading' ? '#f3f4f6' : '#4b5563',
+            borderRadius: 8,
+            paddingVertical: 8,
+            paddingHorizontal: 10
+          }}
+        >
+          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Loading</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           accessibilityRole="button"
           onPress={() => setMockState('results')}
@@ -53,6 +67,24 @@ export function ResultsScreen({ albums, onSelectAlbum }) {
           <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Error</Text>
         </TouchableOpacity>
       </View>
+
+      {showLoading && (
+        <View
+          style={{
+            marginTop: 12,
+            borderWidth: 1,
+            borderColor: '#374151',
+            borderRadius: 10,
+            padding: 12,
+            backgroundColor: '#181a1f'
+          }}
+        >
+          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading mock album results...</Text>
+          <Text style={{ color: '#9ca3af', marginTop: 4 }}>
+            Simulating the in-flight state before results are shown.
+          </Text>
+        </View>
+      )}
 
       {showError && (
         <View
