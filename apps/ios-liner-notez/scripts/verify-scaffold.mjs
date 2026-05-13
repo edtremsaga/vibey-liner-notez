@@ -41,8 +41,14 @@ if (!searchScreenSource.includes("from 'core-liner-notez'")) {
 if (!searchScreenSource.includes('Mock album preview (shared core fixture)')) {
   throw new Error('SearchScreen does not render mock album preview marker')
 }
-if (!searchScreenSource.includes('View Mock Results')) {
-  throw new Error('SearchScreen does not include View Mock Results action')
+if (!searchScreenSource.includes('Artist search input')) {
+  throw new Error('SearchScreen does not include artist search input marker')
+}
+if (!searchScreenSource.includes('Search Mock Albums')) {
+  throw new Error('SearchScreen does not include mock search action')
+}
+if (!searchScreenSource.includes('Please enter an artist name to continue.')) {
+  throw new Error('SearchScreen does not include empty-input validation message')
 }
 
 const resultsScreenSource = readFileSync(path.join(appRoot, 'src/screens/ResultsScreen.js'), 'utf8')
@@ -73,14 +79,17 @@ if (!albumDetailScreenSource.includes('Loading mock album detail...')) {
   throw new Error('AlbumDetailScreen does not include mock loading state text')
 }
 
-if (!appSource.includes('handleSelectAlbum') || !appSource.includes('setRoute(\'Album Detail\')')) {
+if (!appSource.includes('handleSubmitMockSearch') || !appSource.includes("setRoute('Results')")) {
+  throw new Error('App router does not navigate from search to results via mock submit flow')
+}
+if (!appSource.includes('handleSelectAlbum') || !appSource.includes("setRoute('Album Detail')")) {
   throw new Error('App router does not navigate from results to album detail')
 }
 if (!appSource.includes('getMockAlbumById')) {
   throw new Error('App router does not use shared core getMockAlbumById accessor')
 }
-if (!appSource.includes('handleBackToResults') || !appSource.includes('setRoute(\'Results\')')) {
+if (!appSource.includes('handleBackToResults') || !appSource.includes("setRoute('Results')")) {
   throw new Error('App router does not restore results route from album detail')
 }
 
-console.log('PASS Expo scaffold files, route shell, and Search -> Results -> Album Detail mock flow wiring verified')
+console.log('PASS Expo scaffold files and mock Search -> Results -> Album Detail flow wiring verified')
