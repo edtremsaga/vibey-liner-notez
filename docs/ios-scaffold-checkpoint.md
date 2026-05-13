@@ -2,15 +2,18 @@
 
 ## Current Stable State
 - iOS scaffold is stable on `main` for mock-data-only development.
+- Current `main` includes `8d9b67e Update iOS search scaffold copy`.
 - App runs in iOS Simulator.
 - Search -> Results -> Album Detail flow works.
-- Producer Search shell exists.
+- Producer Search shell works.
 - Producer input works.
-- Mock producer result rows are visible.
+- Producer Search result rows are visible/readable.
 - Tapping a mock producer result opens Album Detail.
 - Album Detail renders selected mock album content.
-- Help / Data Sources content exists.
-- Album Detail currently shows Tracklist, Credits, Editions, and External Links sections.
+- Album Detail shows Tracklist, Credits, Selected Edition, and External Links.
+- Help / Data Sources shows mock-scope, planned sources, and trust-rule content.
+- Internal marker strings are removed from visible UI.
+- Outdated “Placeholder screen for album search flow” copy is removed.
 
 ## Product Scope Status
 - No real APIs are active yet.
@@ -29,7 +32,7 @@ Use direct-to-main for small, low-risk iOS scaffold edits limited to:
 - `apps/ios-liner-notez/src/screens/*`
 - `apps/ios-liner-notez/scripts/verify-scaffold.mjs`
 
-Tier 1 verification:
+Tier 1 verification only for those changes:
 - `npm run verify:ios-scaffold`
 - `cd apps/ios-liner-notez && CI=1 npx expo export --platform ios`
 
