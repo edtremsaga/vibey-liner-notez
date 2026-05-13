@@ -21,7 +21,9 @@ export function SearchScreen({ onSubmitMockSearch }) {
   return (
     <View>
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Search</Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>Placeholder screen for album search flow.</Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Search mock album data while the native iOS flow is being built.
+      </Text>
       <View
         style={{
           marginTop: 16,
