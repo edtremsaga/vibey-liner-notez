@@ -95,13 +95,23 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
             }}
           >
             <Text style={{ color: '#f3f4f6', fontWeight: '600', marginBottom: 8 }}>Tracklist</Text>
-            <Text style={{ color: '#9ca3af', fontSize: 12, marginBottom: 8 }}>TRACKLIST_PREVIEW_MARKER</Text>
+            <Text style={{ color: '#9ca3af', fontSize: 12, marginBottom: 8 }}>
+              TRACKLIST_MOCK_DATA_MARKER
+            </Text>
             {hasTracks ? (
               album.tracks.map((track) => (
-                <Text key={track.trackId} style={{ color: '#d1d5db', marginTop: 4 }}>
-                  {track.position}. {track.title}
-                  {formatDuration(track.durationMs) ? ` (${formatDuration(track.durationMs)})` : ''}
-                </Text>
+                <View
+                  key={track.trackId}
+                  style={{ marginTop: 4, flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}
+                >
+                  <Text style={{ color: '#d1d5db', flex: 1 }}>
+                    {track.position ? `${track.position}. ` : ''}
+                    {track.title}
+                  </Text>
+                  {formatDuration(track.durationMs) ? (
+                    <Text style={{ color: '#9ca3af' }}>{formatDuration(track.durationMs)}</Text>
+                  ) : null}
+                </View>
               ))
             ) : (
               <Text style={{ color: '#9ca3af' }}>Tracklist preview placeholder</Text>

@@ -72,8 +72,11 @@ if (!albumDetailScreenSource.includes('Back to Results')) {
 if (!albumDetailScreenSource.includes('Loading mock album detail...')) {
   throw new Error('AlbumDetailScreen does not include mock loading state text')
 }
-if (!albumDetailScreenSource.includes('TRACKLIST_PREVIEW_MARKER')) {
-  throw new Error('AlbumDetailScreen does not include tracklist preview marker')
+if (!albumDetailScreenSource.includes('TRACKLIST_MOCK_DATA_MARKER')) {
+  throw new Error('AlbumDetailScreen does not include mock tracklist data marker')
+}
+if (!albumDetailScreenSource.includes('track.position') || !albumDetailScreenSource.includes('track.title')) {
+  throw new Error('AlbumDetailScreen does not render track number/title from mock data')
 }
 if (!albumDetailScreenSource.includes('CREDITS_PREVIEW_MARKER')) {
   throw new Error('AlbumDetailScreen does not include credits preview marker')
