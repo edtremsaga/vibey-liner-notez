@@ -1,13 +1,34 @@
 import React, { useState } from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 
+function formatDuration(durationMs) {
+  if (!durationMs || Number.isNaN(durationMs)) {
+    return null
+  }
+  const totalSeconds = Math.floor(durationMs / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = String(totalSeconds % 60).padStart(2, '0')
+  return `${minutes}:${seconds}`
+}
+
 export function AlbumDetailScreen({ album, onBackToResults }) {
   const [showLoading, setShowLoading] = useState(false)
+
+  const hasAlbum = !!album
+  const hasTracks = hasAlbum && Array.isArray(album.tracks) && album.tracks.length > 0
+  const hasAlbumCredits =
+    hasAlbum &&
+    album.credits &&
+    Array.isArray(album.credits.albumCredits) &&
+    album.credits.albumCredits.length > 0
+  const hasEditions = hasAlbum && Array.isArray(album.editions) && album.editions.length > 0
+  const hasSources = hasAlbum && Array.isArray(album.sources) && album.sources.length > 0
 
   return (
     <View>
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Album Detail</Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>Placeholder screen for album details and liner-note sections.</Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>Mock detail layout preview (iOS scaffold only).</Text>
+
       <TouchableOpacity
         accessibilityRole="button"
         onPress={() => setShowLoading((current) => !current)}
@@ -25,6 +46,7 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
           {showLoading ? 'Hide Loading' : 'Show Loading'}
         </Text>
       </TouchableOpacity>
+
       {showLoading && (
         <View
           style={{
@@ -42,24 +64,121 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
           </Text>
         </View>
       )}
-      {album ? (
+
+      {hasAlbum ? (
+        <>
+          <View
+            style={{
+              marginTop: 16,
+              borderWidth: 1,
+              borderColor: '#374151',
+              borderRadius: 10,
+              padding: 12,
+              backgroundColor: '#181a1f'
+            }}
+          >
+            <Text style={{ color: '#f3f4f6', fontSize: 20, fontWeight: '700' }}>{album.title}</Text>
+            <Text style={{ color: '#d1d5db', marginTop: 6, fontSize: 16 }}>{album.artistName}</Text>
+            <Text style={{ color: '#9ca3af', marginTop: 6 }}>
+              {album.releaseYear} • {album.albumType}
+            </Text>
+          </View>
+
+          <View
+            style={{
+              marginTop: 12,
+              borderWidth: 1,
+              borderColor: '#374151',
+              borderRadius: 10,
+              padding: 12,
+              backgroundColor: '#181a1f'
+            }}
+          >
+            <Text style={{ color: '#f3f4f6', fontWeight: '600', marginBottom: 8 }}>Tracklist</Text>
+            <Text style={{ color: '#9ca3af', fontSize: 12, marginBottom: 8 }}>TRACKLIST_PREVIEW_MARKER</Text>
+            {hasTracks ? (
+              album.tracks.map((track) => (
+                <Text key={track.trackId} style={{ color: '#d1d5db', marginTop: 4 }}>
+                  {track.position}. {track.title}
+                  {formatDuration(track.durationMs) ? ` (${formatDuration(track.durationMs)})` : ''}
+                </Text>
+              ))
+            ) : (
+              <Text style={{ color: '#9ca3af' }}>Tracklist preview placeholder</Text>
+            )}
+          </View>
+
+          <View
+            style={{
+              marginTop: 12,
+              borderWidth: 1,
+              borderColor: '#374151',
+              borderRadius: 10,
+              padding: 12,
+              backgroundColor: '#181a1f'
+            }}
+          >
+            <Text style={{ color: '#f3f4f6', fontWeight: '600', marginBottom: 8 }}>Credits</Text>
+            <Text style={{ color: '#9ca3af', fontSize: 12, marginBottom: 8 }}>CREDITS_PREVIEW_MARKER</Text>
+            {hasAlbumCredits ? (
+              album.credits.albumCredits.slice(0, 2).map((credit, index) => (
+                <Text key={`${credit.personName}-${credit.role}-${index}`} style={{ color: '#d1d5db', marginTop: 4 }}>
+                  {credit.personName} — {credit.role}
+                </Text>
+              ))
+            ) : (
+              <Text style={{ color: '#9ca3af' }}>Credits preview placeholder</Text>
+            )}
+          </View>
+
+          <View
+            style={{
+              marginTop: 12,
+              borderWidth: 1,
+              borderColor: '#374151',
+              borderRadius: 10,
+              padding: 12,
+              backgroundColor: '#181a1f'
+            }}
+          >
+            <Text style={{ color: '#f3f4f6', fontWeight: '600', marginBottom: 8 }}>
+              Editions & Sources
+            </Text>
+            <Text style={{ color: '#9ca3af', fontSize: 12, marginBottom: 8 }}>
+              EDITIONS_SOURCES_PREVIEW_MARKER
+            </Text>
+            {hasEditions ? (
+              <Text style={{ color: '#d1d5db' }}>
+                Edition: {album.editions[0].status} • {album.editions[0].country} • {album.editions[0].date}
+              </Text>
+            ) : (
+              <Text style={{ color: '#9ca3af' }}>Editions preview placeholder</Text>
+            )}
+            {hasSources ? (
+              <Text style={{ color: '#9ca3af', marginTop: 6 }}>Source: {album.sources[0].sourceName}</Text>
+            ) : (
+              <Text style={{ color: '#9ca3af', marginTop: 6 }}>Source attribution placeholder</Text>
+            )}
+          </View>
+        </>
+      ) : (
         <View
           style={{
-            marginTop: 16,
+            marginTop: 12,
             borderWidth: 1,
-            borderColor: '#374151',
+            borderColor: '#7f1d1d',
             borderRadius: 10,
             padding: 12,
-            backgroundColor: '#181a1f'
+            backgroundColor: '#2a1215'
           }}
         >
-          <Text style={{ color: '#f3f4f6', fontSize: 18, fontWeight: '600' }}>{album.title}</Text>
-          <Text style={{ color: '#d1d5db', marginTop: 4 }}>{album.artistName}</Text>
-          <Text style={{ color: '#9ca3af', marginTop: 4 }}>{album.releaseYear}</Text>
+          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Album unavailable (mock not-found state)</Text>
+          <Text style={{ color: '#fca5a5', marginTop: 4 }}>
+            We could not find this album in the shared mock fixture.
+          </Text>
         </View>
-      ) : (
-        <Text style={{ color: '#9ca3af', marginTop: 12 }}>No album selected yet.</Text>
       )}
+
       <TouchableOpacity
         accessibilityRole="button"
         onPress={onBackToResults}
