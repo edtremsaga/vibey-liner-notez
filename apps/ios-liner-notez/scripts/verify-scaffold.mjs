@@ -104,6 +104,9 @@ const helpDataSourcesScreenSource = readFileSync(
   path.join(appRoot, 'src/screens/HelpDataSourcesScreen.js'),
   'utf8'
 )
+if (helpDataSourcesScreenSource.includes('Placeholder screen for help, attribution, and data-source disclosures.')) {
+  throw new Error('HelpDataSourcesScreen still contains placeholder-only copy')
+}
 if (!helpDataSourcesScreenSource.includes('mock-data-only')) {
   throw new Error('HelpDataSourcesScreen does not include explicit mock-data-only scope copy')
 }
