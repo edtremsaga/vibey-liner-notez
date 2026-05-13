@@ -23,6 +23,21 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
     album.credits.albumCredits.length > 0
   const hasEditions = hasAlbum && Array.isArray(album.editions) && album.editions.length > 0
   const hasSources = hasAlbum && Array.isArray(album.sources) && album.sources.length > 0
+  const selectedEdition = hasEditions ? album.editions[0] : null
+  const selectedEditionLabel = selectedEdition
+    ? selectedEdition.label || selectedEdition.editionId || album.title
+    : null
+  const selectedEditionRows = selectedEdition
+    ? [
+        ['Country', selectedEdition.country],
+        ['Date', selectedEdition.date],
+        ['Status', selectedEdition.status],
+        ['Format', selectedEdition.formatSummary],
+        ['Label', selectedEdition.label],
+        ['Catalog #', selectedEdition.catalogNumber],
+        ['Barcode', selectedEdition.barcode]
+      ].filter(([, value]) => !!value)
+    : []
   const externalLinks = hasAlbum && album.externalLinks ? album.externalLinks : {}
   const externalLinkRows = [
     ['MusicBrainz release group', externalLinks.musicbrainzReleaseGroupUrl],
@@ -181,10 +196,16 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
             <Text style={{ color: '#f3f4f6', fontWeight: '600', marginBottom: 8 }}>
               Editions & Sources
             </Text>
-            {hasEditions ? (
-              <Text style={{ color: '#d1d5db' }}>
-                Edition: {album.editions[0].status} • {album.editions[0].country} • {album.editions[0].date}
-              </Text>
+            {selectedEdition ? (
+              <View>
+                <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Selected Edition</Text>
+                <Text style={{ color: '#d1d5db', marginTop: 4 }}>{selectedEditionLabel}</Text>
+                {selectedEditionRows.map(([label, value]) => (
+                  <Text key={label} style={{ color: '#9ca3af', marginTop: 4 }}>
+                    {label}: {value}
+                  </Text>
+                ))}
+              </View>
             ) : (
               <Text style={{ color: '#9ca3af' }}>Editions preview placeholder</Text>
             )}

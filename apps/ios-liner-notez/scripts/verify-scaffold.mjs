@@ -96,8 +96,14 @@ if (
 if (!albumDetailScreenSource.includes('Editions & Sources')) {
   throw new Error('AlbumDetailScreen does not include Editions & Sources section label')
 }
-if (!albumDetailScreenSource.includes('album.editions[0].status') || !albumDetailScreenSource.includes('album.sources[0].sourceName')) {
-  throw new Error('AlbumDetailScreen does not render editions/source mock fields')
+if (!albumDetailScreenSource.includes('Selected Edition') || !albumDetailScreenSource.includes('selectedEditionRows')) {
+  throw new Error('AlbumDetailScreen does not render compact selected edition section')
+}
+if (!albumDetailScreenSource.includes("['Country', selectedEdition.country]") || !albumDetailScreenSource.includes("['Format', selectedEdition.formatSummary]")) {
+  throw new Error('AlbumDetailScreen does not render selected edition field rows')
+}
+if (!albumDetailScreenSource.includes('album.sources[0].sourceName')) {
+  throw new Error('AlbumDetailScreen does not render source attribution mock field')
 }
 if (
   !albumDetailScreenSource.includes('externalLinks.musicbrainzReleaseGroupUrl') ||
