@@ -52,7 +52,7 @@ const resultsScreenSource = readFileSync(path.join(appRoot, 'src/screens/Results
 if (!resultsScreenSource.includes('albums.map')) {
   throw new Error('ResultsScreen does not render result list from shared fixture data')
 }
-if (!resultsScreenSource.includes('onSelectAlbum(album.albumId)')) {
+if (!resultsScreenSource.includes('onSelectAlbum(albumId)')) {
   throw new Error('ResultsScreen does not pass albumId-only selection handler')
 }
 if (!resultsScreenSource.includes('No albums found (mock empty state)')) {

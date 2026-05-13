@@ -123,25 +123,32 @@ export function ResultsScreen({ albums, onSelectAlbum }) {
       )}
 
       {showResults &&
-        albums.map((album) => (
-          <TouchableOpacity
-            key={album.albumId}
-            accessibilityRole="button"
-            onPress={() => onSelectAlbum(album.albumId)}
-            style={{
-              marginTop: 12,
-              borderWidth: 1,
-              borderColor: '#374151',
-              borderRadius: 10,
-              padding: 12,
-              backgroundColor: '#181a1f'
-            }}
-          >
-            <Text style={{ color: '#f3f4f6', fontWeight: '600', fontSize: 16 }}>{album.title}</Text>
-            <Text style={{ color: '#d1d5db', marginTop: 4 }}>{album.artistName}</Text>
-            <Text style={{ color: '#9ca3af', marginTop: 4 }}>{album.releaseYear}</Text>
-          </TouchableOpacity>
-        ))}
+        albums.map((album) => {
+          const albumId = album?.albumId ?? album?.id ?? null
+          if (!albumId) {
+            return null
+          }
+
+          return (
+            <TouchableOpacity
+              key={albumId}
+              accessibilityRole="button"
+              onPress={() => onSelectAlbum(albumId)}
+              style={{
+                marginTop: 12,
+                borderWidth: 1,
+                borderColor: '#374151',
+                borderRadius: 10,
+                padding: 12,
+                backgroundColor: '#181a1f'
+              }}
+            >
+              <Text style={{ color: '#f3f4f6', fontWeight: '600', fontSize: 16 }}>{album.title}</Text>
+              <Text style={{ color: '#d1d5db', marginTop: 4 }}>{album.artistName}</Text>
+              <Text style={{ color: '#9ca3af', marginTop: 4 }}>{album.releaseYear}</Text>
+            </TouchableOpacity>
+          )
+        })}
     </View>
   )
 }

@@ -12,11 +12,13 @@ const ROUTES = ['Search', 'Results', 'Album Detail', 'Producer Search', 'Help / 
 function ScreenRouter({
   route,
   mockResults,
-  selectedAlbum,
+  selectedAlbumId,
   onSubmitMockSearch,
   onSelectAlbum,
   onBackToResults
 }) {
+  const selectedAlbum = selectedAlbumId ? getMockAlbumById(selectedAlbumId) : null
+
   switch (route) {
     case 'Results':
       return <ResultsScreen albums={mockResults} onSelectAlbum={onSelectAlbum} />
@@ -35,7 +37,7 @@ function ScreenRouter({
 export default function App() {
   const [route, setRoute] = useState('Search')
   const [mockResults] = useState(getMockAlbums())
-  const [selectedAlbum, setSelectedAlbum] = useState(null)
+  const [selectedAlbumId, setSelectedAlbumId] = useState(null)
   const [lastMockSearchArtist, setLastMockSearchArtist] = useState('')
   const tabs = useMemo(() => ROUTES, [])
 
@@ -47,7 +49,7 @@ export default function App() {
   function handleSelectAlbum(albumId) {
     const selected = getMockAlbumById(albumId)
     if (selected) {
-      setSelectedAlbum(selected)
+      setSelectedAlbumId(selected.albumId)
       setRoute('Album Detail')
     }
   }
@@ -80,7 +82,7 @@ export default function App() {
         <ScreenRouter
           route={route}
           mockResults={mockResults}
-          selectedAlbum={selectedAlbum}
+          selectedAlbumId={selectedAlbumId}
           onSubmitMockSearch={handleSubmitMockSearch}
           onSelectAlbum={handleSelectAlbum}
           onBackToResults={handleBackToResults}
