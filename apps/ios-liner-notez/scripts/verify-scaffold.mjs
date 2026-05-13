@@ -30,6 +30,15 @@ for (const route of requiredRoutes) {
     throw new Error(`Route not found in App.js: ${route}`)
   }
 }
+if (!appSource.includes("import { HelpDataSourcesScreen } from './screens/HelpDataSourcesScreen'")) {
+  throw new Error('App.js does not import HelpDataSourcesScreen from src/screens')
+}
+if (!appSource.includes("case 'Help / Data Sources':") || !appSource.includes('return <HelpDataSourcesScreen />')) {
+  throw new Error('App.js does not route Help / Data Sources to HelpDataSourcesScreen')
+}
+if (appSource.includes('Placeholder screen for help, attribution, and data-source disclosures.')) {
+  throw new Error('App.js contains inline Help placeholder copy instead of screen-based Help content')
+}
 
 const searchScreenSource = readFileSync(path.join(appRoot, 'src/screens/SearchScreen.js'), 'utf8')
 if (!searchScreenSource.includes('getMockAlbums')) {
