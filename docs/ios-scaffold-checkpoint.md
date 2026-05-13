@@ -5,6 +5,10 @@
 - App runs in iOS Simulator.
 - Search -> Results -> Album Detail flow works.
 - Producer Search shell exists.
+- Producer input works.
+- Mock producer result rows are visible.
+- Tapping a mock producer result opens Album Detail.
+- Album Detail renders selected mock album content.
 - Help / Data Sources content exists.
 - Album Detail currently shows Tracklist, Credits, Editions, and External Links sections.
 
@@ -13,10 +17,10 @@
 - No producer traversal is implemented yet.
 
 ## Runtime Lesson Learned
-- Stale Metro state can look like a code bug.
-- Before diagnosing UI regressions, do a hard restart:
+- If the simulator does not reflect source changes, stale Metro/Expo session state can look like a code bug.
+- Before assuming a code bug, do a hard restart:
   - `npm start -- --clear`
-  - restart Expo Go / Simulator session
+  - fully restart Expo Go / iOS Simulator session
 
 ## Workflow Rules
 
