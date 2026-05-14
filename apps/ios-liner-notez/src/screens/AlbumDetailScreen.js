@@ -52,7 +52,7 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
 
   return (
     <View>
-      <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Album Detail</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 30, fontWeight: '500' }}>Album Detail</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>Mock detail layout preview (iOS scaffold only).</Text>
 
       <TouchableOpacity
@@ -95,17 +95,17 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
         <>
           <View
             style={{
-              marginTop: 16,
+              marginTop: 14,
               borderWidth: 1,
               borderColor: '#374151',
               borderRadius: 10,
-              padding: 12,
+              padding: 14,
               backgroundColor: '#181a1f'
             }}
           >
             <Text style={{ color: '#f3f4f6', fontSize: 20, fontWeight: '700' }}>{album.title}</Text>
-            <Text style={{ color: '#d1d5db', marginTop: 6, fontSize: 16 }}>{album.artistName}</Text>
-            <Text style={{ color: '#9ca3af', marginTop: 6 }}>
+            <Text style={{ color: '#d1d5db', marginTop: 4, fontSize: 16 }}>{album.artistName}</Text>
+            <Text style={{ color: '#9ca3af', marginTop: 4, fontSize: 15 }}>
               {album.releaseYear} • {album.albumType}
             </Text>
           </View>
@@ -116,23 +116,23 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
               borderWidth: 1,
               borderColor: '#374151',
               borderRadius: 10,
-              padding: 12,
+              padding: 14,
               backgroundColor: '#181a1f'
             }}
           >
-            <Text style={{ color: '#f3f4f6', fontWeight: '600', marginBottom: 8 }}>Tracklist</Text>
+            <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17, marginBottom: 10 }}>Tracklist</Text>
             {hasTracks ? (
               album.tracks.map((track) => (
                 <View
                   key={track.trackId}
-                  style={{ marginTop: 4, flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}
+                  style={{ marginTop: 2, paddingVertical: 4, flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}
                 >
-                  <Text style={{ color: '#d1d5db', flex: 1 }}>
+                  <Text style={{ color: '#d1d5db', flex: 1, fontSize: 15 }}>
                     {track.position ? `${track.position}. ` : ''}
                     {track.title}
                   </Text>
                   {formatDuration(track.durationMs) ? (
-                    <Text style={{ color: '#9ca3af' }}>{formatDuration(track.durationMs)}</Text>
+                    <Text style={{ color: '#9ca3af', fontSize: 14 }}>{formatDuration(track.durationMs)}</Text>
                   ) : null}
                 </View>
               ))
@@ -147,16 +147,16 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
               borderWidth: 1,
               borderColor: '#374151',
               borderRadius: 10,
-              padding: 12,
+              padding: 14,
               backgroundColor: '#181a1f'
             }}
           >
-            <Text style={{ color: '#f3f4f6', fontWeight: '600', marginBottom: 8 }}>Credits</Text>
+            <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17, marginBottom: 10 }}>Credits</Text>
             {hasAlbumCredits ? (
               album.credits.albumCredits.slice(0, 3).map((credit, index) => (
                 <Text
                   key={`album-${credit.personName}-${credit.role}-${index}`}
-                  style={{ color: '#d1d5db', marginTop: 4 }}
+                  style={{ color: '#d1d5db', marginTop: 2, fontSize: 15 }}
                 >
                   {credit.personName}
                   {credit.role ? ` — ${credit.role}` : ''}
@@ -169,7 +169,7 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
                   (trackCreditsByTrackId[track.trackId] ?? []).slice(0, 2).map((credit, index) => (
                     <Text
                       key={`track-${track.trackId}-${credit.personName}-${credit.role}-${index}`}
-                      style={{ color: '#9ca3af', marginTop: 4 }}
+                      style={{ color: '#9ca3af', marginTop: 2, fontSize: 14 }}
                     >
                       {track.title}: {credit.personName}
                       {credit.role ? ` — ${credit.role}` : ''}
@@ -189,19 +189,19 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
               borderWidth: 1,
               borderColor: '#374151',
               borderRadius: 10,
-              padding: 12,
+              padding: 14,
               backgroundColor: '#181a1f'
             }}
           >
-            <Text style={{ color: '#f3f4f6', fontWeight: '600', marginBottom: 8 }}>
+            <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17, marginBottom: 10 }}>
               Editions & Sources
             </Text>
             {selectedEdition ? (
               <View>
-                <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Selected Edition</Text>
-                <Text style={{ color: '#d1d5db', marginTop: 4 }}>{selectedEditionLabel}</Text>
+                <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Selected Edition</Text>
+                <Text style={{ color: '#d1d5db', marginTop: 4, fontSize: 15 }}>{selectedEditionLabel}</Text>
                 {selectedEditionRows.map(([label, value]) => (
-                  <Text key={label} style={{ color: '#9ca3af', marginTop: 4 }}>
+                  <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>
                     {label}: {value}
                   </Text>
                 ))}
@@ -210,14 +210,16 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
               <Text style={{ color: '#9ca3af' }}>Editions preview placeholder</Text>
             )}
             {hasSources ? (
-              <Text style={{ color: '#9ca3af', marginTop: 6 }}>Source: {album.sources[0].sourceName}</Text>
+              <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>
+                Source: {album.sources[0].sourceName}
+              </Text>
             ) : (
-              <Text style={{ color: '#9ca3af', marginTop: 6 }}>Source attribution placeholder</Text>
+              <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>Source attribution placeholder</Text>
             )}
             {externalLinkRows.length > 0 ? (
-              <View style={{ marginTop: 10 }}>
+              <View style={{ marginTop: 8 }}>
                 {externalLinkRows.map(([label, value]) => (
-                  <Text key={label} style={{ color: '#9ca3af', marginTop: 4 }}>
+                  <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>
                     {label}: {value}
                   </Text>
                 ))}
