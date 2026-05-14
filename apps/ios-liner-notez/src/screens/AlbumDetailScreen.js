@@ -13,6 +13,9 @@ function formatDuration(durationMs) {
 
 export function AlbumDetailScreen({ album, onBackToResults }) {
   const [showLoading, setShowLoading] = useState(false)
+  const [showTracklist, setShowTracklist] = useState(true)
+  const [showCredits, setShowCredits] = useState(true)
+  const [showEditionsSources, setShowEditionsSources] = useState(true)
 
   const hasAlbum = !!album
   const hasTracks = hasAlbum && Array.isArray(album.tracks) && album.tracks.length > 0
@@ -120,25 +123,34 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
               backgroundColor: '#181a1f'
             }}
           >
-            <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17, marginBottom: 10 }}>Tracklist</Text>
-            {hasTracks ? (
-              album.tracks.map((track) => (
-                <View
-                  key={track.trackId}
-                  style={{ marginTop: 2, paddingVertical: 4, flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}
-                >
-                  <Text style={{ color: '#d1d5db', flex: 1, fontSize: 15 }}>
-                    {track.position ? `${track.position}. ` : ''}
-                    {track.title}
-                  </Text>
-                  {formatDuration(track.durationMs) ? (
-                    <Text style={{ color: '#9ca3af', fontSize: 14 }}>{formatDuration(track.durationMs)}</Text>
-                  ) : null}
-                </View>
-              ))
-            ) : (
-              <Text style={{ color: '#9ca3af' }}>Tracklist preview placeholder</Text>
-            )}
+            <TouchableOpacity
+              accessibilityRole="button"
+              onPress={() => setShowTracklist((current) => !current)}
+              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+            >
+              <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Tracklist</Text>
+              <Text style={{ color: '#9ca3af', fontSize: 14 }}>{showTracklist ? 'Hide' : 'Show'}</Text>
+            </TouchableOpacity>
+            {showTracklist ? (
+              hasTracks ? (
+                album.tracks.map((track) => (
+                  <View
+                    key={track.trackId}
+                    style={{ marginTop: 2, paddingVertical: 4, flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}
+                  >
+                    <Text style={{ color: '#d1d5db', flex: 1, fontSize: 15 }}>
+                      {track.position ? `${track.position}. ` : ''}
+                      {track.title}
+                    </Text>
+                    {formatDuration(track.durationMs) ? (
+                      <Text style={{ color: '#9ca3af', fontSize: 14 }}>{formatDuration(track.durationMs)}</Text>
+                    ) : null}
+                  </View>
+                ))
+              ) : (
+                <Text style={{ color: '#9ca3af', marginTop: 8 }}>Tracklist preview placeholder</Text>
+              )
+            ) : null}
           </View>
 
           <View
@@ -151,35 +163,46 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
               backgroundColor: '#181a1f'
             }}
           >
-            <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17, marginBottom: 10 }}>Credits</Text>
-            {hasAlbumCredits ? (
-              album.credits.albumCredits.slice(0, 3).map((credit, index) => (
-                <Text
-                  key={`album-${credit.personName}-${credit.role}-${index}`}
-                  style={{ color: '#d1d5db', marginTop: 2, fontSize: 15 }}
-                >
-                  {credit.personName}
-                  {credit.role ? ` — ${credit.role}` : ''}
-                  {credit.instrument ? ` (${credit.instrument})` : ''}
-                </Text>
-              ))
-            ) : null}
-            {hasTrackCredits
-              ? album.tracks.slice(0, 3).map((track) =>
-                  (trackCreditsByTrackId[track.trackId] ?? []).slice(0, 2).map((credit, index) => (
+            <TouchableOpacity
+              accessibilityRole="button"
+              onPress={() => setShowCredits((current) => !current)}
+              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+            >
+              <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Credits</Text>
+              <Text style={{ color: '#9ca3af', fontSize: 14 }}>{showCredits ? 'Hide' : 'Show'}</Text>
+            </TouchableOpacity>
+            {showCredits ? (
+              <>
+                {hasAlbumCredits ? (
+                  album.credits.albumCredits.slice(0, 3).map((credit, index) => (
                     <Text
-                      key={`track-${track.trackId}-${credit.personName}-${credit.role}-${index}`}
-                      style={{ color: '#9ca3af', marginTop: 2, fontSize: 14 }}
+                      key={`album-${credit.personName}-${credit.role}-${index}`}
+                      style={{ color: '#d1d5db', marginTop: 2, fontSize: 15 }}
                     >
-                      {track.title}: {credit.personName}
+                      {credit.personName}
                       {credit.role ? ` — ${credit.role}` : ''}
                       {credit.instrument ? ` (${credit.instrument})` : ''}
                     </Text>
                   ))
-                )
-              : null}
-            {!hasAlbumCredits && !hasTrackCredits ? (
-              <Text style={{ color: '#9ca3af' }}>Credits preview placeholder</Text>
+                ) : null}
+                {hasTrackCredits
+                  ? album.tracks.slice(0, 3).map((track) =>
+                      (trackCreditsByTrackId[track.trackId] ?? []).slice(0, 2).map((credit, index) => (
+                        <Text
+                          key={`track-${track.trackId}-${credit.personName}-${credit.role}-${index}`}
+                          style={{ color: '#9ca3af', marginTop: 2, fontSize: 14 }}
+                        >
+                          {track.title}: {credit.personName}
+                          {credit.role ? ` — ${credit.role}` : ''}
+                          {credit.instrument ? ` (${credit.instrument})` : ''}
+                        </Text>
+                      ))
+                    )
+                  : null}
+                {!hasAlbumCredits && !hasTrackCredits ? (
+                  <Text style={{ color: '#9ca3af', marginTop: 8 }}>Credits preview placeholder</Text>
+                ) : null}
+              </>
             ) : null}
           </View>
 
@@ -193,40 +216,51 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
               backgroundColor: '#181a1f'
             }}
           >
-            <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17, marginBottom: 10 }}>
-              Editions & Sources
-            </Text>
-            {selectedEdition ? (
-              <View>
-                <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Selected Edition</Text>
-                <Text style={{ color: '#d1d5db', marginTop: 4, fontSize: 15 }}>{selectedEditionLabel}</Text>
-                {selectedEditionRows.map(([label, value]) => (
-                  <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>
-                    {label}: {value}
-                  </Text>
-                ))}
-              </View>
-            ) : (
-              <Text style={{ color: '#9ca3af' }}>Editions preview placeholder</Text>
-            )}
-            {hasSources ? (
-              <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>
-                Source: {album.sources[0].sourceName}
+            <TouchableOpacity
+              accessibilityRole="button"
+              onPress={() => setShowEditionsSources((current) => !current)}
+              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+            >
+              <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>
+                Editions & Sources
               </Text>
-            ) : (
-              <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>Source attribution placeholder</Text>
-            )}
-            {externalLinkRows.length > 0 ? (
-              <View style={{ marginTop: 8 }}>
-                {externalLinkRows.map(([label, value]) => (
-                  <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>
-                    {label}: {value}
+              <Text style={{ color: '#9ca3af', fontSize: 14 }}>{showEditionsSources ? 'Hide' : 'Show'}</Text>
+            </TouchableOpacity>
+            {showEditionsSources ? (
+              <>
+                {selectedEdition ? (
+                  <View>
+                    <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Selected Edition</Text>
+                    <Text style={{ color: '#d1d5db', marginTop: 4, fontSize: 15 }}>{selectedEditionLabel}</Text>
+                    {selectedEditionRows.map(([label, value]) => (
+                      <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>
+                        {label}: {value}
+                      </Text>
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={{ color: '#9ca3af', marginTop: 8 }}>Editions preview placeholder</Text>
+                )}
+                {hasSources ? (
+                  <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>
+                    Source: {album.sources[0].sourceName}
                   </Text>
-                ))}
-              </View>
-            ) : (
-              <Text style={{ color: '#9ca3af', marginTop: 6 }}>External links unavailable</Text>
-            )}
+                ) : (
+                  <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>Source attribution placeholder</Text>
+                )}
+                {externalLinkRows.length > 0 ? (
+                  <View style={{ marginTop: 8 }}>
+                    {externalLinkRows.map(([label, value]) => (
+                      <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>
+                        {label}: {value}
+                      </Text>
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={{ color: '#9ca3af', marginTop: 6 }}>External links unavailable</Text>
+                )}
+              </>
+            ) : null}
           </View>
         </>
       ) : (
