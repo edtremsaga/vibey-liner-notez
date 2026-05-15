@@ -1,15 +1,25 @@
 import React from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 
-export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, isLoading, onSelectAlbum }) {
+const RELEASE_TYPE_LABELS = {
+  Album: 'Studio albums',
+  EP: 'EPs',
+  Single: 'Singles',
+  Live: 'Live albums',
+  Compilation: 'Compilations',
+  Soundtrack: 'Soundtracks'
+}
+
+export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, isLoading, releaseType = 'Album', onSelectAlbum }) {
   const showLoading = isLoading
   const showError = !isLoading && !!errorMessage
   const showEmpty = !isLoading && !errorMessage && artistName && albums.length === 0
   const showResults = !isLoading && !errorMessage && albums.length > 0
+  const releaseTypeLabel = RELEASE_TYPE_LABELS[releaseType] ?? RELEASE_TYPE_LABELS.Album
   const searchDescription = artistName
     ? albumTitle
       ? `MusicBrainz albums by ${artistName} matching "${albumTitle}".`
-      : `MusicBrainz albums by ${artistName}.`
+      : `${releaseTypeLabel} by ${artistName}.`
     : 'Search by artist to load MusicBrainz album results.'
 
   return (
@@ -30,7 +40,7 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
         >
           <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading MusicBrainz album results...</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Searching MusicBrainz by artist{albumTitle ? ' and album title' : ''}.
+            Searching MusicBrainz by artist{albumTitle ? ' and album title' : ` for ${releaseTypeLabel.toLowerCase()}`}.
           </Text>
         </View>
       )}

@@ -11,7 +11,7 @@ export function HelpDataSourcesScreen() {
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Current scaffold scope</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Search and Results can display albums by a required artist, with an optional album title to narrow results.
+        Search and Results can display albums by a required artist, with an optional album title to narrow results. Release Type filters artist-only searches.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Not implemented yet</Text>

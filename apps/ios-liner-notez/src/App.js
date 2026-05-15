@@ -15,6 +15,7 @@ function ScreenRouter({
   albumSearchResults,
   albumSearchAlbumTitle,
   albumSearchArtistName,
+  albumSearchReleaseType,
   albumSearchError,
   albumSearchLoading,
   selectedAlbumId,
@@ -31,6 +32,7 @@ function ScreenRouter({
           albums={albumSearchResults}
           albumTitle={albumSearchAlbumTitle}
           artistName={albumSearchArtistName}
+          releaseType={albumSearchReleaseType}
           errorMessage={albumSearchError}
           isLoading={albumSearchLoading}
           onSelectAlbum={onSelectAlbum}
@@ -53,21 +55,23 @@ export default function App() {
   const [albumSearchResults, setAlbumSearchResults] = useState([])
   const [albumSearchAlbumTitle, setAlbumSearchAlbumTitle] = useState('')
   const [albumSearchArtistName, setAlbumSearchArtistName] = useState('')
+  const [albumSearchReleaseType, setAlbumSearchReleaseType] = useState('Album')
   const [albumSearchError, setAlbumSearchError] = useState('')
   const [albumSearchLoading, setAlbumSearchLoading] = useState(false)
   const [selectedAlbumId, setSelectedAlbumId] = useState(null)
   const tabs = useMemo(() => ROUTES, [])
 
-  async function handleSubmitArtistSearch({ artistName, albumTitle }) {
+  async function handleSubmitArtistSearch({ artistName, albumTitle, releaseType }) {
     setAlbumSearchArtistName(artistName)
     setAlbumSearchAlbumTitle(albumTitle)
+    setAlbumSearchReleaseType(releaseType)
     setAlbumSearchResults([])
     setAlbumSearchError('')
     setAlbumSearchLoading(true)
     setRoute('Results')
 
     try {
-      const results = await searchMusicBrainzAlbumsByArtist({ artistName, albumTitle })
+      const results = await searchMusicBrainzAlbumsByArtist({ artistName, albumTitle, releaseType })
       setAlbumSearchResults(results)
     } catch (error) {
       setAlbumSearchError(error?.message || 'We could not load album results. Please try again.')
@@ -116,6 +120,7 @@ export default function App() {
           albumSearchResults={albumSearchResults}
           albumSearchAlbumTitle={albumSearchAlbumTitle}
           albumSearchArtistName={albumSearchArtistName}
+          albumSearchReleaseType={albumSearchReleaseType}
           albumSearchError={albumSearchError}
           albumSearchLoading={albumSearchLoading}
           selectedAlbumId={selectedAlbumId}

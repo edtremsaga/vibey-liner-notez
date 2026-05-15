@@ -1,12 +1,23 @@
 import React, { useState } from 'react'
 import { Text, TextInput, TouchableOpacity, View } from 'react-native'
-import { getMockAlbums } from 'core-liner-notez'
+
+const RELEASE_TYPES = [
+  { value: 'Album', label: 'Studio Albums' },
+  { value: 'EP', label: 'EPs' },
+  { value: 'Single', label: 'Singles' },
+  { value: 'Live', label: 'Live Albums' },
+  { value: 'Compilation', label: 'Compilations' },
+  { value: 'Soundtrack', label: 'Soundtracks' }
+]
 
 export function SearchScreen({ onSubmitArtistSearch }) {
   const [artistInput, setArtistInput] = useState('')
   const [albumInput, setAlbumInput] = useState('')
+  const [releaseType, setReleaseType] = useState('Album')
+  const [showReleaseTypes, setShowReleaseTypes] = useState(false)
   const [validationMessage, setValidationMessage] = useState('')
-  const mockAlbumPreview = getMockAlbums()[0]
+  const selectedReleaseType = RELEASE_TYPES.find((type) => type.value === releaseType) ?? RELEASE_TYPES[0]
+  const showReleaseTypeSelector = !albumInput.trim()
 
   function handleSearchPress() {
     const trimmedArtist = artistInput.trim()
@@ -17,32 +28,15 @@ export function SearchScreen({ onSubmitArtistSearch }) {
     }
 
     setValidationMessage('')
-    onSubmitArtistSearch({ artistName: trimmedArtist, albumTitle: trimmedAlbum })
+    onSubmitArtistSearch({ artistName: trimmedArtist, albumTitle: trimmedAlbum, releaseType })
   }
 
   return (
     <View>
-      <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Search</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Search Albums</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Search MusicBrainz albums by artist. Add an album title only to narrow results.
       </Text>
-      <View
-        style={{
-          marginTop: 16,
-          borderWidth: 1,
-          borderColor: '#374151',
-          borderRadius: 10,
-          padding: 12,
-          backgroundColor: '#181a1f'
-        }}
-      >
-        <Text style={{ color: '#9ca3af', fontSize: 12, marginBottom: 6 }}>
-          Mock album preview (shared core fixture)
-        </Text>
-        <Text style={{ color: '#f3f4f6', fontSize: 18, fontWeight: '600' }}>{mockAlbumPreview.title}</Text>
-        <Text style={{ color: '#d1d5db', marginTop: 4 }}>{mockAlbumPreview.artistName}</Text>
-        <Text style={{ color: '#9ca3af', marginTop: 4 }}>{mockAlbumPreview.releaseYear}</Text>
-      </View>
 
       <Text style={{ color: '#d1d5db', marginTop: 16, marginBottom: 6 }}>Artist name</Text>
       <TextInput
@@ -54,7 +48,7 @@ export function SearchScreen({ onSubmitArtistSearch }) {
             setValidationMessage('')
           }
         }}
-        placeholder="e.g. R.E.M."
+        placeholder="e.g. David Bowie"
         placeholderTextColor="#6b7280"
         style={{
           borderWidth: 1,
@@ -73,11 +67,14 @@ export function SearchScreen({ onSubmitArtistSearch }) {
         autoCapitalize="words"
         onChangeText={(value) => {
           setAlbumInput(value)
+          if (value.trim()) {
+            setShowReleaseTypes(false)
+          }
           if (validationMessage) {
             setValidationMessage('')
           }
         }}
-        placeholder="e.g. Life's Rich Pageant"
+        placeholder="e.g. Aladdin Sane (optional)"
         placeholderTextColor="#6b7280"
         style={{
           borderWidth: 1,
@@ -89,6 +86,66 @@ export function SearchScreen({ onSubmitArtistSearch }) {
         }}
         value={albumInput}
       />
+
+      {showReleaseTypeSelector && (
+        <View>
+          <Text style={{ color: '#d1d5db', marginTop: 12, marginBottom: 6 }}>Release Type</Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Release Type"
+            onPress={() => setShowReleaseTypes((current) => !current)}
+            style={{
+              borderWidth: 1,
+              borderColor: '#4b5563',
+              borderRadius: 8,
+              paddingVertical: 10,
+              paddingHorizontal: 12,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
+          >
+            <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>{selectedReleaseType.label}</Text>
+            <Text style={{ color: '#9ca3af' }}>{showReleaseTypes ? 'Hide' : 'Show'}</Text>
+          </TouchableOpacity>
+
+          {showReleaseTypes && (
+            <View
+              style={{
+                marginTop: 8,
+                borderWidth: 1,
+                borderColor: '#374151',
+                borderRadius: 10,
+                backgroundColor: '#181a1f',
+                overflow: 'hidden'
+              }}
+            >
+              {RELEASE_TYPES.map((type) => (
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select ${type.label}`}
+                  key={type.value}
+                  onPress={() => {
+                    setReleaseType(type.value)
+                    setShowReleaseTypes(false)
+                  }}
+                  style={{
+                    paddingVertical: 10,
+                    paddingHorizontal: 12,
+                    borderTopWidth: type.value === 'Album' ? 0 : 1,
+                    borderTopColor: '#374151'
+                  }}
+                >
+                  <Text style={{ color: '#f3f4f6', fontWeight: type.value === releaseType ? '700' : '500' }}>
+                    {type.value === releaseType ? '✓ ' : ''}
+                    {type.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
 
       {!!validationMessage && <Text style={{ color: '#fca5a5', marginTop: 8 }}>{validationMessage}</Text>}
 
@@ -105,7 +162,7 @@ export function SearchScreen({ onSubmitArtistSearch }) {
           alignSelf: 'flex-start'
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Search Albums</Text>
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Search</Text>
       </TouchableOpacity>
     </View>
   )

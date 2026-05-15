@@ -5,7 +5,7 @@
 - Current `main` includes artist-first MusicBrainz album search in the Search -> Results slice.
 - App runs in iOS Simulator.
 - Search -> Results -> Album Detail flow works.
-- Search requires an artist name and supports an optional album title for narrowing.
+- Search requires an artist name, supports an optional album title for narrowing, and shows Release Type for artist-only searches.
 - Producer Search shell works.
 - Producer input works.
 - Producer Search result rows are visible/readable.
@@ -17,7 +17,7 @@
 - Outdated “Placeholder screen for album search flow” copy is removed.
 
 ## Product Scope Status
-- Read-only MusicBrainz Search -> Results is active for artist-first album results.
+- Read-only MusicBrainz Search -> Results is active for artist-first album results with release-type filtering for artist-only searches.
 - Album Detail remains mock-only.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 

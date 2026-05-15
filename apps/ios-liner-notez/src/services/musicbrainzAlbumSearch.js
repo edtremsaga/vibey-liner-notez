@@ -1,6 +1,15 @@
 const MUSICBRAINZ_API_BASE = 'https://musicbrainz.org/ws/2'
 const MUSICBRAINZ_USER_AGENT = 'liner-notez-ios/0.0.1 (https://github.com/edtremsaga/vibey-liner-notez)'
 
+const RELEASE_TYPE_QUERIES = {
+  Album: 'primarytype:album NOT secondarytype:live NOT secondarytype:compilation NOT secondarytype:soundtrack',
+  EP: 'primarytype:ep',
+  Single: 'primarytype:single',
+  Live: 'primarytype:album AND secondarytype:live',
+  Compilation: 'primarytype:album AND secondarytype:compilation',
+  Soundtrack: 'primarytype:album AND secondarytype:soundtrack'
+}
+
 function extractArtistCredit(artistCredit) {
   if (!Array.isArray(artistCredit)) {
     return null
@@ -35,7 +44,7 @@ export function mapMusicBrainzReleaseGroup(releaseGroup) {
   }
 }
 
-export async function searchMusicBrainzAlbumsByArtist({ artistName, albumTitle = '' }) {
+export async function searchMusicBrainzAlbumsByArtist({ artistName, albumTitle = '', releaseType = 'Album' }) {
   const trimmedArtist = artistName.trim()
   const trimmedAlbum = albumTitle.trim()
 
@@ -43,9 +52,10 @@ export async function searchMusicBrainzAlbumsByArtist({ artistName, albumTitle =
     throw new Error('Artist name is required')
   }
 
+  const releaseTypeQuery = RELEASE_TYPE_QUERIES[releaseType] ?? RELEASE_TYPE_QUERIES.Album
   const query = trimmedAlbum
     ? `artist:"${trimmedArtist}" AND release:"${trimmedAlbum}"`
-    : `artist:"${trimmedArtist}" AND primarytype:album`
+    : `artist:"${trimmedArtist}" AND ${releaseTypeQuery}`
 
   const params = new URLSearchParams({
     query,

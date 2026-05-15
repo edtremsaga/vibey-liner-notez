@@ -42,11 +42,8 @@ if (appSource.includes('Placeholder screen for help, attribution, and data-sourc
 }
 
 const searchScreenSource = readFileSync(path.join(appRoot, 'src/screens/SearchScreen.js'), 'utf8')
-if (!searchScreenSource.includes('getMockAlbums')) {
-  throw new Error('SearchScreen does not use shared core getMockAlbums')
-}
-if (!searchScreenSource.includes("from 'core-liner-notez'")) {
-  throw new Error('SearchScreen does not use stable shared core package import')
+if (searchScreenSource.includes('getMockAlbums') || searchScreenSource.includes('Mock album preview')) {
+  throw new Error('SearchScreen still includes mock album preview content')
 }
 if (!searchScreenSource.includes('Artist search input')) {
   throw new Error('SearchScreen does not include artist search input marker')
@@ -55,13 +52,30 @@ if (!searchScreenSource.includes('Album search input')) {
   throw new Error('SearchScreen does not include optional album search input marker')
 }
 if (!searchScreenSource.includes('Search Albums')) {
-  throw new Error('SearchScreen does not include album search action')
+  throw new Error('SearchScreen does not include album search heading')
+}
+if (!searchScreenSource.includes('>Search</Text>')) {
+  throw new Error('SearchScreen does not include search action')
 }
 if (!searchScreenSource.includes('Please enter an artist name to continue.')) {
   throw new Error('SearchScreen does not include empty-input validation message')
 }
 if (!searchScreenSource.includes('Album title (optional)')) {
   throw new Error('SearchScreen does not present album title as optional')
+}
+if (!searchScreenSource.includes('Release Type')) {
+  throw new Error('SearchScreen does not include release type control')
+}
+if (!searchScreenSource.includes("value: 'Album', label: 'Studio Albums'")) {
+  throw new Error('SearchScreen does not default release type to Studio Albums')
+}
+for (const releaseTypeLabel of ['Studio Albums', 'EPs', 'Singles', 'Live Albums', 'Compilations', 'Soundtracks']) {
+  if (!searchScreenSource.includes(releaseTypeLabel)) {
+    throw new Error(`SearchScreen is missing release type option: ${releaseTypeLabel}`)
+  }
+}
+if (!searchScreenSource.includes('const showReleaseTypeSelector = !albumInput.trim()')) {
+  throw new Error('SearchScreen does not hide release type when album title is present')
 }
 if (searchScreenSource.includes('Please enter an album title to continue.')) {
   throw new Error('SearchScreen incorrectly requires album-only search')
@@ -88,6 +102,9 @@ if (!resultsScreenSource.includes('artistCredit') || !resultsScreenSource.includ
 }
 if (!resultsScreenSource.includes('MusicBrainz albums by')) {
   throw new Error('ResultsScreen does not describe artist-first MusicBrainz album results')
+}
+if (!resultsScreenSource.includes('${releaseTypeLabel} by ${artistName}.')) {
+  throw new Error('ResultsScreen does not include release-type-aware artist-only heading')
 }
 if (resultsScreenSource.includes('Search for an album to load MusicBrainz results.')) {
   throw new Error('ResultsScreen still presents album-only search copy')
@@ -140,6 +157,9 @@ if (!helpDataSourcesScreenSource.includes('read-only MusicBrainz artist-first al
 }
 if (!helpDataSourcesScreenSource.includes('required artist')) {
   throw new Error('HelpDataSourcesScreen does not explain required artist search scope')
+}
+if (!helpDataSourcesScreenSource.includes('Release Type filters artist-only searches.')) {
+  throw new Error('HelpDataSourcesScreen does not explain release type search scope')
 }
 if (!helpDataSourcesScreenSource.includes('No real album detail loading is active yet.')) {
   throw new Error('HelpDataSourcesScreen does not include no-real-album-detail copy')
@@ -250,7 +270,22 @@ if (!musicBrainzAlbumSearchSource.includes('searchMusicBrainzAlbumsByArtist')) {
 if (!musicBrainzAlbumSearchSource.includes('Artist name is required')) {
   throw new Error('iOS MusicBrainz album search adapter does not require artist')
 }
-if (!musicBrainzAlbumSearchSource.includes('artist:"${trimmedArtist}" AND primarytype:album')) {
+if (!musicBrainzAlbumSearchSource.includes('RELEASE_TYPE_QUERIES')) {
+  throw new Error('iOS MusicBrainz album search adapter does not define release type query mapping')
+}
+for (const typeQuery of [
+  'primarytype:album NOT secondarytype:live NOT secondarytype:compilation NOT secondarytype:soundtrack',
+  'primarytype:ep',
+  'primarytype:single',
+  'primarytype:album AND secondarytype:live',
+  'primarytype:album AND secondarytype:compilation',
+  'primarytype:album AND secondarytype:soundtrack'
+]) {
+  if (!musicBrainzAlbumSearchSource.includes(typeQuery)) {
+    throw new Error(`iOS MusicBrainz album search adapter is missing release type query: ${typeQuery}`)
+  }
+}
+if (!musicBrainzAlbumSearchSource.includes('artist:"${trimmedArtist}" AND ${releaseTypeQuery}')) {
   throw new Error('iOS MusicBrainz album search adapter does not search artist-only albums')
 }
 if (!musicBrainzAlbumSearchSource.includes('artist:"${trimmedArtist}" AND release:"${trimmedAlbum}"')) {
