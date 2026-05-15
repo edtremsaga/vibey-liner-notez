@@ -85,8 +85,8 @@ const resultsScreenSource = readFileSync(path.join(appRoot, 'src/screens/Results
 if (!resultsScreenSource.includes('albums.map')) {
   throw new Error('ResultsScreen does not render result list')
 }
-if (!resultsScreenSource.includes('onSelectAlbum(albumId)')) {
-  throw new Error('ResultsScreen does not pass albumId-only selection handler')
+if (!resultsScreenSource.includes('onSelectAlbum(albumId, album)')) {
+  throw new Error('ResultsScreen does not pass selected MusicBrainz result to Album Detail')
 }
 if (!resultsScreenSource.includes('No albums found')) {
   throw new Error('ResultsScreen does not include empty state text')
@@ -167,8 +167,8 @@ if (!helpDataSourcesScreenSource.includes('required artist')) {
 if (!helpDataSourcesScreenSource.includes('Release Type filters artist-only searches.')) {
   throw new Error('HelpDataSourcesScreen does not explain release type search scope')
 }
-if (!helpDataSourcesScreenSource.includes('No real album detail loading is active yet.')) {
-  throw new Error('HelpDataSourcesScreen does not include no-real-album-detail copy')
+if (!helpDataSourcesScreenSource.includes('real selected-album header')) {
+  throw new Error('HelpDataSourcesScreen does not disclose real selected-album header scope')
 }
 if (!helpDataSourcesScreenSource.includes('No producer traversal is implemented yet.')) {
   throw new Error('HelpDataSourcesScreen does not include no-producer-traversal copy')
@@ -194,6 +194,21 @@ if (!albumDetailScreenSource.includes('Back to Results')) {
 }
 if (!albumDetailScreenSource.includes('Loading mock album detail...')) {
   throw new Error('AlbumDetailScreen does not include mock loading state text')
+}
+if (!albumDetailScreenSource.includes('Real MusicBrainz album header. Tracklist and credits are not loaded yet.')) {
+  throw new Error('AlbumDetailScreen does not include real MusicBrainz header scope copy')
+}
+if (!albumDetailScreenSource.includes('Release-group MBID')) {
+  throw new Error('AlbumDetailScreen does not render release-group MBID')
+}
+if (!albumDetailScreenSource.includes('Tracklist is not loaded yet for this first real-detail slice.')) {
+  throw new Error('AlbumDetailScreen does not include deferred real tracklist copy')
+}
+if (!albumDetailScreenSource.includes('Credits are not loaded yet for this first real-detail slice.')) {
+  throw new Error('AlbumDetailScreen does not include deferred real credits copy')
+}
+if (!albumDetailScreenSource.includes('Editions are not loaded yet for this first real-detail slice.')) {
+  throw new Error('AlbumDetailScreen does not include deferred real editions copy')
 }
 if (!albumDetailScreenSource.includes('Tracklist')) {
   throw new Error('AlbumDetailScreen does not include Tracklist section label')
@@ -249,6 +264,12 @@ if (!appSource.includes('handleSubmitArtistSearch') || !appSource.includes("setR
 }
 if (!appSource.includes('handleSelectAlbum') || !appSource.includes("setRoute('Album Detail')")) {
   throw new Error('App router does not navigate from results to album detail')
+}
+if (!appSource.includes('selectedAlbumResult') || !appSource.includes('buildAlbumDetailFromResult')) {
+  throw new Error('App router does not preserve selected MusicBrainz result for Album Detail header')
+}
+if (!appSource.includes('musicbrainzReleaseGroupUrl: `https://musicbrainz.org/release-group/${releaseGroupId}`')) {
+  throw new Error('App router does not build MusicBrainz release-group link for real Album Detail header')
 }
 if (!appSource.includes('getMockAlbumById')) {
   throw new Error('App router does not use shared core getMockAlbumById accessor')
@@ -323,4 +344,4 @@ if (
   throw new Error('iOS MusicBrainz album search adapter does not expose compact result fields')
 }
 
-console.log('PASS Expo scaffold files and MusicBrainz Search -> Results -> mock Album Detail flow wiring verified')
+console.log('PASS Expo scaffold files and MusicBrainz Search -> Results -> real Album Detail header flow wiring verified')

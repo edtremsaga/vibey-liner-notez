@@ -10,6 +10,51 @@ import { searchMusicBrainzAlbumsByArtist } from './services/musicbrainzAlbumSear
 
 const ROUTES = ['Search', 'Results', 'Album Detail', 'Producer Search', 'Help / Data Sources']
 
+function buildAlbumDetailFromResult(albumId, albumResult) {
+  if (!albumResult) {
+    return null
+  }
+
+  const releaseGroupId = albumResult.releaseGroupId ?? albumResult.id ?? albumId
+  const firstReleaseDate = albumResult.firstReleaseDate ?? null
+  const releaseYear = albumResult.releaseYear
+    ? Number(albumResult.releaseYear)
+    : firstReleaseDate
+      ? Number(firstReleaseDate.slice(0, 4))
+      : null
+
+  return {
+    albumId: releaseGroupId,
+    title: albumResult.title ?? 'Untitled album',
+    artistName: albumResult.artistCredit ?? albumResult.artistName ?? 'Unknown artist',
+    firstReleaseDate,
+    releaseYear: Number.isNaN(releaseYear) ? null : releaseYear,
+    disambiguation: albumResult.disambiguation ?? null,
+    albumType: 'album',
+    coverArtUrl: null,
+    editions: [],
+    tracks: [],
+    credits: {
+      albumCredits: null,
+      trackCredits: null
+    },
+    recordingInfo: null,
+    externalLinks: {
+      musicbrainzReleaseGroupUrl: `https://musicbrainz.org/release-group/${releaseGroupId}`,
+      musicbrainzSelectedReleaseUrl: null,
+      wikidataUrl: null,
+      discogsUrl: null
+    },
+    sources: [
+      {
+        sourceName: 'MusicBrainz',
+        license: 'CC0'
+      }
+    ],
+    dataNotes: 'Tracklist, credits, editions, and cover art are not loaded yet.'
+  }
+}
+
 function ScreenRouter({
   route,
   albumSearchResults,
@@ -19,11 +64,16 @@ function ScreenRouter({
   albumSearchError,
   albumSearchLoading,
   selectedAlbumId,
+  selectedAlbumResult,
   onSubmitArtistSearch,
   onSelectAlbum,
   onBackToResults
 }) {
-  const selectedAlbum = selectedAlbumId ? getMockAlbumById(selectedAlbumId) : null
+  const selectedAlbum = selectedAlbumResult
+    ? buildAlbumDetailFromResult(selectedAlbumId, selectedAlbumResult)
+    : selectedAlbumId
+      ? getMockAlbumById(selectedAlbumId)
+      : null
 
   switch (route) {
     case 'Results':
@@ -59,6 +109,7 @@ export default function App() {
   const [albumSearchError, setAlbumSearchError] = useState('')
   const [albumSearchLoading, setAlbumSearchLoading] = useState(false)
   const [selectedAlbumId, setSelectedAlbumId] = useState(null)
+  const [selectedAlbumResult, setSelectedAlbumResult] = useState(null)
   const tabs = useMemo(() => ROUTES, [])
 
   async function handleSubmitArtistSearch({ artistName, albumTitle, releaseType }) {
@@ -80,10 +131,18 @@ export default function App() {
     }
   }
 
-  function handleSelectAlbum(albumId) {
+  function handleSelectAlbum(albumId, albumResult = null) {
+    if (albumResult) {
+      setSelectedAlbumId(albumId)
+      setSelectedAlbumResult(albumResult)
+      setRoute('Album Detail')
+      return
+    }
+
     const selected = getMockAlbumById(albumId) || getMockAlbums()[0]
     if (selected) {
       setSelectedAlbumId(selected.albumId)
+      setSelectedAlbumResult(null)
       setRoute('Album Detail')
     }
   }
@@ -124,6 +183,7 @@ export default function App() {
           albumSearchError={albumSearchError}
           albumSearchLoading={albumSearchLoading}
           selectedAlbumId={selectedAlbumId}
+          selectedAlbumResult={selectedAlbumResult}
           onSubmitArtistSearch={handleSubmitArtistSearch}
           onSelectAlbum={handleSelectAlbum}
           onBackToResults={handleBackToResults}

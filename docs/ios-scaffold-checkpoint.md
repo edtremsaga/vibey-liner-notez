@@ -10,6 +10,7 @@
   - `34ba2b9` Ignore Expo local state
 - App runs in iOS Simulator.
 - Search -> Results -> Album Detail flow works.
+- Tapping a real MusicBrainz result opens Album Detail with real selected-result header data.
 - Search requires an artist name, supports an optional album title for narrowing, and shows Release Type for artist-only searches.
 - Album-only search is not supported.
 - SearchScreen is now the real artist-first search entry point; the old mock album preview card has been removed.
@@ -17,8 +18,8 @@
 - Producer input works.
 - Producer Search result rows are visible/readable.
 - Tapping a mock producer result opens Album Detail.
-- Album Detail renders selected mock album content.
-- Album Detail shows Tracklist, Credits, Selected Edition, and External Links.
+- Album Detail shows real selected-result header data for Search results, with Tracklist, Credits, Editions, cover art, and rich detail sections deferred.
+- Album Detail still renders selected mock album content for Producer Search mock results.
 - Help / Data Sources shows mock-scope, planned sources, and trust-rule content.
 - Internal marker strings are removed from visible UI.
 - Outdated “Placeholder screen for album search flow” copy is removed.
@@ -27,7 +28,7 @@
 
 ## Product Scope Status
 - Read-only MusicBrainz Search -> Results is active for artist-first album results with release-type filtering for artist-only searches.
-- Album Detail remains mock-only.
+- Album Detail real-data scope is limited to selected-result header data from Search results.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 
 ## Search Behavior Contract
@@ -36,7 +37,7 @@
 - Artist-only search returns MusicBrainz release-group album results by that artist.
 - Artist + Album search narrows MusicBrainz release-group results to albums by that artist matching the album text.
 - Album-only search is not a supported product flow and should not be presented as valid UI.
-- Tapping a result may still route to existing mock Album Detail behavior until real Album Detail is implemented.
+- Tapping a Search result opens Album Detail with selected MusicBrainz result header data.
 
 ## Release Type Behavior
 - Release Type is only visible for artist-only searches, when Album Name is empty.
@@ -61,14 +62,13 @@
 - This milestone is React parity, not stricter canonical studio-albums-only filtering.
 - Do not start canonical studio albums cleanup here; that is a later shared React+iOS search-semantics project.
 
-## Mock-Only Scope
-- Album Detail remains mock-only.
+## Mock-Only / Deferred Scope
+- Album Detail tracklist, credits, editions, cover art, and rich liner-note sections are not loaded yet.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 
 ## Known Deferred Work
 - Canonical studio albums cleanup as a later shared React+iOS search-semantics project.
-- Results screen polish that preserves current search/query behavior exactly.
-- Real Album Detail loading.
+- Real Album Detail tracklist/credits loading.
 - Real Producer Search.
 - Pagination or load more for larger result sets.
 - Cover art or richer result cards.

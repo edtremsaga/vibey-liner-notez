@@ -18,6 +18,7 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
   const [showEditionsSources, setShowEditionsSources] = useState(true)
 
   const hasAlbum = !!album
+  const isRealMusicBrainzHeader = hasAlbum && album.dataNotes === 'Tracklist, credits, editions, and cover art are not loaded yet.'
   const hasTracks = hasAlbum && Array.isArray(album.tracks) && album.tracks.length > 0
   const hasAlbumCredits =
     hasAlbum &&
@@ -56,27 +57,33 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
   return (
     <View>
       <Text style={{ color: '#e5e7eb', fontSize: 30, fontWeight: '500' }}>Album Detail</Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>Mock detail layout preview (iOS scaffold only).</Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        {isRealMusicBrainzHeader
+          ? 'Real MusicBrainz album header. Tracklist and credits are not loaded yet.'
+          : 'Mock detail layout preview (iOS scaffold only).'}
+      </Text>
 
-      <TouchableOpacity
-        accessibilityRole="button"
-        onPress={() => setShowLoading((current) => !current)}
-        style={{
-          marginTop: 12,
-          borderWidth: 1,
-          borderColor: showLoading ? '#f3f4f6' : '#4b5563',
-          borderRadius: 8,
-          paddingVertical: 8,
-          paddingHorizontal: 10,
-          alignSelf: 'flex-start'
-        }}
-      >
-        <Text style={{ color: '#f3f4f6', fontSize: 12 }}>
-          {showLoading ? 'Hide Loading' : 'Show Loading'}
-        </Text>
-      </TouchableOpacity>
+      {!isRealMusicBrainzHeader && (
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={() => setShowLoading((current) => !current)}
+          style={{
+            marginTop: 12,
+            borderWidth: 1,
+            borderColor: showLoading ? '#f3f4f6' : '#4b5563',
+            borderRadius: 8,
+            paddingVertical: 8,
+            paddingHorizontal: 10,
+            alignSelf: 'flex-start'
+          }}
+        >
+          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>
+            {showLoading ? 'Hide Loading' : 'Show Loading'}
+          </Text>
+        </TouchableOpacity>
+      )}
 
-      {showLoading && (
+      {!isRealMusicBrainzHeader && showLoading && (
         <View
           style={{
             marginTop: 12,
@@ -109,8 +116,18 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
             <Text style={{ color: '#f3f4f6', fontSize: 20, fontWeight: '700' }}>{album.title}</Text>
             <Text style={{ color: '#d1d5db', marginTop: 4, fontSize: 16 }}>{album.artistName}</Text>
             <Text style={{ color: '#9ca3af', marginTop: 4, fontSize: 15 }}>
-              {album.releaseYear} • {album.albumType}
+              {album.firstReleaseDate ?? album.releaseYear ?? 'Release date unknown'} - {album.albumType}
             </Text>
+            {!!album.disambiguation && (
+              <Text style={{ color: '#9ca3af', marginTop: 4, fontSize: 14 }}>
+                Disambiguation: {album.disambiguation}
+              </Text>
+            )}
+            {!!album.albumId && (
+              <Text style={{ color: '#9ca3af', marginTop: 4, fontSize: 13 }}>
+                Release-group MBID: {album.albumId}
+              </Text>
+            )}
           </View>
 
           <View
@@ -148,7 +165,11 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
                   </View>
                 ))
               ) : (
-                <Text style={{ color: '#9ca3af', marginTop: 8 }}>Tracklist preview placeholder</Text>
+                <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+                  {isRealMusicBrainzHeader
+                    ? 'Tracklist is not loaded yet for this first real-detail slice.'
+                    : 'Tracklist preview placeholder'}
+                </Text>
               )
             ) : null}
           </View>
@@ -200,7 +221,11 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
                     )
                   : null}
                 {!hasAlbumCredits && !hasTrackCredits ? (
-                  <Text style={{ color: '#9ca3af', marginTop: 8 }}>Credits preview placeholder</Text>
+                  <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+                    {isRealMusicBrainzHeader
+                      ? 'Credits are not loaded yet for this first real-detail slice.'
+                      : 'Credits preview placeholder'}
+                  </Text>
                 ) : null}
               </>
             ) : null}
@@ -239,7 +264,11 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
                     ))}
                   </View>
                 ) : (
-                  <Text style={{ color: '#9ca3af', marginTop: 8 }}>Editions preview placeholder</Text>
+                  <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+                    {isRealMusicBrainzHeader
+                      ? 'Editions are not loaded yet for this first real-detail slice.'
+                      : 'Editions preview placeholder'}
+                  </Text>
                 )}
                 {hasSources ? (
                   <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>
