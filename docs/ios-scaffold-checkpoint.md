@@ -1,10 +1,11 @@
 # iOS Scaffold Checkpoint
 
 ## Current Stable State
-- iOS scaffold is stable on `main` for mock-data-only development.
-- Current `main` includes `8d9b67e Update iOS search scaffold copy`.
+- iOS scaffold is stable on `main` for read-only Search -> Results development.
+- Current `main` includes artist-first MusicBrainz album search in the Search -> Results slice.
 - App runs in iOS Simulator.
 - Search -> Results -> Album Detail flow works.
+- Search requires an artist name and supports an optional album title for narrowing.
 - Producer Search shell works.
 - Producer input works.
 - Producer Search result rows are visible/readable.
@@ -16,8 +17,9 @@
 - Outdated “Placeholder screen for album search flow” copy is removed.
 
 ## Product Scope Status
-- No real APIs are active yet.
-- No producer traversal is implemented yet.
+- Read-only MusicBrainz Search -> Results is active for artist-first album results.
+- Album Detail remains mock-only.
+- Producer Search remains mock-only; no producer traversal is implemented yet.
 
 ## Runtime Lesson Learned
 - If the simulator does not reflect source changes, stale Metro/Expo session state can look like a code bug.

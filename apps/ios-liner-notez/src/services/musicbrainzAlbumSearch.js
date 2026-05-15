@@ -35,15 +35,20 @@ export function mapMusicBrainzReleaseGroup(releaseGroup) {
   }
 }
 
-export async function searchMusicBrainzAlbums(query) {
-  const trimmedQuery = query.trim()
+export async function searchMusicBrainzAlbumsByArtist({ artistName, albumTitle = '' }) {
+  const trimmedArtist = artistName.trim()
+  const trimmedAlbum = albumTitle.trim()
 
-  if (!trimmedQuery) {
-    throw new Error('Album search query is required')
+  if (!trimmedArtist) {
+    throw new Error('Artist name is required')
   }
 
+  const query = trimmedAlbum
+    ? `artist:"${trimmedArtist}" AND release:"${trimmedAlbum}"`
+    : `artist:"${trimmedArtist}" AND primarytype:album`
+
   const params = new URLSearchParams({
-    query: `releasegroup:"${trimmedQuery}" AND primarytype:album`,
+    query,
     limit: '20',
     fmt: 'json'
   })

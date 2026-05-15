@@ -6,18 +6,19 @@ import { AlbumDetailScreen } from './screens/AlbumDetailScreen'
 import { ProducerSearchScreen } from './screens/ProducerSearchScreen'
 import { HelpDataSourcesScreen } from './screens/HelpDataSourcesScreen'
 import { getMockAlbumById, getMockAlbums } from 'core-liner-notez'
-import { searchMusicBrainzAlbums } from './services/musicbrainzAlbumSearch'
+import { searchMusicBrainzAlbumsByArtist } from './services/musicbrainzAlbumSearch'
 
 const ROUTES = ['Search', 'Results', 'Album Detail', 'Producer Search', 'Help / Data Sources']
 
 function ScreenRouter({
   route,
   albumSearchResults,
+  albumSearchAlbumTitle,
+  albumSearchArtistName,
   albumSearchError,
   albumSearchLoading,
-  albumSearchQuery,
   selectedAlbumId,
-  onSubmitAlbumSearch,
+  onSubmitArtistSearch,
   onSelectAlbum,
   onBackToResults
 }) {
@@ -28,9 +29,10 @@ function ScreenRouter({
       return (
         <ResultsScreen
           albums={albumSearchResults}
+          albumTitle={albumSearchAlbumTitle}
+          artistName={albumSearchArtistName}
           errorMessage={albumSearchError}
           isLoading={albumSearchLoading}
-          query={albumSearchQuery}
           onSelectAlbum={onSelectAlbum}
         />
       )
@@ -42,28 +44,30 @@ function ScreenRouter({
       return <HelpDataSourcesScreen />
     case 'Search':
     default:
-      return <SearchScreen onSubmitAlbumSearch={onSubmitAlbumSearch} />
+      return <SearchScreen onSubmitArtistSearch={onSubmitArtistSearch} />
   }
 }
 
 export default function App() {
   const [route, setRoute] = useState('Search')
   const [albumSearchResults, setAlbumSearchResults] = useState([])
+  const [albumSearchAlbumTitle, setAlbumSearchAlbumTitle] = useState('')
+  const [albumSearchArtistName, setAlbumSearchArtistName] = useState('')
   const [albumSearchError, setAlbumSearchError] = useState('')
   const [albumSearchLoading, setAlbumSearchLoading] = useState(false)
-  const [albumSearchQuery, setAlbumSearchQuery] = useState('')
   const [selectedAlbumId, setSelectedAlbumId] = useState(null)
   const tabs = useMemo(() => ROUTES, [])
 
-  async function handleSubmitAlbumSearch(query) {
-    setAlbumSearchQuery(query)
+  async function handleSubmitArtistSearch({ artistName, albumTitle }) {
+    setAlbumSearchArtistName(artistName)
+    setAlbumSearchAlbumTitle(albumTitle)
     setAlbumSearchResults([])
     setAlbumSearchError('')
     setAlbumSearchLoading(true)
     setRoute('Results')
 
     try {
-      const results = await searchMusicBrainzAlbums(query)
+      const results = await searchMusicBrainzAlbumsByArtist({ artistName, albumTitle })
       setAlbumSearchResults(results)
     } catch (error) {
       setAlbumSearchError(error?.message || 'We could not load album results. Please try again.')
@@ -88,8 +92,10 @@ export default function App() {
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
         <Text style={styles.title}>liner notez (iOS scaffold)</Text>
-        {!!albumSearchQuery && (
-          <Text style={styles.subtitle}>Album search: {albumSearchQuery}</Text>
+        {!!albumSearchArtistName && (
+          <Text style={styles.subtitle}>
+            Artist search: {albumSearchArtistName}{albumSearchAlbumTitle ? ` - ${albumSearchAlbumTitle}` : ''}
+          </Text>
         )}
       </View>
       <View style={styles.tabs}>
@@ -108,11 +114,12 @@ export default function App() {
         <ScreenRouter
           route={route}
           albumSearchResults={albumSearchResults}
+          albumSearchAlbumTitle={albumSearchAlbumTitle}
+          albumSearchArtistName={albumSearchArtistName}
           albumSearchError={albumSearchError}
           albumSearchLoading={albumSearchLoading}
-          albumSearchQuery={albumSearchQuery}
           selectedAlbumId={selectedAlbumId}
-          onSubmitAlbumSearch={handleSubmitAlbumSearch}
+          onSubmitArtistSearch={handleSubmitArtistSearch}
           onSelectAlbum={handleSelectAlbum}
           onBackToResults={handleBackToResults}
         />

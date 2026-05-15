@@ -1,18 +1,21 @@
 import React from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 
-export function ResultsScreen({ albums, errorMessage, isLoading, query, onSelectAlbum }) {
+export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, isLoading, onSelectAlbum }) {
   const showLoading = isLoading
   const showError = !isLoading && !!errorMessage
-  const showEmpty = !isLoading && !errorMessage && query && albums.length === 0
+  const showEmpty = !isLoading && !errorMessage && artistName && albums.length === 0
   const showResults = !isLoading && !errorMessage && albums.length > 0
+  const searchDescription = artistName
+    ? albumTitle
+      ? `MusicBrainz albums by ${artistName} matching "${albumTitle}".`
+      : `MusicBrainz albums by ${artistName}.`
+    : 'Search by artist to load MusicBrainz album results.'
 
   return (
     <View>
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Results</Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        {query ? `MusicBrainz album results for "${query}".` : 'Search for an album to load MusicBrainz results.'}
-      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>{searchDescription}</Text>
 
       {showLoading && (
         <View
@@ -27,7 +30,7 @@ export function ResultsScreen({ albums, errorMessage, isLoading, query, onSelect
         >
           <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading MusicBrainz album results...</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Searching the MusicBrainz release-group catalog.
+            Searching MusicBrainz by artist{albumTitle ? ' and album title' : ''}.
           </Text>
         </View>
       )}
@@ -63,7 +66,7 @@ export function ResultsScreen({ albums, errorMessage, isLoading, query, onSelect
         >
           <Text style={{ color: '#d1d5db', fontWeight: '600' }}>No albums found</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Try another album title in Search.
+            Try another artist name or remove the optional album title.
           </Text>
         </View>
       )}

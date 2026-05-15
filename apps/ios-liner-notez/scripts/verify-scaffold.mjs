@@ -48,14 +48,23 @@ if (!searchScreenSource.includes('getMockAlbums')) {
 if (!searchScreenSource.includes("from 'core-liner-notez'")) {
   throw new Error('SearchScreen does not use stable shared core package import')
 }
+if (!searchScreenSource.includes('Artist search input')) {
+  throw new Error('SearchScreen does not include artist search input marker')
+}
 if (!searchScreenSource.includes('Album search input')) {
-  throw new Error('SearchScreen does not include album search input marker')
+  throw new Error('SearchScreen does not include optional album search input marker')
 }
 if (!searchScreenSource.includes('Search Albums')) {
   throw new Error('SearchScreen does not include album search action')
 }
-if (!searchScreenSource.includes('Please enter an album title to continue.')) {
+if (!searchScreenSource.includes('Please enter an artist name to continue.')) {
   throw new Error('SearchScreen does not include empty-input validation message')
+}
+if (!searchScreenSource.includes('Album title (optional)')) {
+  throw new Error('SearchScreen does not present album title as optional')
+}
+if (searchScreenSource.includes('Please enter an album title to continue.')) {
+  throw new Error('SearchScreen incorrectly requires album-only search')
 }
 
 const resultsScreenSource = readFileSync(path.join(appRoot, 'src/screens/ResultsScreen.js'), 'utf8')
@@ -76,6 +85,12 @@ if (!resultsScreenSource.includes('Loading MusicBrainz album results...')) {
 }
 if (!resultsScreenSource.includes('artistCredit') || !resultsScreenSource.includes('firstReleaseDate')) {
   throw new Error('ResultsScreen does not render compact MusicBrainz album fields')
+}
+if (!resultsScreenSource.includes('MusicBrainz albums by')) {
+  throw new Error('ResultsScreen does not describe artist-first MusicBrainz album results')
+}
+if (resultsScreenSource.includes('Search for an album to load MusicBrainz results.')) {
+  throw new Error('ResultsScreen still presents album-only search copy')
 }
 
 const producerSearchScreenSource = readFileSync(
@@ -120,8 +135,11 @@ const helpDataSourcesScreenSource = readFileSync(
 if (helpDataSourcesScreenSource.includes('Placeholder screen for help, attribution, and data-source disclosures.')) {
   throw new Error('HelpDataSourcesScreen still contains placeholder-only copy')
 }
-if (!helpDataSourcesScreenSource.includes('read-only MusicBrainz album search')) {
+if (!helpDataSourcesScreenSource.includes('read-only MusicBrainz artist-first album search')) {
   throw new Error('HelpDataSourcesScreen does not disclose read-only MusicBrainz album search scope')
+}
+if (!helpDataSourcesScreenSource.includes('required artist')) {
+  throw new Error('HelpDataSourcesScreen does not explain required artist search scope')
 }
 if (!helpDataSourcesScreenSource.includes('No real album detail loading is active yet.')) {
   throw new Error('HelpDataSourcesScreen does not include no-real-album-detail copy')
@@ -197,11 +215,11 @@ if (!albumDetailScreenSource.includes('mock not-found state')) {
   throw new Error('AlbumDetailScreen does not include not-found/unavailable state')
 }
 
-if (!appSource.includes('searchMusicBrainzAlbums')) {
+if (!appSource.includes('searchMusicBrainzAlbumsByArtist')) {
   throw new Error('App router does not import iOS MusicBrainz album search adapter')
 }
-if (!appSource.includes('handleSubmitAlbumSearch') || !appSource.includes("setRoute('Results')")) {
-  throw new Error('App router does not navigate from search to results via album submit flow')
+if (!appSource.includes('handleSubmitArtistSearch') || !appSource.includes("setRoute('Results')")) {
+  throw new Error('App router does not navigate from search to results via artist submit flow')
 }
 if (!appSource.includes('handleSelectAlbum') || !appSource.includes("setRoute('Album Detail')")) {
   throw new Error('App router does not navigate from results to album detail')
@@ -226,8 +244,20 @@ if (!musicBrainzAlbumSearchSource.includes('https://musicbrainz.org/ws/2')) {
 if (!musicBrainzAlbumSearchSource.includes('/release-group?')) {
   throw new Error('iOS MusicBrainz album search adapter does not use release-group search')
 }
-if (!musicBrainzAlbumSearchSource.includes('primarytype:album')) {
-  throw new Error('iOS MusicBrainz album search adapter does not limit search to albums')
+if (!musicBrainzAlbumSearchSource.includes('searchMusicBrainzAlbumsByArtist')) {
+  throw new Error('iOS MusicBrainz album search adapter is not artist-first')
+}
+if (!musicBrainzAlbumSearchSource.includes('Artist name is required')) {
+  throw new Error('iOS MusicBrainz album search adapter does not require artist')
+}
+if (!musicBrainzAlbumSearchSource.includes('artist:"${trimmedArtist}" AND primarytype:album')) {
+  throw new Error('iOS MusicBrainz album search adapter does not search artist-only albums')
+}
+if (!musicBrainzAlbumSearchSource.includes('artist:"${trimmedArtist}" AND release:"${trimmedAlbum}"')) {
+  throw new Error('iOS MusicBrainz album search adapter does not support artist plus album narrowing')
+}
+if (musicBrainzAlbumSearchSource.includes('releasegroup:"${trimmedQuery}"')) {
+  throw new Error('iOS MusicBrainz album search adapter still supports album-only query')
 }
 if (
   !musicBrainzAlbumSearchSource.includes('artistCredit') ||

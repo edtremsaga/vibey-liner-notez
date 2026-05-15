@@ -6,12 +6,12 @@ export function HelpDataSourcesScreen() {
     <View>
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Help / Data Sources</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        This iOS scaffold uses read-only MusicBrainz album search while Album Detail and Producer Search remain mock-only.
+        This iOS scaffold uses read-only MusicBrainz artist-first album search while Album Detail and Producer Search remain mock-only.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Current scaffold scope</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Search and Results can display MusicBrainz album matches. Album Detail, Producer Search, and remaining data flows are mock-only.
+        Search and Results can display albums by a required artist, with an optional album title to narrow results.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Not implemented yet</Text>
