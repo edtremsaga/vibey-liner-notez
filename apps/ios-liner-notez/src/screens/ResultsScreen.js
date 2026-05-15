@@ -16,16 +16,31 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
   const showEmpty = !isLoading && !errorMessage && artistName && albums.length === 0
   const showResults = !isLoading && !errorMessage && albums.length > 0
   const releaseTypeLabel = RELEASE_TYPE_LABELS[releaseType] ?? RELEASE_TYPE_LABELS.Album
-  const searchDescription = artistName
+  const resultsHeading = artistName
     ? albumTitle
-      ? `MusicBrainz albums by ${artistName} matching "${albumTitle}".`
+      ? `Albums by ${artistName} matching "${albumTitle}".`
       : `${releaseTypeLabel} by ${artistName}.`
     : 'Search by artist to load MusicBrainz album results.'
+  const loadingDetail = artistName
+    ? albumTitle
+      ? `Looking for albums by ${artistName} matching "${albumTitle}".`
+      : `Looking for ${releaseTypeLabel.toLowerCase()} by ${artistName}.`
+    : 'Looking for MusicBrainz album results.'
+  const emptyDetail = albumTitle
+    ? 'Try another album title or search by artist only.'
+    : 'Try another artist name or choose a different release type.'
 
   return (
     <View>
-      <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Results</Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>{searchDescription}</Text>
+      <Text style={{ color: '#f3f4f6', fontSize: 24, fontWeight: '700' }}>{resultsHeading}</Text>
+      {showResults && (
+        <View style={{ marginTop: 8 }}>
+          <Text style={{ color: '#9ca3af' }}>
+            {albums.length} {albums.length === 1 ? 'result' : 'results'} from MusicBrainz
+          </Text>
+          <Text style={{ color: '#6b7280', marginTop: 4 }}>Album detail opens the current preview.</Text>
+        </View>
+      )}
 
       {showLoading && (
         <View
@@ -38,9 +53,9 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
             backgroundColor: '#181a1f'
           }}
         >
-          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading MusicBrainz album results...</Text>
+          <Text style={{ color: '#d1d5db', fontWeight: '700', fontSize: 16 }}>Searching MusicBrainz</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Searching MusicBrainz by artist{albumTitle ? ' and album title' : ` for ${releaseTypeLabel.toLowerCase()}`}.
+            {loadingDetail}
           </Text>
         </View>
       )}
@@ -74,9 +89,9 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
             backgroundColor: '#181a1f'
           }}
         >
-          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>No albums found</Text>
+          <Text style={{ color: '#d1d5db', fontWeight: '700', fontSize: 16 }}>No albums found</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Try another artist name or remove the optional album title.
+            {emptyDetail}
           </Text>
         </View>
       )}
@@ -88,6 +103,9 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
             return null
           }
 
+          const releaseDate = album.firstReleaseDate ?? album.releaseYear ?? null
+          const artistAndDate = [album.artistCredit ?? album.artistName, releaseDate].filter(Boolean).join(' - ')
+
           return (
             <TouchableOpacity
               key={albumId}
@@ -98,20 +116,16 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
                 borderWidth: 1,
                 borderColor: '#374151',
                 borderRadius: 10,
-                padding: 12,
+                padding: 14,
                 backgroundColor: '#181a1f'
               }}
             >
-              <Text style={{ color: '#f3f4f6', fontWeight: '600', fontSize: 16 }}>{album.title}</Text>
-              <Text style={{ color: '#d1d5db', marginTop: 4 }}>{album.artistCredit ?? album.artistName}</Text>
-              {!!(album.firstReleaseDate ?? album.releaseYear) && (
-                <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-                  {album.firstReleaseDate ?? album.releaseYear}
-                </Text>
-              )}
+              <Text style={{ color: '#f9fafb', fontWeight: '700', fontSize: 18 }}>{album.title}</Text>
+              {!!artistAndDate && <Text style={{ color: '#d1d5db', marginTop: 6 }}>{artistAndDate}</Text>}
               {!!album.disambiguation && (
-                <Text style={{ color: '#9ca3af', marginTop: 4 }}>{album.disambiguation}</Text>
+                <Text style={{ color: '#9ca3af', marginTop: 6 }}>{album.disambiguation}</Text>
               )}
+              <Text style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open preview</Text>
             </TouchableOpacity>
           )
         })}

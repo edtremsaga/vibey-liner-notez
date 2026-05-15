@@ -94,17 +94,23 @@ if (!resultsScreenSource.includes('No albums found')) {
 if (!resultsScreenSource.includes('MusicBrainz search error')) {
   throw new Error('ResultsScreen does not include MusicBrainz error state text')
 }
-if (!resultsScreenSource.includes('Loading MusicBrainz album results...')) {
+if (!resultsScreenSource.includes('Searching MusicBrainz')) {
   throw new Error('ResultsScreen does not include MusicBrainz loading state text')
 }
 if (!resultsScreenSource.includes('artistCredit') || !resultsScreenSource.includes('firstReleaseDate')) {
   throw new Error('ResultsScreen does not render compact MusicBrainz album fields')
 }
-if (!resultsScreenSource.includes('MusicBrainz albums by')) {
+if (!resultsScreenSource.includes('from MusicBrainz')) {
   throw new Error('ResultsScreen does not describe artist-first MusicBrainz album results')
 }
 if (!resultsScreenSource.includes('${releaseTypeLabel} by ${artistName}.')) {
   throw new Error('ResultsScreen does not include release-type-aware artist-only heading')
+}
+if (!resultsScreenSource.includes('Album detail opens the current preview.')) {
+  throw new Error('ResultsScreen does not explain current preview behavior')
+}
+if (!resultsScreenSource.includes('Open preview')) {
+  throw new Error('ResultsScreen does not include row preview affordance text')
 }
 if (resultsScreenSource.includes('Search for an album to load MusicBrainz results.')) {
   throw new Error('ResultsScreen still presents album-only search copy')
