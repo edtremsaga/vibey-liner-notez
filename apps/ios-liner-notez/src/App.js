@@ -6,7 +6,10 @@ import { AlbumDetailScreen } from './screens/AlbumDetailScreen'
 import { ProducerSearchScreen } from './screens/ProducerSearchScreen'
 import { HelpDataSourcesScreen } from './screens/HelpDataSourcesScreen'
 import { getMockAlbumById, getMockAlbums } from 'core-liner-notez'
-import { fetchMusicBrainzAlbumBasicInfo } from './services/musicbrainzAlbumDetail'
+import {
+  fetchMusicBrainzAlbumBasicInfo,
+  fetchMusicBrainzSelectedReleaseTracklist
+} from './services/musicbrainzAlbumDetail'
 import { searchMusicBrainzAlbumsByArtist } from './services/musicbrainzAlbumSearch'
 
 const ROUTES = ['Search', 'Results', 'Album Detail', 'Producer Search', 'Help / Data Sources']
@@ -32,10 +35,11 @@ function buildAlbumDetailFromResult(albumId, albumResult, enrichedDetail = null)
     releaseYear: Number.isNaN(releaseYear) ? null : releaseYear,
     disambiguation: enrichedDetail?.disambiguation ?? albumResult.disambiguation ?? null,
     selectedReleaseId: enrichedDetail?.selectedReleaseId ?? null,
+    isRealMusicBrainzDetail: true,
     albumType: 'album',
     coverArtUrl: null,
     editions: enrichedDetail?.editions ?? [],
-    tracks: [],
+    tracks: enrichedDetail?.tracks ?? [],
     credits: {
       albumCredits: null,
       trackCredits: null
@@ -53,7 +57,9 @@ function buildAlbumDetailFromResult(albumId, albumResult, enrichedDetail = null)
         license: 'CC0'
       }
     ],
-    dataNotes: 'Tracklist, credits, editions, and cover art are not loaded yet.'
+    dataNotes: enrichedDetail?.tracks?.length > 0
+      ? 'Credits, full editions, and cover art are not loaded yet.'
+      : 'Tracklist, credits, full editions, and cover art are not loaded yet.'
   }
 }
 
@@ -140,9 +146,28 @@ export default function App() {
     setAlbumDetailError('')
 
     fetchMusicBrainzAlbumBasicInfo(selectedAlbumId)
-      .then((detail) => {
+      .then(async (detail) => {
         if (isCurrent) {
           setSelectedAlbumDetail(detail)
+        }
+
+        if (!detail?.selectedReleaseId) {
+          return
+        }
+
+        try {
+          const tracklistDetail = await fetchMusicBrainzSelectedReleaseTracklist(detail.selectedReleaseId)
+          if (isCurrent) {
+            setSelectedAlbumDetail({
+              ...detail,
+              selectedReleaseId: tracklistDetail.selectedReleaseId ?? detail.selectedReleaseId,
+              tracks: tracklistDetail.tracks ?? []
+            })
+          }
+        } catch (error) {
+          if (isCurrent) {
+            setAlbumDetailError(error?.message || 'We could not load the MusicBrainz selected release tracklist.')
+          }
         }
       })
       .catch((error) => {

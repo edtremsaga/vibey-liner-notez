@@ -18,7 +18,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
   const [showEditionsSources, setShowEditionsSources] = useState(true)
 
   const hasAlbum = !!album
-  const isRealMusicBrainzHeader = hasAlbum && album.dataNotes === 'Tracklist, credits, editions, and cover art are not loaded yet.'
+  const isRealMusicBrainzDetail = hasAlbum && album.isRealMusicBrainzDetail
   const hasTracks = hasAlbum && Array.isArray(album.tracks) && album.tracks.length > 0
   const hasAlbumCredits =
     hasAlbum &&
@@ -59,12 +59,14 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
     <View>
       <Text style={{ color: '#e5e7eb', fontSize: 30, fontWeight: '500' }}>Album Detail</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        {isRealMusicBrainzHeader
-          ? 'Real MusicBrainz album header. Tracklist and credits are not loaded yet.'
+        {isRealMusicBrainzDetail
+          ? hasTracks
+            ? 'Real MusicBrainz album header and tracklist. Credits are not loaded yet.'
+            : 'Real MusicBrainz album header. Tracklist and credits are not loaded yet.'
           : 'Mock detail layout preview (iOS scaffold only).'}
       </Text>
 
-      {!isRealMusicBrainzHeader && (
+      {!isRealMusicBrainzDetail && (
         <TouchableOpacity
           accessibilityRole="button"
           onPress={() => setShowLoading((current) => !current)}
@@ -84,7 +86,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
         </TouchableOpacity>
       )}
 
-      {!isRealMusicBrainzHeader && showLoading && (
+      {!isRealMusicBrainzDetail && showLoading && (
         <View
           style={{
             marginTop: 12,
@@ -102,7 +104,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
         </View>
       )}
 
-      {isRealMusicBrainzHeader && isLoading && (
+      {isRealMusicBrainzDetail && isLoading && (
         <View
           style={{
             marginTop: 12,
@@ -113,14 +115,14 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
             backgroundColor: '#181a1f'
           }}
         >
-          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading release-group details...</Text>
+          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading MusicBrainz details...</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Keeping the selected result visible while MusicBrainz release information loads.
+            Keeping the selected result visible while release-group and tracklist information loads.
           </Text>
         </View>
       )}
 
-      {isRealMusicBrainzHeader && !!errorMessage && (
+      {isRealMusicBrainzDetail && !!errorMessage && (
         <View
           style={{
             marginTop: 12,
@@ -131,7 +133,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
             backgroundColor: '#2a1215'
           }}
         >
-          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Release-group details unavailable</Text>
+          <Text style={{ color: '#fecaca', fontWeight: '600' }}>MusicBrainz detail enrichment unavailable</Text>
           <Text style={{ color: '#fca5a5', marginTop: 4 }}>{errorMessage}</Text>
         </View>
       )}
@@ -201,8 +203,8 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                 ))
               ) : (
                 <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-                  {isRealMusicBrainzHeader
-                    ? 'Tracklist is not loaded yet for this first real-detail slice.'
+                  {isRealMusicBrainzDetail
+                    ? 'Tracklist is not loaded yet.'
                     : 'Tracklist preview placeholder'}
                 </Text>
               )
@@ -257,8 +259,8 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                   : null}
                 {!hasAlbumCredits && !hasTrackCredits ? (
                   <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-                    {isRealMusicBrainzHeader
-                      ? 'Credits are not loaded yet for this first real-detail slice.'
+                    {isRealMusicBrainzDetail
+                      ? 'Credits are not loaded yet.'
                       : 'Credits preview placeholder'}
                   </Text>
                 ) : null}
@@ -300,8 +302,8 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                   </View>
                 ) : (
                   <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-                    {isRealMusicBrainzHeader
-                      ? 'Editions are not loaded yet for this first real-detail slice.'
+                    {isRealMusicBrainzDetail
+                      ? 'Editions are not loaded yet.'
                       : 'Editions preview placeholder'}
                   </Text>
                 )}

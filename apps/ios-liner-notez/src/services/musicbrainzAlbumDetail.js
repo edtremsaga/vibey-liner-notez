@@ -47,6 +47,44 @@ function mapReleaseToEdition(release) {
   }
 }
 
+function parseTrackPosition(track, medium) {
+  if (!track?.number) {
+    return null
+  }
+
+  if (medium?.position && medium.position > 1) {
+    return `${medium.position}-${track.number}`
+  }
+
+  return track.number.toString()
+}
+
+function mapReleaseToTracks(release) {
+  const media = Array.isArray(release?.media) ? release.media : []
+
+  return media.flatMap((medium) => {
+    const tracks = Array.isArray(medium?.tracks) ? medium.tracks : []
+
+    return tracks
+      .map((track) => {
+        const recording = track?.recording
+        if (!recording) {
+          return null
+        }
+
+        const position = parseTrackPosition(track, medium) || track?.number?.toString() || ''
+
+        return {
+          trackId: recording.id ?? track?.id ?? `${medium?.position ?? 1}-${position}`,
+          position,
+          title: recording.title || track?.title || '',
+          durationMs: recording.length ?? track?.length ?? null
+        }
+      })
+      .filter(Boolean)
+  })
+}
+
 export async function fetchMusicBrainzAlbumBasicInfo(releaseGroupId) {
   if (!releaseGroupId) {
     throw new Error('MusicBrainz release-group id is required')
@@ -105,5 +143,34 @@ export async function fetchMusicBrainzAlbumBasicInfo(releaseGroupId) {
         retrievedAt
       }
     ]
+  }
+}
+
+export async function fetchMusicBrainzSelectedReleaseTracklist(selectedReleaseId) {
+  if (!selectedReleaseId) {
+    throw new Error('MusicBrainz selected release id is required')
+  }
+
+  const params = new URLSearchParams({
+    inc: 'recordings+artist-credits+recording-level-rels+release-rels+labels+artist-rels',
+    fmt: 'json'
+  })
+  const url = `${MUSICBRAINZ_API_BASE}/release/${selectedReleaseId}?${params.toString()}`
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': MUSICBRAINZ_USER_AGENT
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error(`MusicBrainz selected release tracklist failed: ${response.status} ${response.statusText}`)
+  }
+
+  const release = await response.json()
+
+  return {
+    selectedReleaseId: release?.id ?? selectedReleaseId,
+    tracks: mapReleaseToTracks(release)
   }
 }

@@ -199,22 +199,25 @@ if (!albumDetailScreenSource.includes('Loading mock album detail...')) {
 if (!albumDetailScreenSource.includes('Real MusicBrainz album header. Tracklist and credits are not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include real MusicBrainz header scope copy')
 }
+if (!albumDetailScreenSource.includes('Real MusicBrainz album header and tracklist. Credits are not loaded yet.')) {
+  throw new Error('AlbumDetailScreen does not include real MusicBrainz tracklist scope copy')
+}
 if (!albumDetailScreenSource.includes('Release-group MBID')) {
   throw new Error('AlbumDetailScreen does not render release-group MBID')
 }
-if (!albumDetailScreenSource.includes('Tracklist is not loaded yet for this first real-detail slice.')) {
+if (!albumDetailScreenSource.includes('Tracklist is not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include deferred real tracklist copy')
 }
-if (!albumDetailScreenSource.includes('Credits are not loaded yet for this first real-detail slice.')) {
+if (!albumDetailScreenSource.includes('Credits are not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include deferred real credits copy')
 }
-if (!albumDetailScreenSource.includes('Editions are not loaded yet for this first real-detail slice.')) {
+if (!albumDetailScreenSource.includes('Editions are not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include deferred real editions copy')
 }
-if (!albumDetailScreenSource.includes('Loading release-group details...')) {
+if (!albumDetailScreenSource.includes('Loading MusicBrainz details...')) {
   throw new Error('AlbumDetailScreen does not include release-group enrichment loading state')
 }
-if (!albumDetailScreenSource.includes('Release-group details unavailable')) {
+if (!albumDetailScreenSource.includes('MusicBrainz detail enrichment unavailable')) {
   throw new Error('AlbumDetailScreen does not include release-group enrichment error state')
 }
 if (!albumDetailScreenSource.includes('Release-group editions')) {
@@ -281,6 +284,9 @@ if (!appSource.includes('selectedAlbumResult') || !appSource.includes('buildAlbu
 if (!appSource.includes('fetchMusicBrainzAlbumBasicInfo') || !appSource.includes('setAlbumDetailLoading')) {
   throw new Error('App router does not fetch release-group basic enrichment for Album Detail')
 }
+if (!appSource.includes('fetchMusicBrainzSelectedReleaseTracklist') || !appSource.includes('tracks: tracklistDetail.tracks')) {
+  throw new Error('App router does not fetch and merge selected-release tracklist for Album Detail')
+}
 if (!appSource.includes('musicbrainzReleaseGroupUrl:') || !appSource.includes('`https://musicbrainz.org/release-group/${releaseGroupId}`')) {
   throw new Error('App router does not build MusicBrainz release-group link for real Album Detail header')
 }
@@ -317,11 +323,30 @@ if (!musicBrainzAlbumDetailSource.includes("release?.status === 'Official'") || 
 if (!musicBrainzAlbumDetailSource.includes('mapReleaseToEdition') || !musicBrainzAlbumDetailSource.includes('editionId')) {
   throw new Error('iOS MusicBrainz album detail service does not map minimal release-group editions')
 }
-if (musicBrainzAlbumDetailSource.includes('recordings+artist-credits+recording-level-rels') || musicBrainzAlbumDetailSource.includes('fetchCoverArt')) {
-  throw new Error('iOS MusicBrainz album detail service includes full album/cover-art work outside this slice')
+if (!musicBrainzAlbumDetailSource.includes('fetchMusicBrainzSelectedReleaseTracklist')) {
+  throw new Error('iOS MusicBrainz album detail service does not expose selected-release tracklist fetch')
 }
-if (musicBrainzAlbumDetailSource.includes('${MUSICBRAINZ_API_BASE}/release/${')) {
-  throw new Error('iOS MusicBrainz album detail service must not fetch selected release detail in this slice')
+if (!musicBrainzAlbumDetailSource.includes('/release/${selectedReleaseId}?')) {
+  throw new Error('iOS MusicBrainz album detail service does not fetch selected-release tracklist')
+}
+if (!musicBrainzAlbumDetailSource.includes('recordings+artist-credits+recording-level-rels+release-rels+labels+artist-rels')) {
+  throw new Error('iOS MusicBrainz album detail service does not use React-parity selected-release includes')
+}
+if (!musicBrainzAlbumDetailSource.includes('parseTrackPosition') || !musicBrainzAlbumDetailSource.includes('${medium.position}-${track.number}')) {
+  throw new Error('iOS MusicBrainz album detail service does not preserve React multi-disc track positions')
+}
+for (const trackField of ['trackId', 'position', 'title', 'durationMs']) {
+  if (!musicBrainzAlbumDetailSource.includes(trackField)) {
+    throw new Error(`iOS MusicBrainz album detail service does not map track field: ${trackField}`)
+  }
+}
+if (musicBrainzAlbumDetailSource.includes('fetchCoverArt')) {
+  throw new Error('iOS MusicBrainz album detail service includes cover-art work outside this slice')
+}
+for (const deferredDetailMarker of ['albumCredits', 'trackCreditsMap', 'extractAlbumCredits', 'extractTrackCredits', 'personName']) {
+  if (musicBrainzAlbumDetailSource.includes(deferredDetailMarker)) {
+    throw new Error(`iOS MusicBrainz album detail service includes deferred credits work: ${deferredDetailMarker}`)
+  }
 }
 if (!musicBrainzAlbumSearchSource.includes('https://musicbrainz.org/ws/2')) {
   throw new Error('iOS MusicBrainz album search adapter does not target MusicBrainz')
