@@ -291,6 +291,21 @@ if (!musicBrainzAlbumSearchSource.includes('artist:"${trimmedArtist}" AND ${rele
 if (!musicBrainzAlbumSearchSource.includes('artist:"${trimmedArtist}" AND release:"${trimmedAlbum}"')) {
   throw new Error('iOS MusicBrainz album search adapter does not support artist plus album narrowing')
 }
+if (!musicBrainzAlbumSearchSource.includes("limit: isArtistOnlySearch ? '100' : '20'")) {
+  throw new Error('iOS MusicBrainz album search adapter does not use React-parity artist-only limit')
+}
+if (!musicBrainzAlbumSearchSource.includes("offset: '0'")) {
+  throw new Error('iOS MusicBrainz album search adapter does not include React-parity offset')
+}
+if (!musicBrainzAlbumSearchSource.includes("inc: 'releases'")) {
+  throw new Error('iOS MusicBrainz album search adapter does not include releases for bootleg status checks')
+}
+if (!musicBrainzAlbumSearchSource.includes("BOOTLEG_STATUS_ID = '1156806e-d06a-38bd-83f0-cf2284a808b9'")) {
+  throw new Error('iOS MusicBrainz album search adapter does not include React-parity bootleg status handling')
+}
+if (!musicBrainzAlbumSearchSource.includes('function sortArtistOnlyResults') || !musicBrainzAlbumSearchSource.includes('return isArtistOnlySearch ? sortArtistOnlyResults(results) : results')) {
+  throw new Error('iOS MusicBrainz album search adapter does not sort artist-only results like React')
+}
 if (musicBrainzAlbumSearchSource.includes('releasegroup:"${trimmedQuery}"')) {
   throw new Error('iOS MusicBrainz album search adapter still supports album-only query')
 }
