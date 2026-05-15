@@ -4,6 +4,8 @@
 - iOS scaffold is stable on `main` for read-only Search -> Results development.
 - Current `main` includes live MusicBrainz Search -> Results behavior that matches the current React app search model.
 - Recent Search -> Results milestone commits:
+  - `ec75193` Add real iOS album detail header
+  - `4e6afa3` Polish iOS results screen
   - `efd78db` Correct iOS search to artist-first flow
   - `0a3f499` Add iOS release type filtering
   - `b373d6f` Align iOS album search with React behavior
@@ -29,6 +31,7 @@
 ## Product Scope Status
 - Read-only MusicBrainz Search -> Results is active for artist-first album results with release-type filtering for artist-only searches.
 - Album Detail real-data scope is limited to selected-result header data from Search results.
+- The current real Album Detail header is no-fetch; it uses the selected Results row data only.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 
 ## Search Behavior Contract
@@ -62,6 +65,19 @@
 - This milestone is React parity, not stricter canonical studio-albums-only filtering.
 - Do not start canonical studio albums cleanup here; that is a later shared React+iOS search-semantics project.
 
+## Manual Smoke Status
+- David Bowie / Aladdin Sane passed after `ec75193`.
+- Search used the artist-first flow with Artist `David Bowie` and Album `Aladdin Sane`.
+- Release Type was hidden because Album Name had text.
+- Results heading showed `Albums by David Bowie matching "Aladdin Sane".`
+- Result count appeared and result rows were readable.
+- First result was the expected real MusicBrainz result: `Aladdin Sane` / `David Bowie` / `1973-04-19`.
+- Tapping the result opened Album Detail with matching real selected-result header data.
+- Album Detail showed title, artist, date/year, release-group MBID, `Source: MusicBrainz`, and MusicBrainz release-group link.
+- Tracklist, Credits, and Editions remained not loaded yet.
+- Producer Search remained mock-only.
+- Noisy secondary search results remain expected under current shared MusicBrainz/search semantics and are not an iOS-specific bug.
+
 ## Mock-Only / Deferred Scope
 - Album Detail tracklist, credits, editions, cover art, and rich liner-note sections are not loaded yet.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
@@ -74,8 +90,8 @@
 - Cover art or richer result cards.
 
 ## Recommended Next Safe Slice
-- Polish the iOS Results screen presentation while preserving current Search -> Results query behavior exactly.
-- Do not change MusicBrainz query semantics, result filtering, sorting, or mock-only Album Detail routing in that slice.
+- Polish the iOS Album Detail deferred-section copy while preserving current no-fetch detail-header behavior exactly.
+- Do not change MusicBrainz query semantics, result filtering, sorting, or Producer Search mock-only behavior in that slice.
 
 ## Runtime Lesson Learned
 - If the simulator does not reflect source changes, stale Metro/Expo session state can look like a code bug.
