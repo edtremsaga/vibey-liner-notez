@@ -6,20 +6,20 @@ export function HelpDataSourcesScreen() {
     <View>
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Help / Data Sources</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        This iOS scaffold is currently mock-data-only and helps us validate app flow and UI structure.
+        This iOS scaffold uses read-only MusicBrainz album search while Album Detail and Producer Search remain mock-only.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Current scaffold scope</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Search, Results, Album Detail, Producer Search, and Help / Data Sources are available as mock screens.
+        Search and Results can display MusicBrainz album matches. Album Detail, Producer Search, and remaining data flows are mock-only.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Not implemented yet</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        No real API calls are active yet. No producer traversal is implemented yet.
+        No real album detail loading is active yet. No producer traversal is implemented yet.
       </Text>
 
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Planned real sources</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Data sources</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>MusicBrainz</Text>
       <Text style={{ color: '#9ca3af', marginTop: 4 }}>Cover Art Archive</Text>
       <Text style={{ color: '#9ca3af', marginTop: 4 }}>Wikidata</Text>

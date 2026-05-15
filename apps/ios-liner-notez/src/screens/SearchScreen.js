@@ -2,27 +2,27 @@ import React, { useState } from 'react'
 import { Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { getMockAlbums } from 'core-liner-notez'
 
-export function SearchScreen({ onSubmitMockSearch }) {
-  const [artistInput, setArtistInput] = useState('')
+export function SearchScreen({ onSubmitAlbumSearch }) {
+  const [albumInput, setAlbumInput] = useState('')
   const [validationMessage, setValidationMessage] = useState('')
   const mockAlbumPreview = getMockAlbums()[0]
 
   function handleSearchPress() {
-    const trimmedArtist = artistInput.trim()
-    if (!trimmedArtist) {
-      setValidationMessage('Please enter an artist name to continue.')
+    const trimmedAlbum = albumInput.trim()
+    if (!trimmedAlbum) {
+      setValidationMessage('Please enter an album title to continue.')
       return
     }
 
     setValidationMessage('')
-    onSubmitMockSearch(trimmedArtist)
+    onSubmitAlbumSearch(trimmedAlbum)
   }
 
   return (
     <View>
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Search</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Search mock album data while the native iOS flow is being built.
+        Search MusicBrainz album results. Album Detail remains mock-only while the native detail flow is being built.
       </Text>
       <View
         style={{
@@ -42,17 +42,17 @@ export function SearchScreen({ onSubmitMockSearch }) {
         <Text style={{ color: '#9ca3af', marginTop: 4 }}>{mockAlbumPreview.releaseYear}</Text>
       </View>
 
-      <Text style={{ color: '#d1d5db', marginTop: 16, marginBottom: 6 }}>Artist (mock)</Text>
+      <Text style={{ color: '#d1d5db', marginTop: 16, marginBottom: 6 }}>Album title</Text>
       <TextInput
-        accessibilityLabel="Artist search input"
+        accessibilityLabel="Album search input"
         autoCapitalize="words"
         onChangeText={(value) => {
-          setArtistInput(value)
+          setAlbumInput(value)
           if (validationMessage) {
             setValidationMessage('')
           }
         }}
-        placeholder="e.g. R.E.M."
+        placeholder="e.g. Life's Rich Pageant"
         placeholderTextColor="#6b7280"
         style={{
           borderWidth: 1,
@@ -62,7 +62,7 @@ export function SearchScreen({ onSubmitMockSearch }) {
           paddingHorizontal: 12,
           color: '#f3f4f6'
         }}
-        value={artistInput}
+        value={albumInput}
       />
 
       {!!validationMessage && <Text style={{ color: '#fca5a5', marginTop: 8 }}>{validationMessage}</Text>}
@@ -80,7 +80,7 @@ export function SearchScreen({ onSubmitMockSearch }) {
           alignSelf: 'flex-start'
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Search Mock Albums</Text>
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Search Albums</Text>
       </TouchableOpacity>
     </View>
   )

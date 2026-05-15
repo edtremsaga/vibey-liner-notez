@@ -6,14 +6,18 @@ import { AlbumDetailScreen } from './screens/AlbumDetailScreen'
 import { ProducerSearchScreen } from './screens/ProducerSearchScreen'
 import { HelpDataSourcesScreen } from './screens/HelpDataSourcesScreen'
 import { getMockAlbumById, getMockAlbums } from 'core-liner-notez'
+import { searchMusicBrainzAlbums } from './services/musicbrainzAlbumSearch'
 
 const ROUTES = ['Search', 'Results', 'Album Detail', 'Producer Search', 'Help / Data Sources']
 
 function ScreenRouter({
   route,
-  mockResults,
+  albumSearchResults,
+  albumSearchError,
+  albumSearchLoading,
+  albumSearchQuery,
   selectedAlbumId,
-  onSubmitMockSearch,
+  onSubmitAlbumSearch,
   onSelectAlbum,
   onBackToResults
 }) {
@@ -21,7 +25,15 @@ function ScreenRouter({
 
   switch (route) {
     case 'Results':
-      return <ResultsScreen albums={mockResults} onSelectAlbum={onSelectAlbum} />
+      return (
+        <ResultsScreen
+          albums={albumSearchResults}
+          errorMessage={albumSearchError}
+          isLoading={albumSearchLoading}
+          query={albumSearchQuery}
+          onSelectAlbum={onSelectAlbum}
+        />
+      )
     case 'Album Detail':
       return <AlbumDetailScreen album={selectedAlbum} onBackToResults={onBackToResults} />
     case 'Producer Search':
@@ -30,24 +42,38 @@ function ScreenRouter({
       return <HelpDataSourcesScreen />
     case 'Search':
     default:
-      return <SearchScreen onSubmitMockSearch={onSubmitMockSearch} />
+      return <SearchScreen onSubmitAlbumSearch={onSubmitAlbumSearch} />
   }
 }
 
 export default function App() {
   const [route, setRoute] = useState('Search')
-  const [mockResults] = useState(getMockAlbums())
+  const [albumSearchResults, setAlbumSearchResults] = useState([])
+  const [albumSearchError, setAlbumSearchError] = useState('')
+  const [albumSearchLoading, setAlbumSearchLoading] = useState(false)
+  const [albumSearchQuery, setAlbumSearchQuery] = useState('')
   const [selectedAlbumId, setSelectedAlbumId] = useState(null)
-  const [lastMockSearchArtist, setLastMockSearchArtist] = useState('')
   const tabs = useMemo(() => ROUTES, [])
 
-  function handleSubmitMockSearch(artistName) {
-    setLastMockSearchArtist(artistName)
+  async function handleSubmitAlbumSearch(query) {
+    setAlbumSearchQuery(query)
+    setAlbumSearchResults([])
+    setAlbumSearchError('')
+    setAlbumSearchLoading(true)
     setRoute('Results')
+
+    try {
+      const results = await searchMusicBrainzAlbums(query)
+      setAlbumSearchResults(results)
+    } catch (error) {
+      setAlbumSearchError(error?.message || 'We could not load album results. Please try again.')
+    } finally {
+      setAlbumSearchLoading(false)
+    }
   }
 
   function handleSelectAlbum(albumId) {
-    const selected = getMockAlbumById(albumId)
+    const selected = getMockAlbumById(albumId) || getMockAlbums()[0]
     if (selected) {
       setSelectedAlbumId(selected.albumId)
       setRoute('Album Detail')
@@ -62,8 +88,8 @@ export default function App() {
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
         <Text style={styles.title}>liner notez (iOS scaffold)</Text>
-        {!!lastMockSearchArtist && (
-          <Text style={styles.subtitle}>Mock search artist: {lastMockSearchArtist}</Text>
+        {!!albumSearchQuery && (
+          <Text style={styles.subtitle}>Album search: {albumSearchQuery}</Text>
         )}
       </View>
       <View style={styles.tabs}>
@@ -81,9 +107,12 @@ export default function App() {
       <View style={styles.content}>
         <ScreenRouter
           route={route}
-          mockResults={mockResults}
+          albumSearchResults={albumSearchResults}
+          albumSearchError={albumSearchError}
+          albumSearchLoading={albumSearchLoading}
+          albumSearchQuery={albumSearchQuery}
           selectedAlbumId={selectedAlbumId}
-          onSubmitMockSearch={handleSubmitMockSearch}
+          onSubmitAlbumSearch={handleSubmitAlbumSearch}
           onSelectAlbum={handleSelectAlbum}
           onBackToResults={handleBackToResults}
         />

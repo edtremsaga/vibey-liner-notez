@@ -1,72 +1,18 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 
-export function ResultsScreen({ albums, onSelectAlbum }) {
-  const [mockState, setMockState] = useState('results')
-
-  const showLoading = mockState === 'loading'
-  const showResults = mockState === 'results'
-  const showEmpty = mockState === 'empty'
-  const showError = mockState === 'error'
+export function ResultsScreen({ albums, errorMessage, isLoading, query, onSelectAlbum }) {
+  const showLoading = isLoading
+  const showError = !isLoading && !!errorMessage
+  const showEmpty = !isLoading && !errorMessage && query && albums.length === 0
+  const showResults = !isLoading && !errorMessage && albums.length > 0
 
   return (
     <View>
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Results</Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>Mock results only (shared core fixture data).</Text>
-      <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-        <TouchableOpacity
-          accessibilityRole="button"
-          onPress={() => setMockState('loading')}
-          style={{
-            borderWidth: 1,
-            borderColor: mockState === 'loading' ? '#f3f4f6' : '#4b5563',
-            borderRadius: 8,
-            paddingVertical: 8,
-            paddingHorizontal: 10
-          }}
-        >
-          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Loading</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          accessibilityRole="button"
-          onPress={() => setMockState('results')}
-          style={{
-            borderWidth: 1,
-            borderColor: mockState === 'results' ? '#f3f4f6' : '#4b5563',
-            borderRadius: 8,
-            paddingVertical: 8,
-            paddingHorizontal: 10
-          }}
-        >
-          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Results</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          accessibilityRole="button"
-          onPress={() => setMockState('empty')}
-          style={{
-            borderWidth: 1,
-            borderColor: mockState === 'empty' ? '#f3f4f6' : '#4b5563',
-            borderRadius: 8,
-            paddingVertical: 8,
-            paddingHorizontal: 10
-          }}
-        >
-          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Empty</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          accessibilityRole="button"
-          onPress={() => setMockState('error')}
-          style={{
-            borderWidth: 1,
-            borderColor: mockState === 'error' ? '#f3f4f6' : '#4b5563',
-            borderRadius: 8,
-            paddingVertical: 8,
-            paddingHorizontal: 10
-          }}
-        >
-          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Error</Text>
-        </TouchableOpacity>
-      </View>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        {query ? `MusicBrainz album results for "${query}".` : 'Search for an album to load MusicBrainz results.'}
+      </Text>
 
       {showLoading && (
         <View
@@ -79,9 +25,9 @@ export function ResultsScreen({ albums, onSelectAlbum }) {
             backgroundColor: '#181a1f'
           }}
         >
-          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading mock album results...</Text>
+          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading MusicBrainz album results...</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Simulating the in-flight state before results are shown.
+            Searching the MusicBrainz release-group catalog.
           </Text>
         </View>
       )}
@@ -97,9 +43,9 @@ export function ResultsScreen({ albums, onSelectAlbum }) {
             backgroundColor: '#2a1215'
           }}
         >
-          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Mock error state</Text>
+          <Text style={{ color: '#fecaca', fontWeight: '600' }}>MusicBrainz search error</Text>
           <Text style={{ color: '#fca5a5', marginTop: 4 }}>
-            We could not load album results. Please try again.
+            {errorMessage}
           </Text>
         </View>
       )}
@@ -115,16 +61,16 @@ export function ResultsScreen({ albums, onSelectAlbum }) {
             backgroundColor: '#181a1f'
           }}
         >
-          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>No albums found (mock empty state)</Text>
+          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>No albums found</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Try another artist or album name in Search.
+            Try another album title in Search.
           </Text>
         </View>
       )}
 
       {showResults &&
         albums.map((album) => {
-          const albumId = album?.albumId ?? album?.id ?? null
+          const albumId = album?.releaseGroupId ?? album?.id ?? album?.albumId ?? null
           if (!albumId) {
             return null
           }
@@ -144,8 +90,15 @@ export function ResultsScreen({ albums, onSelectAlbum }) {
               }}
             >
               <Text style={{ color: '#f3f4f6', fontWeight: '600', fontSize: 16 }}>{album.title}</Text>
-              <Text style={{ color: '#d1d5db', marginTop: 4 }}>{album.artistName}</Text>
-              <Text style={{ color: '#9ca3af', marginTop: 4 }}>{album.releaseYear}</Text>
+              <Text style={{ color: '#d1d5db', marginTop: 4 }}>{album.artistCredit ?? album.artistName}</Text>
+              {!!(album.firstReleaseDate ?? album.releaseYear) && (
+                <Text style={{ color: '#9ca3af', marginTop: 4 }}>
+                  {album.firstReleaseDate ?? album.releaseYear}
+                </Text>
+              )}
+              {!!album.disambiguation && (
+                <Text style={{ color: '#9ca3af', marginTop: 4 }}>{album.disambiguation}</Text>
+              )}
             </TouchableOpacity>
           )
         })}

@@ -9,6 +9,7 @@ const appRoot = path.resolve(__dirname, '..')
 const requiredFiles = [
   'index.js',
   'src/App.js',
+  'src/services/musicbrainzAlbumSearch.js',
   'src/screens/SearchScreen.js',
   'src/screens/ResultsScreen.js',
   'src/screens/AlbumDetailScreen.js',
@@ -47,31 +48,34 @@ if (!searchScreenSource.includes('getMockAlbums')) {
 if (!searchScreenSource.includes("from 'core-liner-notez'")) {
   throw new Error('SearchScreen does not use stable shared core package import')
 }
-if (!searchScreenSource.includes('Artist search input')) {
-  throw new Error('SearchScreen does not include artist search input marker')
+if (!searchScreenSource.includes('Album search input')) {
+  throw new Error('SearchScreen does not include album search input marker')
 }
-if (!searchScreenSource.includes('Search Mock Albums')) {
-  throw new Error('SearchScreen does not include mock search action')
+if (!searchScreenSource.includes('Search Albums')) {
+  throw new Error('SearchScreen does not include album search action')
 }
-if (!searchScreenSource.includes('Please enter an artist name to continue.')) {
+if (!searchScreenSource.includes('Please enter an album title to continue.')) {
   throw new Error('SearchScreen does not include empty-input validation message')
 }
 
 const resultsScreenSource = readFileSync(path.join(appRoot, 'src/screens/ResultsScreen.js'), 'utf8')
 if (!resultsScreenSource.includes('albums.map')) {
-  throw new Error('ResultsScreen does not render result list from shared fixture data')
+  throw new Error('ResultsScreen does not render result list')
 }
 if (!resultsScreenSource.includes('onSelectAlbum(albumId)')) {
   throw new Error('ResultsScreen does not pass albumId-only selection handler')
 }
-if (!resultsScreenSource.includes('No albums found (mock empty state)')) {
-  throw new Error('ResultsScreen does not include mock empty state text')
+if (!resultsScreenSource.includes('No albums found')) {
+  throw new Error('ResultsScreen does not include empty state text')
 }
-if (!resultsScreenSource.includes('Mock error state')) {
-  throw new Error('ResultsScreen does not include mock error state text')
+if (!resultsScreenSource.includes('MusicBrainz search error')) {
+  throw new Error('ResultsScreen does not include MusicBrainz error state text')
 }
-if (!resultsScreenSource.includes('Loading mock album results...')) {
-  throw new Error('ResultsScreen does not include mock loading state text')
+if (!resultsScreenSource.includes('Loading MusicBrainz album results...')) {
+  throw new Error('ResultsScreen does not include MusicBrainz loading state text')
+}
+if (!resultsScreenSource.includes('artistCredit') || !resultsScreenSource.includes('firstReleaseDate')) {
+  throw new Error('ResultsScreen does not render compact MusicBrainz album fields')
 }
 
 const producerSearchScreenSource = readFileSync(
@@ -116,11 +120,11 @@ const helpDataSourcesScreenSource = readFileSync(
 if (helpDataSourcesScreenSource.includes('Placeholder screen for help, attribution, and data-source disclosures.')) {
   throw new Error('HelpDataSourcesScreen still contains placeholder-only copy')
 }
-if (!helpDataSourcesScreenSource.includes('mock-data-only')) {
-  throw new Error('HelpDataSourcesScreen does not include explicit mock-data-only scope copy')
+if (!helpDataSourcesScreenSource.includes('read-only MusicBrainz album search')) {
+  throw new Error('HelpDataSourcesScreen does not disclose read-only MusicBrainz album search scope')
 }
-if (!helpDataSourcesScreenSource.includes('No real API calls are active yet.')) {
-  throw new Error('HelpDataSourcesScreen does not include no-real-API copy')
+if (!helpDataSourcesScreenSource.includes('No real album detail loading is active yet.')) {
+  throw new Error('HelpDataSourcesScreen does not include no-real-album-detail copy')
 }
 if (!helpDataSourcesScreenSource.includes('No producer traversal is implemented yet.')) {
   throw new Error('HelpDataSourcesScreen does not include no-producer-traversal copy')
@@ -193,8 +197,11 @@ if (!albumDetailScreenSource.includes('mock not-found state')) {
   throw new Error('AlbumDetailScreen does not include not-found/unavailable state')
 }
 
-if (!appSource.includes('handleSubmitMockSearch') || !appSource.includes("setRoute('Results')")) {
-  throw new Error('App router does not navigate from search to results via mock submit flow')
+if (!appSource.includes('searchMusicBrainzAlbums')) {
+  throw new Error('App router does not import iOS MusicBrainz album search adapter')
+}
+if (!appSource.includes('handleSubmitAlbumSearch') || !appSource.includes("setRoute('Results')")) {
+  throw new Error('App router does not navigate from search to results via album submit flow')
 }
 if (!appSource.includes('handleSelectAlbum') || !appSource.includes("setRoute('Album Detail')")) {
   throw new Error('App router does not navigate from results to album detail')
@@ -209,4 +216,25 @@ if (!appSource.includes('return <ProducerSearchScreen onSelectAlbum={onSelectAlb
   throw new Error('App router does not pass album-select handler to ProducerSearchScreen')
 }
 
-console.log('PASS Expo scaffold files and mock Search -> Results -> Album Detail flow wiring verified')
+const musicBrainzAlbumSearchSource = readFileSync(
+  path.join(appRoot, 'src/services/musicbrainzAlbumSearch.js'),
+  'utf8'
+)
+if (!musicBrainzAlbumSearchSource.includes('https://musicbrainz.org/ws/2')) {
+  throw new Error('iOS MusicBrainz album search adapter does not target MusicBrainz')
+}
+if (!musicBrainzAlbumSearchSource.includes('/release-group?')) {
+  throw new Error('iOS MusicBrainz album search adapter does not use release-group search')
+}
+if (!musicBrainzAlbumSearchSource.includes('primarytype:album')) {
+  throw new Error('iOS MusicBrainz album search adapter does not limit search to albums')
+}
+if (
+  !musicBrainzAlbumSearchSource.includes('artistCredit') ||
+  !musicBrainzAlbumSearchSource.includes('firstReleaseDate') ||
+  !musicBrainzAlbumSearchSource.includes('disambiguation')
+) {
+  throw new Error('iOS MusicBrainz album search adapter does not expose compact result fields')
+}
+
+console.log('PASS Expo scaffold files and MusicBrainz Search -> Results -> mock Album Detail flow wiring verified')
