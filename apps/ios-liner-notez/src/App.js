@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SearchScreen } from './screens/SearchScreen'
 import { ResultsScreen } from './screens/ResultsScreen'
@@ -6,33 +6,35 @@ import { AlbumDetailScreen } from './screens/AlbumDetailScreen'
 import { ProducerSearchScreen } from './screens/ProducerSearchScreen'
 import { HelpDataSourcesScreen } from './screens/HelpDataSourcesScreen'
 import { getMockAlbumById, getMockAlbums } from 'core-liner-notez'
+import { fetchMusicBrainzAlbumBasicInfo } from './services/musicbrainzAlbumDetail'
 import { searchMusicBrainzAlbumsByArtist } from './services/musicbrainzAlbumSearch'
 
 const ROUTES = ['Search', 'Results', 'Album Detail', 'Producer Search', 'Help / Data Sources']
 
-function buildAlbumDetailFromResult(albumId, albumResult) {
+function buildAlbumDetailFromResult(albumId, albumResult, enrichedDetail = null) {
   if (!albumResult) {
     return null
   }
 
-  const releaseGroupId = albumResult.releaseGroupId ?? albumResult.id ?? albumId
-  const firstReleaseDate = albumResult.firstReleaseDate ?? null
-  const releaseYear = albumResult.releaseYear
+  const releaseGroupId = enrichedDetail?.albumId ?? albumResult.releaseGroupId ?? albumResult.id ?? albumId
+  const firstReleaseDate = enrichedDetail?.firstReleaseDate ?? albumResult.firstReleaseDate ?? null
+  const releaseYear = enrichedDetail?.releaseYear ?? (albumResult.releaseYear
     ? Number(albumResult.releaseYear)
     : firstReleaseDate
       ? Number(firstReleaseDate.slice(0, 4))
-      : null
+      : null)
 
   return {
     albumId: releaseGroupId,
-    title: albumResult.title ?? 'Untitled album',
-    artistName: albumResult.artistCredit ?? albumResult.artistName ?? 'Unknown artist',
+    title: enrichedDetail?.title ?? albumResult.title ?? 'Untitled album',
+    artistName: enrichedDetail?.artistName ?? albumResult.artistCredit ?? albumResult.artistName ?? 'Unknown artist',
     firstReleaseDate,
     releaseYear: Number.isNaN(releaseYear) ? null : releaseYear,
-    disambiguation: albumResult.disambiguation ?? null,
+    disambiguation: enrichedDetail?.disambiguation ?? albumResult.disambiguation ?? null,
+    selectedReleaseId: enrichedDetail?.selectedReleaseId ?? null,
     albumType: 'album',
     coverArtUrl: null,
-    editions: [],
+    editions: enrichedDetail?.editions ?? [],
     tracks: [],
     credits: {
       albumCredits: null,
@@ -40,12 +42,12 @@ function buildAlbumDetailFromResult(albumId, albumResult) {
     },
     recordingInfo: null,
     externalLinks: {
-      musicbrainzReleaseGroupUrl: `https://musicbrainz.org/release-group/${releaseGroupId}`,
-      musicbrainzSelectedReleaseUrl: null,
-      wikidataUrl: null,
-      discogsUrl: null
+      musicbrainzReleaseGroupUrl: enrichedDetail?.externalLinks?.musicbrainzReleaseGroupUrl ?? `https://musicbrainz.org/release-group/${releaseGroupId}`,
+      musicbrainzSelectedReleaseUrl: enrichedDetail?.externalLinks?.musicbrainzSelectedReleaseUrl ?? null,
+      wikidataUrl: enrichedDetail?.externalLinks?.wikidataUrl ?? null,
+      discogsUrl: enrichedDetail?.externalLinks?.discogsUrl ?? null
     },
-    sources: [
+    sources: enrichedDetail?.sources ?? [
       {
         sourceName: 'MusicBrainz',
         license: 'CC0'
@@ -65,12 +67,15 @@ function ScreenRouter({
   albumSearchLoading,
   selectedAlbumId,
   selectedAlbumResult,
+  selectedAlbumDetail,
+  albumDetailLoading,
+  albumDetailError,
   onSubmitArtistSearch,
   onSelectAlbum,
   onBackToResults
 }) {
   const selectedAlbum = selectedAlbumResult
-    ? buildAlbumDetailFromResult(selectedAlbumId, selectedAlbumResult)
+    ? buildAlbumDetailFromResult(selectedAlbumId, selectedAlbumResult, selectedAlbumDetail)
     : selectedAlbumId
       ? getMockAlbumById(selectedAlbumId)
       : null
@@ -89,7 +94,14 @@ function ScreenRouter({
         />
       )
     case 'Album Detail':
-      return <AlbumDetailScreen album={selectedAlbum} onBackToResults={onBackToResults} />
+      return (
+        <AlbumDetailScreen
+          album={selectedAlbum}
+          errorMessage={albumDetailError}
+          isLoading={albumDetailLoading}
+          onBackToResults={onBackToResults}
+        />
+      )
     case 'Producer Search':
       return <ProducerSearchScreen onSelectAlbum={onSelectAlbum} />
     case 'Help / Data Sources':
@@ -110,7 +122,44 @@ export default function App() {
   const [albumSearchLoading, setAlbumSearchLoading] = useState(false)
   const [selectedAlbumId, setSelectedAlbumId] = useState(null)
   const [selectedAlbumResult, setSelectedAlbumResult] = useState(null)
+  const [selectedAlbumDetail, setSelectedAlbumDetail] = useState(null)
+  const [albumDetailLoading, setAlbumDetailLoading] = useState(false)
+  const [albumDetailError, setAlbumDetailError] = useState('')
   const tabs = useMemo(() => ROUTES, [])
+
+  useEffect(() => {
+    if (!selectedAlbumResult || !selectedAlbumId) {
+      setSelectedAlbumDetail(null)
+      setAlbumDetailLoading(false)
+      setAlbumDetailError('')
+      return undefined
+    }
+
+    let isCurrent = true
+    setAlbumDetailLoading(true)
+    setAlbumDetailError('')
+
+    fetchMusicBrainzAlbumBasicInfo(selectedAlbumId)
+      .then((detail) => {
+        if (isCurrent) {
+          setSelectedAlbumDetail(detail)
+        }
+      })
+      .catch((error) => {
+        if (isCurrent) {
+          setAlbumDetailError(error?.message || 'We could not load MusicBrainz release-group details.')
+        }
+      })
+      .finally(() => {
+        if (isCurrent) {
+          setAlbumDetailLoading(false)
+        }
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [selectedAlbumId, selectedAlbumResult])
 
   async function handleSubmitArtistSearch({ artistName, albumTitle, releaseType }) {
     setAlbumSearchArtistName(artistName)
@@ -135,6 +184,8 @@ export default function App() {
     if (albumResult) {
       setSelectedAlbumId(albumId)
       setSelectedAlbumResult(albumResult)
+      setSelectedAlbumDetail(null)
+      setAlbumDetailError('')
       setRoute('Album Detail')
       return
     }
@@ -143,6 +194,8 @@ export default function App() {
     if (selected) {
       setSelectedAlbumId(selected.albumId)
       setSelectedAlbumResult(null)
+      setSelectedAlbumDetail(null)
+      setAlbumDetailError('')
       setRoute('Album Detail')
     }
   }
@@ -184,6 +237,9 @@ export default function App() {
           albumSearchLoading={albumSearchLoading}
           selectedAlbumId={selectedAlbumId}
           selectedAlbumResult={selectedAlbumResult}
+          selectedAlbumDetail={selectedAlbumDetail}
+          albumDetailLoading={albumDetailLoading}
+          albumDetailError={albumDetailError}
           onSubmitArtistSearch={handleSubmitArtistSearch}
           onSelectAlbum={handleSelectAlbum}
           onBackToResults={handleBackToResults}

@@ -20,7 +20,7 @@
 - Producer input works.
 - Producer Search result rows are visible/readable.
 - Tapping a mock producer result opens Album Detail.
-- Album Detail shows real selected-result header data for Search results, with Tracklist, Credits, Editions, cover art, and rich detail sections deferred.
+- Album Detail shows real selected-result header data for Search results and enriches release-group Editions & Sources from MusicBrainz.
 - Album Detail still renders selected mock album content for Producer Search mock results.
 - Help / Data Sources shows mock-scope, planned sources, and trust-rule content.
 - Internal marker strings are removed from visible UI.
@@ -30,8 +30,8 @@
 
 ## Product Scope Status
 - Read-only MusicBrainz Search -> Results is active for artist-first album results with release-type filtering for artist-only searches.
-- Album Detail real-data scope is limited to selected-result header data from Search results.
-- The current real Album Detail header is no-fetch; it uses the selected Results row data only.
+- Album Detail real-data scope is limited to selected-result header data plus release-group basic enrichment from MusicBrainz.
+- Album Detail opens immediately from selected Results row data, then fetches release-group basic info in the background.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 
 ## Search Behavior Contract
@@ -74,23 +74,24 @@
 - First result was the expected real MusicBrainz result: `Aladdin Sane` / `David Bowie` / `1973-04-19`.
 - Tapping the result opened Album Detail with matching real selected-result header data.
 - Album Detail showed title, artist, date/year, release-group MBID, `Source: MusicBrainz`, and MusicBrainz release-group link.
-- Tracklist, Credits, and Editions remained not loaded yet.
+- Tracklist and Credits remained not loaded yet. Release-group Editions & Sources are the only enrichment scope.
 - Producer Search remained mock-only.
 - Noisy secondary search results remain expected under current shared MusicBrainz/search semantics and are not an iOS-specific bug.
 
 ## Mock-Only / Deferred Scope
-- Album Detail tracklist, credits, editions, cover art, and rich liner-note sections are not loaded yet.
+- Album Detail tracklist, credits, full edition metadata, cover art, and rich liner-note sections are not loaded yet.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 
 ## Known Deferred Work
 - Canonical studio albums cleanup as a later shared React+iOS search-semantics project.
 - Real Album Detail tracklist/credits loading.
+- Full selected-release edition metadata.
 - Real Producer Search.
 - Pagination or load more for larger result sets.
 - Cover art or richer result cards.
 
 ## Recommended Next Safe Slice
-- Polish the iOS Album Detail deferred-section copy while preserving current no-fetch detail-header behavior exactly.
+- Polish the iOS Album Detail deferred-section copy while preserving current release-group enrichment behavior exactly.
 - Do not change MusicBrainz query semantics, result filtering, sorting, or Producer Search mock-only behavior in that slice.
 
 ## Runtime Lesson Learned

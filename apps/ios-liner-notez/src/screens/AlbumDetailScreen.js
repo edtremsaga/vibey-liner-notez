@@ -11,7 +11,7 @@ function formatDuration(durationMs) {
   return `${minutes}:${seconds}`
 }
 
-export function AlbumDetailScreen({ album, onBackToResults }) {
+export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResults }) {
   const [showLoading, setShowLoading] = useState(false)
   const [showTracklist, setShowTracklist] = useState(true)
   const [showCredits, setShowCredits] = useState(true)
@@ -42,6 +42,7 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
         ['Barcode', selectedEdition.barcode]
       ].filter(([, value]) => !!value)
     : []
+  const editionRows = hasEditions ? album.editions.slice(0, 8) : []
   const externalLinks = hasAlbum && album.externalLinks ? album.externalLinks : {}
   const externalLinkRows = [
     ['MusicBrainz release group', externalLinks.musicbrainzReleaseGroupUrl],
@@ -98,6 +99,40 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
             Simulating album detail retrieval before content is available.
           </Text>
+        </View>
+      )}
+
+      {isRealMusicBrainzHeader && isLoading && (
+        <View
+          style={{
+            marginTop: 12,
+            borderWidth: 1,
+            borderColor: '#374151',
+            borderRadius: 10,
+            padding: 12,
+            backgroundColor: '#181a1f'
+          }}
+        >
+          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading release-group details...</Text>
+          <Text style={{ color: '#9ca3af', marginTop: 4 }}>
+            Keeping the selected result visible while MusicBrainz release information loads.
+          </Text>
+        </View>
+      )}
+
+      {isRealMusicBrainzHeader && !!errorMessage && (
+        <View
+          style={{
+            marginTop: 12,
+            borderWidth: 1,
+            borderColor: '#7f1d1d',
+            borderRadius: 10,
+            padding: 12,
+            backgroundColor: '#2a1215'
+          }}
+        >
+          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Release-group details unavailable</Text>
+          <Text style={{ color: '#fca5a5', marginTop: 4 }}>{errorMessage}</Text>
         </View>
       )}
 
@@ -269,6 +304,21 @@ export function AlbumDetailScreen({ album, onBackToResults }) {
                       ? 'Editions are not loaded yet for this first real-detail slice.'
                       : 'Editions preview placeholder'}
                   </Text>
+                )}
+                {editionRows.length > 0 && (
+                  <View style={{ marginTop: 10 }}>
+                    <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>
+                      Release-group editions
+                    </Text>
+                    {editionRows.map((edition) => {
+                      const editionSummary = [edition.date, edition.country, edition.status].filter(Boolean).join(' - ')
+                      return (
+                        <Text key={edition.editionId} style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>
+                          {editionSummary || edition.editionId}
+                        </Text>
+                      )
+                    })}
+                  </View>
                 )}
                 {hasSources ? (
                   <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>

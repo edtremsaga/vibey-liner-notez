@@ -9,6 +9,7 @@ const appRoot = path.resolve(__dirname, '..')
 const requiredFiles = [
   'index.js',
   'src/App.js',
+  'src/services/musicbrainzAlbumDetail.js',
   'src/services/musicbrainzAlbumSearch.js',
   'src/screens/SearchScreen.js',
   'src/screens/ResultsScreen.js',
@@ -167,8 +168,8 @@ if (!helpDataSourcesScreenSource.includes('required artist')) {
 if (!helpDataSourcesScreenSource.includes('Release Type filters artist-only searches.')) {
   throw new Error('HelpDataSourcesScreen does not explain release type search scope')
 }
-if (!helpDataSourcesScreenSource.includes('real selected-album header')) {
-  throw new Error('HelpDataSourcesScreen does not disclose real selected-album header scope')
+if (!helpDataSourcesScreenSource.includes('release-group information')) {
+  throw new Error('HelpDataSourcesScreen does not disclose real release-group enrichment scope')
 }
 if (!helpDataSourcesScreenSource.includes('No producer traversal is implemented yet.')) {
   throw new Error('HelpDataSourcesScreen does not include no-producer-traversal copy')
@@ -209,6 +210,15 @@ if (!albumDetailScreenSource.includes('Credits are not loaded yet for this first
 }
 if (!albumDetailScreenSource.includes('Editions are not loaded yet for this first real-detail slice.')) {
   throw new Error('AlbumDetailScreen does not include deferred real editions copy')
+}
+if (!albumDetailScreenSource.includes('Loading release-group details...')) {
+  throw new Error('AlbumDetailScreen does not include release-group enrichment loading state')
+}
+if (!albumDetailScreenSource.includes('Release-group details unavailable')) {
+  throw new Error('AlbumDetailScreen does not include release-group enrichment error state')
+}
+if (!albumDetailScreenSource.includes('Release-group editions')) {
+  throw new Error('AlbumDetailScreen does not render minimal release-group editions')
 }
 if (!albumDetailScreenSource.includes('Tracklist')) {
   throw new Error('AlbumDetailScreen does not include Tracklist section label')
@@ -268,7 +278,10 @@ if (!appSource.includes('handleSelectAlbum') || !appSource.includes("setRoute('A
 if (!appSource.includes('selectedAlbumResult') || !appSource.includes('buildAlbumDetailFromResult')) {
   throw new Error('App router does not preserve selected MusicBrainz result for Album Detail header')
 }
-if (!appSource.includes('musicbrainzReleaseGroupUrl: `https://musicbrainz.org/release-group/${releaseGroupId}`')) {
+if (!appSource.includes('fetchMusicBrainzAlbumBasicInfo') || !appSource.includes('setAlbumDetailLoading')) {
+  throw new Error('App router does not fetch release-group basic enrichment for Album Detail')
+}
+if (!appSource.includes('musicbrainzReleaseGroupUrl:') || !appSource.includes('`https://musicbrainz.org/release-group/${releaseGroupId}`')) {
   throw new Error('App router does not build MusicBrainz release-group link for real Album Detail header')
 }
 if (!appSource.includes('getMockAlbumById')) {
@@ -285,6 +298,31 @@ const musicBrainzAlbumSearchSource = readFileSync(
   path.join(appRoot, 'src/services/musicbrainzAlbumSearch.js'),
   'utf8'
 )
+const musicBrainzAlbumDetailSource = readFileSync(
+  path.join(appRoot, 'src/services/musicbrainzAlbumDetail.js'),
+  'utf8'
+)
+if (!musicBrainzAlbumDetailSource.includes('fetchMusicBrainzAlbumBasicInfo')) {
+  throw new Error('iOS MusicBrainz album detail service does not expose basic info fetch')
+}
+if (!musicBrainzAlbumDetailSource.includes('/release-group/${releaseGroupId}?')) {
+  throw new Error('iOS MusicBrainz album detail service does not fetch release-group detail')
+}
+if (!musicBrainzAlbumDetailSource.includes('releases+artist-credits+release-group-rels+artist-rels+url-rels')) {
+  throw new Error('iOS MusicBrainz album detail service does not use React-parity release-group includes')
+}
+if (!musicBrainzAlbumDetailSource.includes("release?.status === 'Official'") || !musicBrainzAlbumDetailSource.includes('dateA.localeCompare(dateB)')) {
+  throw new Error('iOS MusicBrainz album detail service does not choose selected release like React basic info')
+}
+if (!musicBrainzAlbumDetailSource.includes('mapReleaseToEdition') || !musicBrainzAlbumDetailSource.includes('editionId')) {
+  throw new Error('iOS MusicBrainz album detail service does not map minimal release-group editions')
+}
+if (musicBrainzAlbumDetailSource.includes('recordings+artist-credits+recording-level-rels') || musicBrainzAlbumDetailSource.includes('fetchCoverArt')) {
+  throw new Error('iOS MusicBrainz album detail service includes full album/cover-art work outside this slice')
+}
+if (musicBrainzAlbumDetailSource.includes('${MUSICBRAINZ_API_BASE}/release/${')) {
+  throw new Error('iOS MusicBrainz album detail service must not fetch selected release detail in this slice')
+}
 if (!musicBrainzAlbumSearchSource.includes('https://musicbrainz.org/ws/2')) {
   throw new Error('iOS MusicBrainz album search adapter does not target MusicBrainz')
 }

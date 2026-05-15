@@ -1,0 +1,109 @@
+const MUSICBRAINZ_API_BASE = 'https://musicbrainz.org/ws/2'
+const MUSICBRAINZ_USER_AGENT = 'liner-notez-ios/0.0.1 (https://github.com/edtremsaga/vibey-liner-notez)'
+
+function extractArtistCredit(artistCredit) {
+  if (!Array.isArray(artistCredit)) {
+    return null
+  }
+
+  const names = artistCredit
+    .map((credit) => credit?.name || credit?.artist?.name)
+    .filter(Boolean)
+
+  return names.length > 0 ? names.join(', ') : null
+}
+
+function getReleaseYear(firstReleaseDate) {
+  if (!firstReleaseDate) {
+    return null
+  }
+
+  const releaseYear = Number(firstReleaseDate.slice(0, 4))
+  return Number.isNaN(releaseYear) ? null : releaseYear
+}
+
+function sortReleasesForSelectedRelease(releases) {
+  const sorted = [...releases].sort((a, b) => {
+    const dateA = a?.date || '9999'
+    const dateB = b?.date || '9999'
+    return dateA.localeCompare(dateB)
+  })
+  const officialReleases = sorted.filter((release) => release?.status === 'Official')
+
+  return officialReleases.length > 0 ? officialReleases : sorted
+}
+
+function mapReleaseToEdition(release) {
+  return {
+    editionId: release?.id ?? null,
+    status: release?.status ?? null,
+    country: release?.country ?? null,
+    date: release?.date ?? null,
+    label: null,
+    catalogNumber: null,
+    barcode: null,
+    formatSummary: null,
+    packaging: null
+  }
+}
+
+export async function fetchMusicBrainzAlbumBasicInfo(releaseGroupId) {
+  if (!releaseGroupId) {
+    throw new Error('MusicBrainz release-group id is required')
+  }
+
+  const params = new URLSearchParams({
+    inc: 'releases+artist-credits+release-group-rels+artist-rels+url-rels',
+    fmt: 'json'
+  })
+  const url = `${MUSICBRAINZ_API_BASE}/release-group/${releaseGroupId}?${params.toString()}`
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': MUSICBRAINZ_USER_AGENT
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error(`MusicBrainz release-group detail failed: ${response.status} ${response.statusText}`)
+  }
+
+  const releaseGroup = await response.json()
+  const releases = Array.isArray(releaseGroup?.releases) ? releaseGroup.releases : []
+  const sortedReleases = sortReleasesForSelectedRelease(releases)
+  const selectedReleaseId = sortedReleases[0]?.id ?? releases[0]?.id ?? null
+  const selectedRelease = selectedReleaseId
+    ? releases.find((release) => release?.id === selectedReleaseId) ?? sortedReleases[0] ?? null
+    : null
+  const remainingReleases = releases.filter((release) => release?.id && release.id !== selectedReleaseId)
+  const editions = [
+    ...(selectedRelease ? [selectedRelease] : []),
+    ...remainingReleases
+  ].map(mapReleaseToEdition).filter((edition) => edition.editionId)
+  const firstReleaseDate = releaseGroup?.['first-release-date'] ?? null
+  const retrievedAt = new Date().toISOString()
+
+  return {
+    albumId: releaseGroup?.id ?? releaseGroupId,
+    title: releaseGroup?.title ?? null,
+    artistName: extractArtistCredit(releaseGroup?.['artist-credit']),
+    firstReleaseDate,
+    releaseYear: getReleaseYear(firstReleaseDate),
+    disambiguation: releaseGroup?.disambiguation || null,
+    selectedReleaseId,
+    editions,
+    externalLinks: {
+      musicbrainzReleaseGroupUrl: `https://musicbrainz.org/release-group/${releaseGroup?.id ?? releaseGroupId}`,
+      musicbrainzSelectedReleaseUrl: selectedReleaseId ? `https://musicbrainz.org/release/${selectedReleaseId}` : null,
+      wikidataUrl: null,
+      discogsUrl: null
+    },
+    sources: [
+      {
+        sourceName: 'MusicBrainz',
+        license: 'CC0',
+        retrievedAt
+      }
+    ]
+  }
+}
