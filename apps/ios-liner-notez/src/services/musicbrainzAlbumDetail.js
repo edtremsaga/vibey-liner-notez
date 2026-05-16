@@ -59,6 +59,61 @@ function parseTrackPosition(track, medium) {
   return track.number.toString()
 }
 
+function extractTrackCredits(recording) {
+  const credits = []
+
+  const artistCredits = Array.isArray(recording?.['artist-credit'])
+    ? recording['artist-credit']
+    : recording?.['artist-credit']
+      ? [recording['artist-credit']]
+      : []
+
+  for (const credit of artistCredits) {
+    const personName = credit?.name || credit?.artist?.name || null
+    if (!personName) {
+      continue
+    }
+
+    const instrument = Array.isArray(credit?.attributes) && credit.attributes.length > 0
+      ? credit.attributes[0]
+      : null
+
+    credits.push({
+      personName,
+      role: instrument || 'Performer',
+      instrument,
+      notes: null
+    })
+  }
+
+  const relations = Array.isArray(recording?.relations) ? recording.relations : []
+  for (const relation of relations) {
+    if (!relation?.type || relation?.['target-type'] !== 'artist') {
+      continue
+    }
+
+    const role = relation.type
+    const lowerRole = role.toLowerCase()
+    if (lowerRole.includes('writer') || lowerRole.includes('composer') || lowerRole.includes('lyricist')) {
+      continue
+    }
+
+    const personName = relation.artist?.name || relation['target-credit'] || null
+    if (!personName) {
+      continue
+    }
+
+    credits.push({
+      personName,
+      role,
+      instrument: null,
+      notes: null
+    })
+  }
+
+  return credits
+}
+
 function mapReleaseToTracks(release) {
   const media = Array.isArray(release?.media) ? release.media : []
 
@@ -83,6 +138,28 @@ function mapReleaseToTracks(release) {
       })
       .filter(Boolean)
   })
+}
+
+function mapReleaseToTrackCredits(release) {
+  const media = Array.isArray(release?.media) ? release.media : []
+  const trackCredits = {}
+
+  for (const medium of media) {
+    const tracks = Array.isArray(medium?.tracks) ? medium.tracks : []
+    for (const track of tracks) {
+      const recording = track?.recording
+      if (!recording?.id) {
+        continue
+      }
+
+      const credits = extractTrackCredits(recording)
+      if (credits.length > 0) {
+        trackCredits[recording.id] = credits
+      }
+    }
+  }
+
+  return Object.keys(trackCredits).length > 0 ? trackCredits : null
 }
 
 export async function fetchMusicBrainzAlbumBasicInfo(releaseGroupId) {
@@ -171,6 +248,10 @@ export async function fetchMusicBrainzSelectedReleaseTracklist(selectedReleaseId
 
   return {
     selectedReleaseId: release?.id ?? selectedReleaseId,
-    tracks: mapReleaseToTracks(release)
+    tracks: mapReleaseToTracks(release),
+    credits: {
+      albumCredits: null,
+      trackCredits: mapReleaseToTrackCredits(release)
+    }
   }
 }

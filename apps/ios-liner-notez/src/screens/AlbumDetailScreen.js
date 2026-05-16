@@ -60,8 +60,10 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
       <Text style={{ color: '#e5e7eb', fontSize: 30, fontWeight: '500' }}>Album Detail</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         {isRealMusicBrainzDetail
-          ? hasTracks
-            ? 'Real MusicBrainz album header and tracklist. Credits are not loaded yet.'
+          ? hasTrackCredits
+            ? 'Real MusicBrainz album header, tracklist, and selected-release track credits.'
+            : hasTracks
+              ? 'Real MusicBrainz album header and tracklist. Credits are not documented for this selected release yet.'
             : 'Real MusicBrainz album header. Tracklist and credits are not loaded yet.'
           : 'Mock detail layout preview (iOS scaffold only).'}
       </Text>
@@ -260,7 +262,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                 {!hasAlbumCredits && !hasTrackCredits ? (
                   <Text style={{ color: '#9ca3af', marginTop: 8 }}>
                     {isRealMusicBrainzDetail
-                      ? 'Credits are not loaded yet.'
+                      ? 'Credits are unavailable or not documented for this selected release.'
                       : 'Credits preview placeholder'}
                   </Text>
                 ) : null}

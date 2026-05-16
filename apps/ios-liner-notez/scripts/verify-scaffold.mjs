@@ -199,7 +199,10 @@ if (!albumDetailScreenSource.includes('Loading mock album detail...')) {
 if (!albumDetailScreenSource.includes('Real MusicBrainz album header. Tracklist and credits are not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include real MusicBrainz header scope copy')
 }
-if (!albumDetailScreenSource.includes('Real MusicBrainz album header and tracklist. Credits are not loaded yet.')) {
+if (!albumDetailScreenSource.includes('Real MusicBrainz album header, tracklist, and selected-release track credits.')) {
+  throw new Error('AlbumDetailScreen does not include real MusicBrainz track credits scope copy')
+}
+if (!albumDetailScreenSource.includes('Real MusicBrainz album header and tracklist. Credits are not documented for this selected release yet.')) {
   throw new Error('AlbumDetailScreen does not include real MusicBrainz tracklist scope copy')
 }
 if (!albumDetailScreenSource.includes('Release-group MBID')) {
@@ -208,8 +211,8 @@ if (!albumDetailScreenSource.includes('Release-group MBID')) {
 if (!albumDetailScreenSource.includes('Tracklist is not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include deferred real tracklist copy')
 }
-if (!albumDetailScreenSource.includes('Credits are not loaded yet.')) {
-  throw new Error('AlbumDetailScreen does not include deferred real credits copy')
+if (!albumDetailScreenSource.includes('Credits are unavailable or not documented for this selected release.')) {
+  throw new Error('AlbumDetailScreen does not include unavailable selected-release credits copy')
 }
 if (!albumDetailScreenSource.includes('Editions are not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include deferred real editions copy')
@@ -287,6 +290,9 @@ if (!appSource.includes('fetchMusicBrainzAlbumBasicInfo') || !appSource.includes
 if (!appSource.includes('fetchMusicBrainzSelectedReleaseTracklist') || !appSource.includes('tracks: tracklistDetail.tracks')) {
   throw new Error('App router does not fetch and merge selected-release tracklist for Album Detail')
 }
+if (!appSource.includes('credits: tracklistDetail.credits')) {
+  throw new Error('App router does not merge selected-release track credits for Album Detail')
+}
 if (!appSource.includes('musicbrainzReleaseGroupUrl:') || !appSource.includes('`https://musicbrainz.org/release-group/${releaseGroupId}`')) {
   throw new Error('App router does not build MusicBrainz release-group link for real Album Detail header')
 }
@@ -335,15 +341,36 @@ if (!musicBrainzAlbumDetailSource.includes('recordings+artist-credits+recording-
 if (!musicBrainzAlbumDetailSource.includes('parseTrackPosition') || !musicBrainzAlbumDetailSource.includes('${medium.position}-${track.number}')) {
   throw new Error('iOS MusicBrainz album detail service does not preserve React multi-disc track positions')
 }
+if (!musicBrainzAlbumDetailSource.includes('extractTrackCredits') || !musicBrainzAlbumDetailSource.includes('mapReleaseToTrackCredits')) {
+  throw new Error('iOS MusicBrainz album detail service does not extract selected-release track credits')
+}
 for (const trackField of ['trackId', 'position', 'title', 'durationMs']) {
   if (!musicBrainzAlbumDetailSource.includes(trackField)) {
     throw new Error(`iOS MusicBrainz album detail service does not map track field: ${trackField}`)
   }
 }
+for (const creditField of ['personName', 'role', 'instrument', 'notes: null']) {
+  if (!musicBrainzAlbumDetailSource.includes(creditField)) {
+    throw new Error(`iOS MusicBrainz album detail service does not map credit field: ${creditField}`)
+  }
+}
+if (!musicBrainzAlbumDetailSource.includes("role: instrument || 'Performer'")) {
+  throw new Error('iOS MusicBrainz album detail service does not map recording artist-credit performer roles')
+}
+if (
+  !musicBrainzAlbumDetailSource.includes("lowerRole.includes('writer')") ||
+  !musicBrainzAlbumDetailSource.includes("lowerRole.includes('composer')") ||
+  !musicBrainzAlbumDetailSource.includes("lowerRole.includes('lyricist')")
+) {
+  throw new Error('iOS MusicBrainz album detail service does not defer songwriting roles from track credits')
+}
+if (!musicBrainzAlbumDetailSource.includes('albumCredits: null')) {
+  throw new Error('iOS MusicBrainz album detail service does not keep album-level credits deferred')
+}
 if (musicBrainzAlbumDetailSource.includes('fetchCoverArt')) {
   throw new Error('iOS MusicBrainz album detail service includes cover-art work outside this slice')
 }
-for (const deferredDetailMarker of ['albumCredits', 'trackCreditsMap', 'extractAlbumCredits', 'extractTrackCredits', 'personName']) {
+for (const deferredDetailMarker of ['trackCreditsMap', 'extractAlbumCredits', 'fetchAlbumCredits', 'fetchRelease(candidate', 'fetchRelease(releaseInfo']) {
   if (musicBrainzAlbumDetailSource.includes(deferredDetailMarker)) {
     throw new Error(`iOS MusicBrainz album detail service includes deferred credits work: ${deferredDetailMarker}`)
   }

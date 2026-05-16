@@ -40,7 +40,7 @@ function buildAlbumDetailFromResult(albumId, albumResult, enrichedDetail = null)
     coverArtUrl: null,
     editions: enrichedDetail?.editions ?? [],
     tracks: enrichedDetail?.tracks ?? [],
-    credits: {
+    credits: enrichedDetail?.credits ?? {
       albumCredits: null,
       trackCredits: null
     },
@@ -57,8 +57,10 @@ function buildAlbumDetailFromResult(albumId, albumResult, enrichedDetail = null)
         license: 'CC0'
       }
     ],
-    dataNotes: enrichedDetail?.tracks?.length > 0
-      ? 'Credits, full editions, and cover art are not loaded yet.'
+    dataNotes: enrichedDetail?.credits?.trackCredits
+      ? 'Selected-release track credits are loaded. Album-level credits, full editions, and cover art are not loaded yet.'
+      : enrichedDetail?.tracks?.length > 0
+        ? 'Album-level credits, full editions, and cover art are not loaded yet.'
       : 'Tracklist, credits, full editions, and cover art are not loaded yet.'
   }
 }
@@ -161,7 +163,11 @@ export default function App() {
             setSelectedAlbumDetail({
               ...detail,
               selectedReleaseId: tracklistDetail.selectedReleaseId ?? detail.selectedReleaseId,
-              tracks: tracklistDetail.tracks ?? []
+              tracks: tracklistDetail.tracks ?? [],
+              credits: tracklistDetail.credits ?? {
+                albumCredits: null,
+                trackCredits: null
+              }
             })
           }
         } catch (error) {
