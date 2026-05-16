@@ -41,6 +41,9 @@ if (!appSource.includes("case 'Help / Data Sources':") || !appSource.includes('r
 if (appSource.includes('Placeholder screen for help, attribution, and data-source disclosures.')) {
   throw new Error('App.js contains inline Help placeholder copy instead of screen-based Help content')
 }
+if (!appSource.includes('content: { flex: 1, minHeight: 0, padding: 16 }')) {
+  throw new Error('App content shell does not provide a bounded scroll host for screen ScrollViews')
+}
 
 const searchScreenSource = readFileSync(path.join(appRoot, 'src/screens/SearchScreen.js'), 'utf8')
 if (!searchScreenSource.includes('ScrollView') || !searchScreenSource.includes('contentContainerStyle')) {
@@ -204,6 +207,9 @@ if (
 const albumDetailScreenSource = readFileSync(path.join(appRoot, 'src/screens/AlbumDetailScreen.js'), 'utf8')
 if (!albumDetailScreenSource.includes('ScrollView') || !albumDetailScreenSource.includes('contentContainerStyle')) {
   throw new Error('AlbumDetailScreen is not scrollable for long album detail content')
+}
+if (!albumDetailScreenSource.includes('alwaysBounceVertical') || !albumDetailScreenSource.includes('paddingBottom: 96')) {
+  throw new Error('AlbumDetailScreen ScrollView does not include hardened scroll props for long detail content')
 }
 if (!albumDetailScreenSource.includes('Back to Results')) {
   throw new Error('AlbumDetailScreen does not include back-to-results action')

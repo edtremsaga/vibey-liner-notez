@@ -58,7 +58,8 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
   return (
     <ScrollView
       style={{ flex: 1 }}
-      contentContainerStyle={{ paddingBottom: 40 }}
+      contentContainerStyle={{ paddingBottom: 96 }}
+      alwaysBounceVertical
       showsVerticalScrollIndicator
     >
       <Text style={{ color: '#e5e7eb', fontSize: 30, fontWeight: '500' }}>Album Detail</Text>

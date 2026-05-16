@@ -303,5 +303,5 @@ const styles = StyleSheet.create({
     borderColor: '#f3f4f6'
   },
   tabLabel: { color: '#e5e7eb', fontSize: 12 },
-  content: { flex: 1, padding: 16 }
+  content: { flex: 1, minHeight: 0, padding: 16 }
 })
