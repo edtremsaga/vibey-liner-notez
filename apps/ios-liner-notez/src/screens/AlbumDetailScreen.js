@@ -90,16 +90,17 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
     ? album.tracks.filter((track) => Array.isArray(trackCreditsByTrackId[track.trackId]) && trackCreditsByTrackId[track.trackId].length > 0)
     : []
   const groupedAlbumCredits = hasAlbumCredits ? groupTrackCredits(album.credits.albumCredits) : []
-  const tracksWithCreditsOrSongwriting = hasTracks
+  const tracksWithCreditDetails = hasTracks
     ? album.tracks.filter((track) => {
         const trackCredits = trackCreditsByTrackId[track.trackId]
         return (
           (Array.isArray(trackCredits) && trackCredits.length > 0) ||
-          !!track.songwriting
+          !!track.songwriting ||
+          !!track.publishing
         )
       })
     : []
-  const hasTrackCreditsOrSongwriting = tracksWithCreditsOrSongwriting.length > 0
+  const hasTrackCreditDetails = tracksWithCreditDetails.length > 0
 
   function toggleTrackCredits(trackId) {
     setExpandedCreditTrackIds((current) => ({
@@ -118,7 +119,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
       <Text style={{ color: '#e5e7eb', fontSize: 30, fontWeight: '500' }}>Album Detail</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         {isRealMusicBrainzDetail
-          ? hasTrackCreditsOrSongwriting
+          ? hasTrackCreditDetails
             ? 'Real MusicBrainz album header, tracklist, and selected-release credits.'
             : hasTracks
               ? 'Real MusicBrainz album header and tracklist. Credits are not documented for this selected release yet.'
@@ -325,12 +326,12 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                       : null}
                   </View>
                 ) : null}
-                {hasTrackCreditsOrSongwriting ? (
+                {hasTrackCreditDetails ? (
                   <>
                     <Text style={{ color: '#9ca3af', marginTop: 8, fontSize: 14 }}>
-                      Selected-release track credits and songwriting from MusicBrainz.
+                      Selected-release track credits, songwriting, and publishing from MusicBrainz.
                     </Text>
-                    {tracksWithCreditsOrSongwriting.map((track) => {
+                    {tracksWithCreditDetails.map((track) => {
                       const trackCredits = trackCreditsByTrackId[track.trackId] ?? []
                       const groupedCredits = groupTrackCredits(trackCredits)
                       const trackDuration = formatDuration(track.durationMs)
@@ -340,6 +341,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                         ...(track.songwriting?.composers ?? []).map((personName) => [personName, 'Composer']),
                         ...(track.songwriting?.lyricists ?? []).map((personName) => [personName, 'Lyricist'])
                       ]
+                      const publishingRows = (track.publishing?.publishers ?? []).map((publisherName) => [publisherName, 'Publisher'])
 
                       return (
                         <View key={`credits-${track.trackId}`} style={{ marginTop: 12 }}>
@@ -380,6 +382,21 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                                       ))}
                                     </View>
                                   ) : null}
+                                  {publishingRows.length > 0 ? (
+                                    <View style={{ marginTop: 8 }}>
+                                      <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
+                                        Publishing
+                                      </Text>
+                                      {publishingRows.map(([publisherName, role], index) => (
+                                        <Text
+                                          key={`${track.trackId}-publishing-${publisherName}-${index}`}
+                                          style={{ color: '#d1d5db', marginTop: 2, fontSize: 14 }}
+                                        >
+                                          {publisherName} — {role}
+                                        </Text>
+                                      ))}
+                                    </View>
+                                  ) : null}
                                   {groupedCredits.map(([groupLabel, credits]) => (
                                     <View key={`${track.trackId}-${groupLabel}`} style={{ marginTop: 8 }}>
                                       <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
@@ -405,7 +422,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                     })}
                   </>
                 ) : null}
-                {!hasAlbumCredits && !hasTrackCreditsOrSongwriting ? (
+                {!hasAlbumCredits && !hasTrackCreditDetails ? (
                   <Text style={{ color: '#9ca3af', marginTop: 8 }}>
                     {isRealMusicBrainzDetail
                       ? 'Credits are unavailable or not documented for this selected release.'

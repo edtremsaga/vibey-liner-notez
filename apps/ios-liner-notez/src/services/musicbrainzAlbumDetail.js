@@ -151,6 +151,24 @@ function extractSongwriting(recording) {
   }
 }
 
+function extractPublishing(recording) {
+  const relations = Array.isArray(recording?.relations) ? recording.relations : []
+  const publishers = []
+
+  for (const relation of relations) {
+    if (relation?.['target-type'] !== 'label' || !relation?.type?.toLowerCase().includes('publisher')) {
+      continue
+    }
+
+    const publisherName = relation.label?.name || relation['target-credit'] || null
+    if (publisherName) {
+      publishers.push(publisherName)
+    }
+  }
+
+  return publishers.length > 0 ? { publishers } : null
+}
+
 function extractAlbumCredits(release) {
   const credits = []
   const relations = Array.isArray(release?.relations) ? release.relations : []
@@ -222,7 +240,7 @@ function mapReleaseToTracks(release) {
           title: recording.title || track?.title || '',
           durationMs: recording.length ?? track?.length ?? null,
           songwriting: extractSongwriting(recording),
-          publishing: null
+          publishing: extractPublishing(recording)
         }
       })
       .filter(Boolean)
