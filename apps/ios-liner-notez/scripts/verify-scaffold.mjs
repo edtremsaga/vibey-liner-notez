@@ -247,8 +247,8 @@ if (!albumDetailScreenSource.includes('Loading mock album detail...')) {
 if (!albumDetailScreenSource.includes('Real MusicBrainz album header. Tracklist and credits are not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include real MusicBrainz header scope copy')
 }
-if (!albumDetailScreenSource.includes('Real MusicBrainz album header, tracklist, and selected-release track credits.')) {
-  throw new Error('AlbumDetailScreen does not include real MusicBrainz track credits scope copy')
+if (!albumDetailScreenSource.includes('Real MusicBrainz album header, tracklist, and selected-release credits.')) {
+  throw new Error('AlbumDetailScreen does not include real MusicBrainz selected-release credits scope copy')
 }
 if (!albumDetailScreenSource.includes('Real MusicBrainz album header and tracklist. Credits are not documented for this selected release yet.')) {
   throw new Error('AlbumDetailScreen does not include real MusicBrainz tracklist scope copy')
@@ -295,8 +295,18 @@ if (
 ) {
   throw new Error('AlbumDetailScreen does not render track-associated credit rows')
 }
-if (!albumDetailScreenSource.includes('Selected-release track credits from MusicBrainz.')) {
-  throw new Error('AlbumDetailScreen does not include selected-release track credits scope copy')
+if (!albumDetailScreenSource.includes('Selected-release track credits and songwriting from MusicBrainz.')) {
+  throw new Error('AlbumDetailScreen does not include selected-release track credits and songwriting scope copy')
+}
+if (
+  !albumDetailScreenSource.includes('tracksWithCreditsOrSongwriting') ||
+  !albumDetailScreenSource.includes('hasTrackCreditsOrSongwriting') ||
+  !albumDetailScreenSource.includes('Songwriting') ||
+  !albumDetailScreenSource.includes("track.songwriting?.writers") ||
+  !albumDetailScreenSource.includes("track.songwriting?.composers") ||
+  !albumDetailScreenSource.includes("track.songwriting?.lyricists")
+) {
+  throw new Error('AlbumDetailScreen does not render selected-release songwriting inside expanded track credits')
 }
 if (
   !albumDetailScreenSource.includes('showAlbumCredits') ||
@@ -311,8 +321,8 @@ for (const creditGroupLabel of ['Performers & Instruments', 'Production & Techni
     throw new Error(`AlbumDetailScreen is missing track credit group label: ${creditGroupLabel}`)
   }
 }
-if (!albumDetailScreenSource.includes('tracksWithCredits.map') || albumDetailScreenSource.includes('album.tracks.slice(0, 3)')) {
-  throw new Error('AlbumDetailScreen does not render all tracks with selected-release credits')
+if (!albumDetailScreenSource.includes('tracksWithCreditsOrSongwriting.map') || albumDetailScreenSource.includes('album.tracks.slice(0, 3)')) {
+  throw new Error('AlbumDetailScreen does not render all tracks with selected-release credits or songwriting')
 }
 if (
   !albumDetailScreenSource.includes('expandedCreditTrackIds') ||
@@ -426,6 +436,15 @@ if (!musicBrainzAlbumDetailSource.includes('extractTrackCredits') || !musicBrain
   throw new Error('iOS MusicBrainz album detail service does not extract selected-release track credits')
 }
 if (
+  !musicBrainzAlbumDetailSource.includes('function extractSongwriting') ||
+  !musicBrainzAlbumDetailSource.includes('writers: writers.length > 0 ? writers : null') ||
+  !musicBrainzAlbumDetailSource.includes('composers: composers.length > 0 ? composers : null') ||
+  !musicBrainzAlbumDetailSource.includes('lyricists: lyricists.length > 0 ? lyricists : null') ||
+  !musicBrainzAlbumDetailSource.includes('songwriting: extractSongwriting(recording)')
+) {
+  throw new Error('iOS MusicBrainz album detail service does not extract selected-release songwriting from recording relations')
+}
+if (
   !musicBrainzAlbumDetailSource.includes('function extractAlbumCredits') ||
   !musicBrainzAlbumDetailSource.includes('release?.relations') ||
   !musicBrainzAlbumDetailSource.includes("relation?.['target-type'] !== 'artist'") ||
@@ -460,6 +479,9 @@ for (const deferredDetailMarker of ['trackCreditsMap', 'fetchAlbumCredits', 'fet
   if (musicBrainzAlbumDetailSource.includes(deferredDetailMarker)) {
     throw new Error(`iOS MusicBrainz album detail service includes deferred credits work: ${deferredDetailMarker}`)
   }
+}
+if (musicBrainzAlbumDetailSource.includes('function extractPublishing')) {
+  throw new Error('iOS MusicBrainz album detail service includes publishing work outside this slice')
 }
 if (!musicBrainzAlbumSearchSource.includes('https://musicbrainz.org/ws/2')) {
   throw new Error('iOS MusicBrainz album search adapter does not target MusicBrainz')

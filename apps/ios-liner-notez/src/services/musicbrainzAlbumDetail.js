@@ -114,6 +114,43 @@ function extractTrackCredits(recording) {
   return credits
 }
 
+function extractSongwriting(recording) {
+  const relations = Array.isArray(recording?.relations) ? recording.relations : []
+  const writers = []
+  const composers = []
+  const lyricists = []
+
+  for (const relation of relations) {
+    if (relation?.['target-type'] !== 'artist') {
+      continue
+    }
+
+    const role = (relation.type || '').toLowerCase()
+    const personName = relation.artist?.name || relation['target-credit'] || null
+    if (!personName) {
+      continue
+    }
+
+    if (role.includes('lyricist')) {
+      lyricists.push(personName)
+    } else if (role.includes('composer')) {
+      composers.push(personName)
+    } else if (role.includes('writer') || role.includes('songwriter')) {
+      writers.push(personName)
+    }
+  }
+
+  if (writers.length === 0 && composers.length === 0 && lyricists.length === 0) {
+    return null
+  }
+
+  return {
+    writers: writers.length > 0 ? writers : null,
+    composers: composers.length > 0 ? composers : null,
+    lyricists: lyricists.length > 0 ? lyricists : null
+  }
+}
+
 function extractAlbumCredits(release) {
   const credits = []
   const relations = Array.isArray(release?.relations) ? release.relations : []
@@ -183,7 +220,9 @@ function mapReleaseToTracks(release) {
           trackId: recording.id ?? track?.id ?? `${medium?.position ?? 1}-${position}`,
           position,
           title: recording.title || track?.title || '',
-          durationMs: recording.length ?? track?.length ?? null
+          durationMs: recording.length ?? track?.length ?? null,
+          songwriting: extractSongwriting(recording),
+          publishing: null
         }
       })
       .filter(Boolean)
