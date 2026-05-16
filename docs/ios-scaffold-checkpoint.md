@@ -4,6 +4,9 @@
 - iOS scaffold is stable on `main` for read-only Search -> Results development.
 - Current `main` includes live MusicBrainz Search -> Results behavior that matches the current React app search model.
 - Recent iOS milestone commits:
+  - `44fe230` Make iOS screens scrollable
+  - `748d4b1` Make iOS album detail scrollable
+  - `6a0a7bf` Add iOS selected release track credits
   - `b13a7f1` Add iOS selected release tracklist
   - `f7c39a4` Add iOS release group detail enrichment
   - `8051359` Update iOS checkpoint for real detail header
@@ -23,8 +26,9 @@
 - Producer input works.
 - Producer Search result rows are visible/readable.
 - Tapping a mock producer result opens Album Detail.
-- Album Detail shows real selected-result header data for Search results, enriches release-group Editions & Sources from MusicBrainz, and loads the selected-release tracklist.
+- Album Detail shows real selected-result header data for Search results, enriches release-group Editions & Sources from MusicBrainz, loads the selected-release tracklist, and displays selected-release track credits when documented.
 - Album Detail still renders selected mock album content for Producer Search mock results.
+- Search, Results, Album Detail, Producer Search, and Help / Data Sources have screen-owned vertical scrolling for smaller iPhones.
 - Help / Data Sources shows mock-scope, planned sources, and trust-rule content.
 - Internal marker strings are removed from visible UI.
 - Outdated “Placeholder screen for album search flow” copy is removed.
@@ -33,8 +37,8 @@
 
 ## Product Scope Status
 - Read-only MusicBrainz Search -> Results is active for artist-first album results with release-type filtering for artist-only searches.
-- Album Detail real-data scope now includes selected-result header data, release-group basic enrichment from MusicBrainz, and the selected-release tracklist.
-- Album Detail opens immediately from selected Results row data, then fetches release-group basic info and selected-release tracklist data in the background.
+- Album Detail real-data scope now includes selected-result header data, release-group basic enrichment from MusicBrainz, the selected-release tracklist, and selected-release track credits.
+- Album Detail opens immediately from selected Results row data, then fetches release-group basic info, selected-release tracklist data, and selected-release track credits in the background.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 
 ## Search Behavior Contract
@@ -46,18 +50,24 @@
 - Tapping a Search result opens Album Detail with selected MusicBrainz result header data.
 
 ## Album Detail Real-Data Path
-- Current live path: Search -> Results -> Album Detail header -> release-group enrichment -> selected-release tracklist.
+- Current live path: Search -> Results -> Album Detail header -> release-group enrichment -> selected-release tracklist -> selected-release track credits.
 - The selected-release tracklist milestone is `b13a7f1` Add iOS selected release tracklist.
+- The selected-release track credits milestone is `6a0a7bf` Add iOS selected release track credits.
 - Tracklist uses `selectedReleaseId` from release-group enrichment.
-- Tracklist fetch uses the React-parity MusicBrainz selected-release endpoint:
+- Tracklist and track credits use the same React-parity MusicBrainz selected-release endpoint:
   - `/release/{selectedReleaseId}?inc=recordings+artist-credits+recording-level-rels+release-rels+labels+artist-rels&fmt=json`
 - iOS extracts only the small tracklist shape for now:
   - `trackId`
   - `position`
   - `title`
   - `durationMs`
+- iOS extracts only selected-release track-level credits for now:
+  - `personName`
+  - `role`
+  - `instrument`
+  - `notes`
 - Multi-disc releases keep the current flat tracklist UI and use React-style positions such as `2-1`, `2-2`, etc.
-- Credits remain not loaded.
+- Album-level credits, songwriting/composer/lyricist credits, publishing, and recording places/studios remain deferred.
 
 ## Release Type Behavior
 - Release Type is only visible for artist-only searches, when Album Name is empty.
@@ -94,17 +104,23 @@
 - Album Detail opened immediately.
 - Release-group enrichment loaded.
 - Tracklist loaded from the selected release.
-- Credits remained not loaded yet.
+- Selected-release track credits loaded when documented.
+- Album Detail scrolls fully, and Tracklist, Credits, Editions & Sources, and the full release-group link/content are reachable.
+- Search, Results, Album Detail, Producer Search, and Help / Data Sources have appropriate scroll handling.
 - Producer Search remained mock-only.
 - Noisy secondary search results remain expected under current shared MusicBrainz/search semantics and are not an iOS-specific bug.
 
 ## Mock-Only / Deferred Scope
-- Album Detail credits, producer graph, cover art, full edition metadata, and rich liner-note sections are not loaded yet.
+- Album Detail album-level credits, richer credits UI, songwriting/composer/lyricist credits, publishing, recording places/studios, producer graph, cover art, full edition metadata, and rich liner-note sections are not loaded yet.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 
 ## Known Deferred Work
 - Canonical studio albums cleanup as a later shared React+iOS search-semantics project.
-- Real Album Detail credits loading.
+- Album-level credits.
+- Richer credits UI for currently available selected-release track credits.
+- Songwriting/composer/lyricist credits.
+- Publishing.
+- Recording places/studios.
 - Producer graph.
 - Full selected-release edition metadata.
 - Real Producer Search.
@@ -112,8 +128,9 @@
 - Cover art or richer result cards.
 
 ## Recommended Next Safe Slice
-- Diagnose the React Album Detail credits flow before implementing any iOS credits.
-- Do not change MusicBrainz search query semantics, result filtering, sorting, canonical studio-albums behavior, or Producer Search mock-only behavior in that slice.
+- Diagnose React credit display structure vs iOS credit display polish.
+- The goal should be UI/readability polish for currently available selected-release track credits, without changing the underlying credit extraction behavior yet.
+- Do not change MusicBrainz search query semantics, result filtering, sorting, canonical studio-albums behavior, selected-release credit extraction behavior, or Producer Search mock-only behavior in that slice.
 
 ## Runtime Lesson Learned
 - If the simulator does not reflect source changes, stale Metro/Expo session state can look like a code bug.
