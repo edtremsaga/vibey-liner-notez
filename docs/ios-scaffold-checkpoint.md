@@ -4,10 +4,11 @@
 - iOS scaffold is stable on `main` for read-only Search -> Results development.
 - Current `main` includes live MusicBrainz Search -> Results behavior that matches the current React app search model.
 - Recent iOS milestone commits:
+  - `a176dbd` Harden iOS album detail scrolling
   - `44fe230` Make iOS screens scrollable
-  - `748d4b1` Make iOS album detail scrollable
   - `6a0a7bf` Add iOS selected release track credits
   - `b13a7f1` Add iOS selected release tracklist
+  - `748d4b1` Make iOS album detail scrollable
   - `f7c39a4` Add iOS release group detail enrichment
   - `8051359` Update iOS checkpoint for real detail header
   - `ec75193` Add real iOS album detail header
@@ -29,6 +30,7 @@
 - Album Detail shows real selected-result header data for Search results, enriches release-group Editions & Sources from MusicBrainz, loads the selected-release tracklist, and displays selected-release track credits when documented.
 - Album Detail still renders selected mock album content for Producer Search mock results.
 - Search, Results, Album Detail, Producer Search, and Help / Data Sources have screen-owned vertical scrolling for smaller iPhones.
+- Album Detail scrolling works reliably after simulator restart.
 - Help / Data Sources shows mock-scope, planned sources, and trust-rule content.
 - Internal marker strings are removed from visible UI.
 - Outdated “Placeholder screen for album search flow” copy is removed.
@@ -107,11 +109,12 @@
 - Selected-release track credits loaded when documented.
 - Album Detail scrolls fully, and Tracklist, Credits, Editions & Sources, and the full release-group link/content are reachable.
 - Search, Results, Album Detail, Producer Search, and Help / Data Sources have appropriate scroll handling.
+- Album Detail scrolling was hardened after simulator restart in `a176dbd`.
 - Producer Search remained mock-only.
 - Noisy secondary search results remain expected under current shared MusicBrainz/search semantics and are not an iOS-specific bug.
 
 ## Mock-Only / Deferred Scope
-- Album Detail album-level credits, richer credits UI, songwriting/composer/lyricist credits, publishing, recording places/studios, producer graph, cover art, full edition metadata, and rich liner-note sections are not loaded yet.
+- Album Detail album-level credits, producer graph, cover art, full edition metadata, canonical studio-albums cleanup, and rich liner-note sections are not loaded yet.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 
 ## Known Deferred Work
