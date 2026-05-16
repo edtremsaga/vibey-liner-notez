@@ -4,6 +4,8 @@
 - iOS scaffold is stable on `main` for read-only Search -> Results development.
 - Current `main` includes live MusicBrainz Search -> Results behavior that matches the current React app search model.
 - Recent iOS milestone commits:
+  - `a1420ba` Make iOS track credits collapsible
+  - `0660575` Polish iOS track credits display
   - `a176dbd` Harden iOS album detail scrolling
   - `44fe230` Make iOS screens scrollable
   - `6a0a7bf` Add iOS selected release track credits
@@ -28,6 +30,8 @@
 - Producer Search result rows are visible/readable.
 - Tapping a mock producer result opens Album Detail.
 - Album Detail shows real selected-result header data for Search results, enriches release-group Editions & Sources from MusicBrainz, loads the selected-release tracklist, and displays selected-release track credits when documented.
+- Album Detail selected-release track credits are grouped by track, collapsed by default, and expandable with iOS-style disclosure chevrons.
+- Album Detail section-level disclosure controls use chevrons consistently for Tracklist, Credits, and Editions & Sources.
 - Album Detail still renders selected mock album content for Producer Search mock results.
 - Search, Results, Album Detail, Producer Search, and Help / Data Sources have screen-owned vertical scrolling for smaller iPhones.
 - Album Detail scrolling works reliably after simulator restart.
@@ -68,6 +72,8 @@
   - `role`
   - `instrument`
   - `notes`
+- Track credits display milestone `0660575` groups available selected-release credits by track and credit category.
+- Track credits disclosure milestone `a1420ba` keeps tracks collapsed by default and lets users expand individual tracks with chevrons while preserving multiple-expanded behavior.
 - Multi-disc releases keep the current flat tracklist UI and use React-style positions such as `2-1`, `2-2`, etc.
 - Album-level credits, songwriting/composer/lyricist credits, publishing, and recording places/studios remain deferred.
 
@@ -107,6 +113,8 @@
 - Release-group enrichment loaded.
 - Tracklist loaded from the selected release.
 - Selected-release track credits loaded when documented.
+- Track credits are readable, grouped, collapsed by default, and expandable per track with chevrons.
+- Tracklist, Credits, and Editions & Sources use consistent chevron disclosure controls.
 - Album Detail scrolls fully, and Tracklist, Credits, Editions & Sources, and the full release-group link/content are reachable.
 - Search, Results, Album Detail, Producer Search, and Help / Data Sources have appropriate scroll handling.
 - Album Detail scrolling was hardened after simulator restart in `a176dbd`.
@@ -120,7 +128,6 @@
 ## Known Deferred Work
 - Canonical studio albums cleanup as a later shared React+iOS search-semantics project.
 - Album-level credits.
-- Richer credits UI for currently available selected-release track credits.
 - Songwriting/composer/lyricist credits.
 - Publishing.
 - Recording places/studios.
@@ -131,9 +138,9 @@
 - Cover art or richer result cards.
 
 ## Recommended Next Safe Slice
-- Diagnose React credit display structure vs iOS credit display polish.
-- The goal should be UI/readability polish for currently available selected-release track credits, without changing the underlying credit extraction behavior yet.
-- Do not change MusicBrainz search query semantics, result filtering, sorting, canonical studio-albums behavior, selected-release credit extraction behavior, or Producer Search mock-only behavior in that slice.
+- Diagnose React album-level credits flow before implementing any iOS album-level credits.
+- The goal should be to identify the smallest safe album-level credits slice, if one exists, while preserving the current selected-release track credit extraction and display behavior.
+- Do not change MusicBrainz search query semantics, result filtering, sorting, canonical studio-albums behavior, selected-release tracklist behavior, selected-release credit extraction behavior, or Producer Search mock-only behavior in that slice.
 
 ## Runtime Lesson Learned
 - If the simulator does not reflect source changes, stale Metro/Expo session state can look like a code bug.
