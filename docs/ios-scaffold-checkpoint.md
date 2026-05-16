@@ -4,6 +4,7 @@
 - iOS scaffold is stable on `main` for read-only Search -> Results development.
 - Current `main` includes live MusicBrainz Search -> Results behavior that matches the current React app search model.
 - Recent iOS milestone commits:
+  - `9b4646a` Add iOS selected release songwriting
   - `736c51b` Add iOS album-level credits
   - `a1420ba` Make iOS track credits collapsible
   - `0660575` Polish iOS track credits display
@@ -30,7 +31,7 @@
 - Producer input works.
 - Producer Search result rows are visible/readable.
 - Tapping a mock producer result opens Album Detail.
-- Album Detail shows real selected-result header data for Search results, enriches release-group Editions & Sources from MusicBrainz, loads the selected-release tracklist, and displays selected-release album-level and track-level credits when documented.
+- Album Detail shows real selected-result header data for Search results, enriches release-group Editions & Sources from MusicBrainz, loads the selected-release tracklist, and displays selected-release album-level credits, track-level credits, and songwriting when documented.
 - Album Detail selected-release album-level credits are loaded from the existing selected-release response without adding another MusicBrainz request.
 - Album Detail album-level credits render as a collapsed `Album` disclosure row inside Credits.
 - Album Detail selected-release track credits are grouped by track, collapsed by default, and expandable with iOS-style disclosure chevrons.
@@ -46,8 +47,8 @@
 
 ## Product Scope Status
 - Read-only MusicBrainz Search -> Results is active for artist-first album results with release-type filtering for artist-only searches.
-- Album Detail real-data scope now includes selected-result header data, release-group basic enrichment from MusicBrainz, the selected-release tracklist, selected-release album-level credits, and selected-release track credits.
-- Album Detail opens immediately from selected Results row data, then fetches release-group basic info, selected-release tracklist data, selected-release album-level credits, and selected-release track credits in the background.
+- Album Detail real-data scope now includes selected-result header data, release-group basic enrichment from MusicBrainz, the selected-release tracklist, selected-release album-level credits, selected-release track credits, and selected-release songwriting.
+- Album Detail opens immediately from selected Results row data, then fetches release-group basic info, selected-release tracklist data, selected-release album-level credits, selected-release track credits, and selected-release songwriting in the background.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 
 ## Search Behavior Contract
@@ -59,10 +60,11 @@
 - Tapping a Search result opens Album Detail with selected MusicBrainz result header data.
 
 ## Album Detail Real-Data Path
-- Current live path: Search -> Results -> Album Detail header -> release-group enrichment -> selected-release tracklist -> selected-release album-level credits -> selected-release track credits.
+- Current live path: Search -> Results -> Album Detail header -> release-group enrichment -> selected-release tracklist -> selected-release album-level credits -> selected-release track credits -> selected-release songwriting.
 - The selected-release tracklist milestone is `b13a7f1` Add iOS selected release tracklist.
 - The selected-release album-level credits milestone is `736c51b` Add iOS album-level credits.
 - The selected-release track credits milestone is `6a0a7bf` Add iOS selected release track credits.
+- The selected-release songwriting milestone is `9b4646a` Add iOS selected release songwriting.
 - Tracklist uses `selectedReleaseId` from release-group enrichment.
 - Tracklist and track credits use the same React-parity MusicBrainz selected-release endpoint:
   - `/release/{selectedReleaseId}?inc=recordings+artist-credits+recording-level-rels+release-rels+labels+artist-rels&fmt=json`
@@ -79,10 +81,16 @@
 - iOS extracts selected-release album-level credits from release `relations` using the same compact credit shape.
 - Album-level credits use the already-fetched selected-release response; iOS does not probe alternate releases for album credits yet.
 - Album-level credits render as a collapsed `Album` disclosure row and use the same credit grouping labels as track credits when expanded.
+- iOS extracts selected-release songwriting from already-fetched recording relations:
+  - `writers`
+  - `composers`
+  - `lyricists`
+- Songwriting appears inside expanded track credit rows before the general credit groups.
+- No additional MusicBrainz request is used for selected-release songwriting.
 - Track credits display milestone `0660575` groups available selected-release credits by track and credit category.
 - Track credits disclosure milestone `a1420ba` keeps tracks collapsed by default and lets users expand individual tracks with chevrons while preserving multiple-expanded behavior.
 - Multi-disc releases keep the current flat tracklist UI and use React-style positions such as `2-1`, `2-2`, etc.
-- Album-level credits, songwriting/composer/lyricist credits, publishing, and recording places/studios remain deferred.
+- Publishing and recording places/studios remain deferred.
 
 ## Release Type Behavior
 - Release Type is only visible for artist-only searches, when Album Name is empty.
@@ -121,7 +129,9 @@
 - Tracklist loaded from the selected release.
 - Selected-release album-level credits loaded when documented.
 - Selected-release track credits loaded when documented.
+- Selected-release songwriting loaded when documented.
 - Album-level credits are shown as a collapsed `Album` row in Credits and expand with a chevron.
+- Songwriting appears in expanded track credit rows when writer/composer/lyricist data is documented.
 - Track credits are readable, grouped, collapsed by default, and expandable per track with chevrons.
 - Tracklist, Credits, and Editions & Sources use consistent chevron disclosure controls.
 - Album Detail scrolls fully, and Tracklist, Credits, Editions & Sources, and the full release-group link/content are reachable.
@@ -137,7 +147,6 @@
 ## Known Deferred Work
 - Canonical studio albums cleanup as a later shared React+iOS search-semantics project.
 - Alternate-release fallback probing for album-level credits when the selected release has none.
-- Songwriting/composer/lyricist credits.
 - Publishing.
 - Recording places/studios.
 - Producer graph.
@@ -147,8 +156,8 @@
 - Cover art or richer result cards.
 
 ## Recommended Next Safe Slice
-- Diagnose React songwriting/composer/lyricist display before implementing any iOS songwriting credits.
-- The goal should be to identify the smallest safe track-level songwriting slice, if one exists, while preserving the current selected-release album-level and track-level credit extraction and display behavior.
+- Diagnose React publishing display before implementing any iOS publishing credits.
+- The goal should be to identify the smallest safe track-level publishing slice, if one exists, while preserving the current selected-release album-level, track-level, and songwriting credit extraction and display behavior.
 - Do not change MusicBrainz search query semantics, result filtering, sorting, canonical studio-albums behavior, selected-release tracklist behavior, selected-release album/track credit behavior, or Producer Search mock-only behavior in that slice.
 
 ## Runtime Lesson Learned
