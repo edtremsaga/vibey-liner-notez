@@ -211,6 +211,33 @@ if (!albumDetailScreenSource.includes('ScrollView') || !albumDetailScreenSource.
 if (!albumDetailScreenSource.includes('alwaysBounceVertical') || !albumDetailScreenSource.includes('paddingBottom: 96')) {
   throw new Error('AlbumDetailScreen ScrollView does not include hardened scroll props for long detail content')
 }
+for (const sectionDisclosureLabel of [
+  "accessibilityLabel={`${showTracklist ? 'Hide' : 'Show'} tracklist`}",
+  "accessibilityLabel={`${showCredits ? 'Hide' : 'Show'} credits`}",
+  "accessibilityLabel={`${showEditionsSources ? 'Hide' : 'Show'} editions and sources`}"
+]) {
+  if (!albumDetailScreenSource.includes(sectionDisclosureLabel)) {
+    throw new Error(`AlbumDetailScreen is missing section disclosure accessibility label: ${sectionDisclosureLabel}`)
+  }
+}
+for (const sectionDisclosureIndicator of [
+  "{showTracklist ? '▾' : '▸'}",
+  "{showCredits ? '▾' : '▸'}",
+  "{showEditionsSources ? '▾' : '▸'}"
+]) {
+  if (!albumDetailScreenSource.includes(sectionDisclosureIndicator)) {
+    throw new Error(`AlbumDetailScreen is missing section disclosure chevron: ${sectionDisclosureIndicator}`)
+  }
+}
+for (const textDisclosure of [
+  "{showTracklist ? 'Hide' : 'Show'}</Text>",
+  "{showCredits ? 'Hide' : 'Show'}</Text>",
+  "{showEditionsSources ? 'Hide' : 'Show'}</Text>"
+]) {
+  if (albumDetailScreenSource.includes(textDisclosure)) {
+    throw new Error(`AlbumDetailScreen still uses visible Show/Hide text for section disclosure: ${textDisclosure}`)
+  }
+}
 if (!albumDetailScreenSource.includes('Back to Results')) {
   throw new Error('AlbumDetailScreen does not include back-to-results action')
 }
@@ -278,6 +305,20 @@ for (const creditGroupLabel of ['Performers & Instruments', 'Production & Techni
 }
 if (!albumDetailScreenSource.includes('tracksWithCredits.map') || albumDetailScreenSource.includes('album.tracks.slice(0, 3)')) {
   throw new Error('AlbumDetailScreen does not render all tracks with selected-release credits')
+}
+if (
+  !albumDetailScreenSource.includes('expandedCreditTrackIds') ||
+  !albumDetailScreenSource.includes('toggleTrackCredits') ||
+  !albumDetailScreenSource.includes("onPress={() => toggleTrackCredits(track.trackId)}") ||
+  !albumDetailScreenSource.includes("accessibilityLabel={`${isTrackExpanded ? 'Hide' : 'Show'} credits for ${track.title}`}")
+) {
+  throw new Error('AlbumDetailScreen does not provide per-track credit expand/collapse controls')
+}
+if (!albumDetailScreenSource.includes("{isTrackExpanded ? '▾' : '▸'}")) {
+  throw new Error('AlbumDetailScreen does not use iOS-style disclosure indicators for per-track credits')
+}
+if (!albumDetailScreenSource.includes('isTrackExpanded') || !albumDetailScreenSource.includes(': null}')) {
+  throw new Error('AlbumDetailScreen does not keep per-track credits collapsed until expanded')
 }
 if (!albumDetailScreenSource.includes('Editions & Sources')) {
   throw new Error('AlbumDetailScreen does not include Editions & Sources section label')

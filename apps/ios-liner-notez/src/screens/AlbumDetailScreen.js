@@ -46,6 +46,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
   const [showTracklist, setShowTracklist] = useState(true)
   const [showCredits, setShowCredits] = useState(true)
   const [showEditionsSources, setShowEditionsSources] = useState(true)
+  const [expandedCreditTrackIds, setExpandedCreditTrackIds] = useState({})
 
   const hasAlbum = !!album
   const isRealMusicBrainzDetail = hasAlbum && album.isRealMusicBrainzDetail
@@ -87,6 +88,13 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
   const tracksWithCredits = hasTracks
     ? album.tracks.filter((track) => Array.isArray(trackCreditsByTrackId[track.trackId]) && trackCreditsByTrackId[track.trackId].length > 0)
     : []
+
+  function toggleTrackCredits(trackId) {
+    setExpandedCreditTrackIds((current) => ({
+      ...current,
+      [trackId]: !current[trackId]
+    }))
+  }
 
   return (
     <ScrollView
@@ -219,11 +227,12 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
           >
             <TouchableOpacity
               accessibilityRole="button"
+              accessibilityLabel={`${showTracklist ? 'Hide' : 'Show'} tracklist`}
               onPress={() => setShowTracklist((current) => !current)}
               style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
             >
               <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Tracklist</Text>
-              <Text style={{ color: '#9ca3af', fontSize: 14 }}>{showTracklist ? 'Hide' : 'Show'}</Text>
+              <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showTracklist ? '▾' : '▸'}</Text>
             </TouchableOpacity>
             {showTracklist ? (
               hasTracks ? (
@@ -263,11 +272,12 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
           >
             <TouchableOpacity
               accessibilityRole="button"
+              accessibilityLabel={`${showCredits ? 'Hide' : 'Show'} credits`}
               onPress={() => setShowCredits((current) => !current)}
               style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
             >
               <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Credits</Text>
-              <Text style={{ color: '#9ca3af', fontSize: 14 }}>{showCredits ? 'Hide' : 'Show'}</Text>
+              <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showCredits ? '▾' : '▸'}</Text>
             </TouchableOpacity>
             {showCredits ? (
               <>
@@ -292,35 +302,48 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                       const trackCredits = trackCreditsByTrackId[track.trackId] ?? []
                       const groupedCredits = groupTrackCredits(trackCredits)
                       const trackDuration = formatDuration(track.durationMs)
+                      const isTrackExpanded = !!expandedCreditTrackIds[track.trackId]
 
                       return (
                         <View key={`credits-${track.trackId}`} style={{ marginTop: 12 }}>
-                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
+                          <TouchableOpacity
+                            accessibilityRole="button"
+                            accessibilityLabel={`${isTrackExpanded ? 'Hide' : 'Show'} credits for ${track.title}`}
+                            onPress={() => toggleTrackCredits(track.trackId)}
+                            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
+                          >
                             <Text style={{ color: '#d1d5db', flex: 1, fontWeight: '700', fontSize: 15 }}>
                               {track.position ? `${track.position}. ` : ''}
                               {track.title}
                             </Text>
-                            {trackDuration ? (
-                              <Text style={{ color: '#9ca3af', fontSize: 14 }}>{trackDuration}</Text>
-                            ) : null}
-                          </View>
-                          {groupedCredits.map(([groupLabel, credits]) => (
-                            <View key={`${track.trackId}-${groupLabel}`} style={{ marginTop: 8 }}>
-                              <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
-                                {groupLabel}
+                            <View style={{ alignItems: 'flex-end' }}>
+                              {trackDuration ? (
+                                <Text style={{ color: '#9ca3af', fontSize: 14 }}>{trackDuration}</Text>
+                              ) : null}
+                              <Text style={{ color: '#9ca3af', marginTop: 2, fontSize: 16 }}>
+                                {isTrackExpanded ? '▾' : '▸'}
                               </Text>
-                              {credits.map((credit, index) => (
-                                <Text
-                                  key={`${track.trackId}-${groupLabel}-${credit.personName}-${credit.role}-${index}`}
-                                  style={{ color: '#d1d5db', marginTop: 2, fontSize: 14 }}
-                                >
-                                  {credit.personName}
-                                  {credit.role ? ` — ${credit.role}` : ''}
-                                  {credit.instrument ? ` (${credit.instrument})` : ''}
-                                </Text>
-                              ))}
                             </View>
-                          ))}
+                          </TouchableOpacity>
+                          {isTrackExpanded
+                            ? groupedCredits.map(([groupLabel, credits]) => (
+                                <View key={`${track.trackId}-${groupLabel}`} style={{ marginTop: 8 }}>
+                                  <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
+                                    {groupLabel}
+                                  </Text>
+                                  {credits.map((credit, index) => (
+                                    <Text
+                                      key={`${track.trackId}-${groupLabel}-${credit.personName}-${credit.role}-${index}`}
+                                      style={{ color: '#d1d5db', marginTop: 2, fontSize: 14 }}
+                                    >
+                                      {credit.personName}
+                                      {credit.role ? ` — ${credit.role}` : ''}
+                                      {credit.instrument ? ` (${credit.instrument})` : ''}
+                                    </Text>
+                                  ))}
+                                </View>
+                              ))
+                            : null}
                         </View>
                       )
                     })}
@@ -349,13 +372,14 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
           >
             <TouchableOpacity
               accessibilityRole="button"
+              accessibilityLabel={`${showEditionsSources ? 'Hide' : 'Show'} editions and sources`}
               onPress={() => setShowEditionsSources((current) => !current)}
               style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
             >
               <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>
                 Editions & Sources
               </Text>
-              <Text style={{ color: '#9ca3af', fontSize: 14 }}>{showEditionsSources ? 'Hide' : 'Show'}</Text>
+              <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showEditionsSources ? '▾' : '▸'}</Text>
             </TouchableOpacity>
             {showEditionsSources ? (
               <>
