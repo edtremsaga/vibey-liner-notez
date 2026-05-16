@@ -268,6 +268,17 @@ if (
 ) {
   throw new Error('AlbumDetailScreen does not render track-associated credit rows')
 }
+if (!albumDetailScreenSource.includes('Selected-release track credits from MusicBrainz.')) {
+  throw new Error('AlbumDetailScreen does not include selected-release track credits scope copy')
+}
+for (const creditGroupLabel of ['Performers & Instruments', 'Production & Technical', 'Other']) {
+  if (!albumDetailScreenSource.includes(creditGroupLabel)) {
+    throw new Error(`AlbumDetailScreen is missing track credit group label: ${creditGroupLabel}`)
+  }
+}
+if (!albumDetailScreenSource.includes('tracksWithCredits.map') || albumDetailScreenSource.includes('album.tracks.slice(0, 3)')) {
+  throw new Error('AlbumDetailScreen does not render all tracks with selected-release credits')
+}
 if (!albumDetailScreenSource.includes('Editions & Sources')) {
   throw new Error('AlbumDetailScreen does not include Editions & Sources section label')
 }

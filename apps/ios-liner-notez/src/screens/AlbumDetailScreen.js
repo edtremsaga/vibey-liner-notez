@@ -11,6 +11,36 @@ function formatDuration(durationMs) {
   return `${minutes}:${seconds}`
 }
 
+function isPerformerCredit(credit) {
+  const role = credit?.role?.toLowerCase() ?? ''
+  return (
+    role === 'performer' ||
+    role.includes('vocal') ||
+    role.includes('guitar') ||
+    role.includes('bass') ||
+    role.includes('drum') ||
+    role.includes('piano') ||
+    role.includes('keyboard')
+  )
+}
+
+function isProductionCredit(credit) {
+  const role = credit?.role?.toLowerCase() ?? ''
+  return role.includes('producer') || role.includes('engineer') || role.includes('mix') || role.includes('mastering')
+}
+
+function groupTrackCredits(credits) {
+  const performers = credits.filter(isPerformerCredit)
+  const production = credits.filter(isProductionCredit)
+  const other = credits.filter((credit) => !isPerformerCredit(credit) && !isProductionCredit(credit))
+
+  return [
+    ['Performers & Instruments', performers],
+    ['Production & Technical', production],
+    ['Other', other]
+  ].filter(([, groupedCredits]) => groupedCredits.length > 0)
+}
+
 export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResults }) {
   const [showLoading, setShowLoading] = useState(false)
   const [showTracklist, setShowTracklist] = useState(true)
@@ -54,6 +84,9 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
   const hasTrackCredits =
     hasTracks &&
     album.tracks.some((track) => Array.isArray(trackCreditsByTrackId[track.trackId]) && trackCreditsByTrackId[track.trackId].length > 0)
+  const tracksWithCredits = hasTracks
+    ? album.tracks.filter((track) => Array.isArray(trackCreditsByTrackId[track.trackId]) && trackCreditsByTrackId[track.trackId].length > 0)
+    : []
 
   return (
     <ScrollView
@@ -250,20 +283,49 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                     </Text>
                   ))
                 ) : null}
-                {hasTrackCredits
-                  ? album.tracks.slice(0, 3).map((track) =>
-                      (trackCreditsByTrackId[track.trackId] ?? []).slice(0, 2).map((credit, index) => (
-                        <Text
-                          key={`track-${track.trackId}-${credit.personName}-${credit.role}-${index}`}
-                          style={{ color: '#9ca3af', marginTop: 2, fontSize: 14 }}
-                        >
-                          {track.title}: {credit.personName}
-                          {credit.role ? ` — ${credit.role}` : ''}
-                          {credit.instrument ? ` (${credit.instrument})` : ''}
-                        </Text>
-                      ))
-                    )
-                  : null}
+                {hasTrackCredits ? (
+                  <>
+                    <Text style={{ color: '#9ca3af', marginTop: 8, fontSize: 14 }}>
+                      Selected-release track credits from MusicBrainz.
+                    </Text>
+                    {tracksWithCredits.map((track) => {
+                      const trackCredits = trackCreditsByTrackId[track.trackId] ?? []
+                      const groupedCredits = groupTrackCredits(trackCredits)
+                      const trackDuration = formatDuration(track.durationMs)
+
+                      return (
+                        <View key={`credits-${track.trackId}`} style={{ marginTop: 12 }}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
+                            <Text style={{ color: '#d1d5db', flex: 1, fontWeight: '700', fontSize: 15 }}>
+                              {track.position ? `${track.position}. ` : ''}
+                              {track.title}
+                            </Text>
+                            {trackDuration ? (
+                              <Text style={{ color: '#9ca3af', fontSize: 14 }}>{trackDuration}</Text>
+                            ) : null}
+                          </View>
+                          {groupedCredits.map(([groupLabel, credits]) => (
+                            <View key={`${track.trackId}-${groupLabel}`} style={{ marginTop: 8 }}>
+                              <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
+                                {groupLabel}
+                              </Text>
+                              {credits.map((credit, index) => (
+                                <Text
+                                  key={`${track.trackId}-${groupLabel}-${credit.personName}-${credit.role}-${index}`}
+                                  style={{ color: '#d1d5db', marginTop: 2, fontSize: 14 }}
+                                >
+                                  {credit.personName}
+                                  {credit.role ? ` — ${credit.role}` : ''}
+                                  {credit.instrument ? ` (${credit.instrument})` : ''}
+                                </Text>
+                              ))}
+                            </View>
+                          ))}
+                        </View>
+                      )
+                    })}
+                  </>
+                ) : null}
                 {!hasAlbumCredits && !hasTrackCredits ? (
                   <Text style={{ color: '#9ca3af', marginTop: 8 }}>
                     {isRealMusicBrainzDetail
