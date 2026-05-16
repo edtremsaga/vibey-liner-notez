@@ -45,7 +45,12 @@ export function ProducerSearchScreen({ onSelectAlbum }) {
   }
 
   return (
-    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 24 }}>
+    <ScrollView
+      style={{ flex: 1 }}
+      keyboardShouldPersistTaps="handled"
+      contentContainerStyle={{ paddingBottom: 40 }}
+      showsVerticalScrollIndicator
+    >
       <View>
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Producer Search</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>

@@ -1,9 +1,13 @@
 import React from 'react'
-import { Text, View } from 'react-native'
+import { ScrollView, Text } from 'react-native'
 
 export function HelpDataSourcesScreen() {
   return (
-    <View>
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      showsVerticalScrollIndicator
+    >
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Help / Data Sources</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         This iOS scaffold uses read-only MusicBrainz artist-first album search and can enrich Album Detail with release-group information while Producer Search remains mock-only.
@@ -29,6 +33,6 @@ export function HelpDataSourcesScreen() {
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         We do not invent credits. If data is missing, it should be shown as unavailable or not documented.
       </Text>
-    </View>
+    </ScrollView>
   )
 }

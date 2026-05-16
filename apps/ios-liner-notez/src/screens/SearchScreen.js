@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
 
 const RELEASE_TYPES = [
   { value: 'Album', label: 'Studio Albums' },
@@ -32,7 +32,12 @@ export function SearchScreen({ onSubmitArtistSearch }) {
   }
 
   return (
-    <View>
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator
+    >
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Search Albums</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Search MusicBrainz albums by artist. Add an album title only to narrow results.
@@ -164,6 +169,6 @@ export function SearchScreen({ onSubmitArtistSearch }) {
       >
         <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Search</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   )
 }

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
 const RELEASE_TYPE_LABELS = {
   Album: 'Studio albums',
@@ -31,7 +31,11 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
     : 'Try another artist name or choose a different release type.'
 
   return (
-    <View>
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      showsVerticalScrollIndicator
+    >
       <Text style={{ color: '#f3f4f6', fontSize: 24, fontWeight: '700' }}>{resultsHeading}</Text>
       {showResults && (
         <View style={{ marginTop: 8 }}>
@@ -129,6 +133,6 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
             </TouchableOpacity>
           )
         })}
-    </View>
+    </ScrollView>
   )
 }

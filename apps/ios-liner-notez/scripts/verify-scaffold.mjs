@@ -43,6 +43,9 @@ if (appSource.includes('Placeholder screen for help, attribution, and data-sourc
 }
 
 const searchScreenSource = readFileSync(path.join(appRoot, 'src/screens/SearchScreen.js'), 'utf8')
+if (!searchScreenSource.includes('ScrollView') || !searchScreenSource.includes('contentContainerStyle')) {
+  throw new Error('SearchScreen is not scrollable for expanded release-type content')
+}
 if (searchScreenSource.includes('getMockAlbums') || searchScreenSource.includes('Mock album preview')) {
   throw new Error('SearchScreen still includes mock album preview content')
 }
@@ -83,6 +86,9 @@ if (searchScreenSource.includes('Please enter an album title to continue.')) {
 }
 
 const resultsScreenSource = readFileSync(path.join(appRoot, 'src/screens/ResultsScreen.js'), 'utf8')
+if (!resultsScreenSource.includes('ScrollView') || !resultsScreenSource.includes('contentContainerStyle')) {
+  throw new Error('ResultsScreen is not scrollable for long MusicBrainz result lists')
+}
 if (!resultsScreenSource.includes('albums.map')) {
   throw new Error('ResultsScreen does not render result list')
 }
@@ -121,6 +127,9 @@ const producerSearchScreenSource = readFileSync(
   path.join(appRoot, 'src/screens/ProducerSearchScreen.js'),
   'utf8'
 )
+if (!producerSearchScreenSource.includes('ScrollView') || !producerSearchScreenSource.includes('contentContainerStyle')) {
+  throw new Error('ProducerSearchScreen is not scrollable for mock producer content')
+}
 if (!producerSearchScreenSource.includes('Producer search input')) {
   throw new Error('ProducerSearchScreen does not include producer input')
 }
@@ -156,6 +165,9 @@ const helpDataSourcesScreenSource = readFileSync(
   path.join(appRoot, 'src/screens/HelpDataSourcesScreen.js'),
   'utf8'
 )
+if (!helpDataSourcesScreenSource.includes('ScrollView') || !helpDataSourcesScreenSource.includes('contentContainerStyle')) {
+  throw new Error('HelpDataSourcesScreen is not scrollable for help/data-source content')
+}
 if (helpDataSourcesScreenSource.includes('Placeholder screen for help, attribution, and data-source disclosures.')) {
   throw new Error('HelpDataSourcesScreen still contains placeholder-only copy')
 }
