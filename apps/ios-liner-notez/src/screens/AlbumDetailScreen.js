@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
 function formatDuration(durationMs) {
   if (!durationMs || Number.isNaN(durationMs)) {
@@ -56,7 +56,11 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
     album.tracks.some((track) => Array.isArray(trackCreditsByTrackId[track.trackId]) && trackCreditsByTrackId[track.trackId].length > 0)
 
   return (
-    <View>
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      showsVerticalScrollIndicator
+    >
       <Text style={{ color: '#e5e7eb', fontSize: 30, fontWeight: '500' }}>Album Detail</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         {isRealMusicBrainzDetail
@@ -379,6 +383,6 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
       >
         <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Results</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   )
 }

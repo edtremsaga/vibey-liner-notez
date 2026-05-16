@@ -190,6 +190,9 @@ if (
 }
 
 const albumDetailScreenSource = readFileSync(path.join(appRoot, 'src/screens/AlbumDetailScreen.js'), 'utf8')
+if (!albumDetailScreenSource.includes('ScrollView') || !albumDetailScreenSource.includes('contentContainerStyle')) {
+  throw new Error('AlbumDetailScreen is not scrollable for long album detail content')
+}
 if (!albumDetailScreenSource.includes('Back to Results')) {
   throw new Error('AlbumDetailScreen does not include back-to-results action')
 }
