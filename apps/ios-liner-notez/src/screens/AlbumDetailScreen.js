@@ -46,6 +46,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
   const [showTracklist, setShowTracklist] = useState(true)
   const [showCredits, setShowCredits] = useState(true)
   const [showEditionsSources, setShowEditionsSources] = useState(true)
+  const [showAlbumCredits, setShowAlbumCredits] = useState(false)
   const [expandedCreditTrackIds, setExpandedCreditTrackIds] = useState({})
 
   const hasAlbum = !!album
@@ -88,6 +89,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
   const tracksWithCredits = hasTracks
     ? album.tracks.filter((track) => Array.isArray(trackCreditsByTrackId[track.trackId]) && trackCreditsByTrackId[track.trackId].length > 0)
     : []
+  const groupedAlbumCredits = hasAlbumCredits ? groupTrackCredits(album.credits.albumCredits) : []
 
   function toggleTrackCredits(trackId) {
     setExpandedCreditTrackIds((current) => ({
@@ -282,16 +284,36 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
             {showCredits ? (
               <>
                 {hasAlbumCredits ? (
-                  album.credits.albumCredits.slice(0, 3).map((credit, index) => (
-                    <Text
-                      key={`album-${credit.personName}-${credit.role}-${index}`}
-                      style={{ color: '#d1d5db', marginTop: 2, fontSize: 15 }}
+                  <View style={{ marginTop: 12 }}>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={`${showAlbumCredits ? 'Hide' : 'Show'} album credits`}
+                      onPress={() => setShowAlbumCredits((current) => !current)}
+                      style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
                     >
-                      {credit.personName}
-                      {credit.role ? ` — ${credit.role}` : ''}
-                      {credit.instrument ? ` (${credit.instrument})` : ''}
-                    </Text>
-                  ))
+                      <Text style={{ color: '#d1d5db', flex: 1, fontWeight: '700', fontSize: 15 }}>Album</Text>
+                      <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showAlbumCredits ? '▾' : '▸'}</Text>
+                    </TouchableOpacity>
+                    {showAlbumCredits
+                      ? groupedAlbumCredits.map(([groupLabel, credits]) => (
+                          <View key={`album-${groupLabel}`} style={{ marginTop: 8 }}>
+                            <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
+                              {groupLabel}
+                            </Text>
+                            {credits.map((credit, index) => (
+                              <Text
+                                key={`album-${groupLabel}-${credit.personName}-${credit.role}-${index}`}
+                                style={{ color: '#d1d5db', marginTop: 2, fontSize: 14 }}
+                              >
+                                {credit.personName}
+                                {credit.role ? ` — ${credit.role}` : ''}
+                                {credit.instrument ? ` (${credit.instrument})` : ''}
+                              </Text>
+                            ))}
+                          </View>
+                        ))
+                      : null}
+                  </View>
                 ) : null}
                 {hasTrackCredits ? (
                   <>

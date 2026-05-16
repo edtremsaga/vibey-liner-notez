@@ -114,6 +114,56 @@ function extractTrackCredits(recording) {
   return credits
 }
 
+function extractAlbumCredits(release) {
+  const credits = []
+  const relations = Array.isArray(release?.relations) ? release.relations : []
+
+  for (const relation of relations) {
+    if (!relation?.type || relation?.['target-type'] !== 'artist') {
+      continue
+    }
+
+    const personName = relation.artist?.name || relation['target-credit'] || null
+    if (!personName) {
+      continue
+    }
+
+    const relationType = relation.type
+    const attributes = Array.isArray(relation.attributes) ? relation.attributes.filter(Boolean) : []
+
+    if (relationType === 'instrument' && attributes.length > 0) {
+      for (const instrument of attributes) {
+        credits.push({
+          personName,
+          role: instrument,
+          instrument: null,
+          notes: null
+        })
+      }
+      continue
+    }
+
+    if (relationType === 'vocal') {
+      credits.push({
+        personName,
+        role: attributes[0] || 'Vocals',
+        instrument: null,
+        notes: null
+      })
+      continue
+    }
+
+    credits.push({
+      personName,
+      role: relationType,
+      instrument: null,
+      notes: null
+    })
+  }
+
+  return credits
+}
+
 function mapReleaseToTracks(release) {
   const media = Array.isArray(release?.media) ? release.media : []
 
@@ -250,7 +300,7 @@ export async function fetchMusicBrainzSelectedReleaseTracklist(selectedReleaseId
     selectedReleaseId: release?.id ?? selectedReleaseId,
     tracks: mapReleaseToTracks(release),
     credits: {
-      albumCredits: null,
+      albumCredits: extractAlbumCredits(release),
       trackCredits: mapReleaseToTrackCredits(release)
     }
   }
