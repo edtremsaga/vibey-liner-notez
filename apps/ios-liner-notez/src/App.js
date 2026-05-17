@@ -191,11 +191,12 @@ export default function App() {
         }
 
         try {
-          const tracklistDetail = await fetchMusicBrainzSelectedReleaseTracklist(detail.selectedReleaseId)
+          const tracklistDetail = await fetchMusicBrainzSelectedReleaseTracklist(detail.selectedReleaseId, detail.editions)
           if (isCurrent) {
             setSelectedAlbumDetail((currentDetail) => ({
               ...(currentDetail ?? detail),
               selectedReleaseId: tracklistDetail.selectedReleaseId ?? detail.selectedReleaseId,
+              editions: tracklistDetail.editions ?? currentDetail?.editions ?? detail.editions ?? [],
               tracks: tracklistDetail.tracks ?? [],
               credits: tracklistDetail.credits ?? {
                 albumCredits: null,

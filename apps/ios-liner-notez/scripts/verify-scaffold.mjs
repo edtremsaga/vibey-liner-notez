@@ -362,7 +362,11 @@ if (!albumDetailScreenSource.includes('Editions & Sources')) {
 if (!albumDetailScreenSource.includes('Selected Edition') || !albumDetailScreenSource.includes('selectedEditionRows')) {
   throw new Error('AlbumDetailScreen does not render compact selected edition section')
 }
-if (!albumDetailScreenSource.includes("['Country', selectedEdition.country]") || !albumDetailScreenSource.includes("['Format', selectedEdition.formatSummary]")) {
+if (
+  !albumDetailScreenSource.includes("['Country', selectedEdition.country]") ||
+  !albumDetailScreenSource.includes("['Format', selectedEdition.formatSummary]") ||
+  !albumDetailScreenSource.includes("['Packaging', selectedEdition.packaging]")
+) {
   throw new Error('AlbumDetailScreen does not render selected edition field rows')
 }
 if (!albumDetailScreenSource.includes('album.sources[0].sourceName')) {
@@ -398,6 +402,12 @@ if (!appSource.includes('fetchMusicBrainzAlbumBasicInfo') || !appSource.includes
 }
 if (!appSource.includes('fetchMusicBrainzSelectedReleaseTracklist') || !appSource.includes('tracks: tracklistDetail.tracks')) {
   throw new Error('App router does not fetch and merge selected-release tracklist for Album Detail')
+}
+if (
+  !appSource.includes('fetchMusicBrainzSelectedReleaseTracklist(detail.selectedReleaseId, detail.editions)') ||
+  !appSource.includes('editions: tracklistDetail.editions')
+) {
+  throw new Error('App router does not merge selected-release edition metadata for Album Detail')
 }
 if (!appSource.includes('credits: tracklistDetail.credits')) {
   throw new Error('App router does not merge selected-release track credits for Album Detail')
@@ -437,6 +447,16 @@ if (!musicBrainzAlbumDetailSource.includes("release?.status === 'Official'") || 
 }
 if (!musicBrainzAlbumDetailSource.includes('mapReleaseToEdition') || !musicBrainzAlbumDetailSource.includes('editionId')) {
   throw new Error('iOS MusicBrainz album detail service does not map minimal release-group editions')
+}
+if (
+  !musicBrainzAlbumDetailSource.includes('function mergeSelectedReleaseEditionDetails') ||
+  !musicBrainzAlbumDetailSource.includes("release?.['label-info']?.[0]?.label?.name") ||
+  !musicBrainzAlbumDetailSource.includes("release?.['label-info']?.[0]?.['catalog-number']") ||
+  !musicBrainzAlbumDetailSource.includes('release?.barcode') ||
+  !musicBrainzAlbumDetailSource.includes('release?.media?.[0]?.format') ||
+  !musicBrainzAlbumDetailSource.includes('release?.packaging')
+) {
+  throw new Error('iOS MusicBrainz album detail service does not enrich selected-release edition metadata')
 }
 if (!musicBrainzAlbumDetailSource.includes('fetchMusicBrainzSelectedReleaseTracklist')) {
   throw new Error('iOS MusicBrainz album detail service does not expose selected-release tracklist fetch')

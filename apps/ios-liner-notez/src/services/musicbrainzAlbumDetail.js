@@ -270,6 +270,36 @@ function mapReleaseToTrackCredits(release) {
   return Object.keys(trackCredits).length > 0 ? trackCredits : null
 }
 
+function normalizeOptionalValue(value) {
+  if (value === undefined || value === null || value === '') {
+    return null
+  }
+
+  return value
+}
+
+function mergeSelectedReleaseEditionDetails(editions, release) {
+  const selectedReleaseId = release?.id
+  if (!selectedReleaseId || !Array.isArray(editions)) {
+    return editions
+  }
+
+  return editions.map((edition) => {
+    if (edition?.editionId !== selectedReleaseId) {
+      return edition
+    }
+
+    return {
+      ...edition,
+      label: normalizeOptionalValue(release?.['label-info']?.[0]?.label?.name),
+      catalogNumber: normalizeOptionalValue(release?.['label-info']?.[0]?.['catalog-number']),
+      barcode: normalizeOptionalValue(release?.barcode),
+      formatSummary: normalizeOptionalValue(release?.media?.[0]?.format),
+      packaging: normalizeOptionalValue(release?.packaging)
+    }
+  })
+}
+
 function getPrimaryCoverImageUrl(coverArtData) {
   const images = Array.isArray(coverArtData?.images) ? coverArtData.images : []
   const frontImage = images.find((image) => image?.front === true)
@@ -358,7 +388,7 @@ export async function fetchMusicBrainzAlbumBasicInfo(releaseGroupId) {
   }
 }
 
-export async function fetchMusicBrainzSelectedReleaseTracklist(selectedReleaseId) {
+export async function fetchMusicBrainzSelectedReleaseTracklist(selectedReleaseId, editions = []) {
   if (!selectedReleaseId) {
     throw new Error('MusicBrainz selected release id is required')
   }
@@ -383,6 +413,7 @@ export async function fetchMusicBrainzSelectedReleaseTracklist(selectedReleaseId
 
   return {
     selectedReleaseId: release?.id ?? selectedReleaseId,
+    editions: mergeSelectedReleaseEditionDetails(editions, release),
     tracks: mapReleaseToTracks(release),
     credits: {
       albumCredits: extractAlbumCredits(release),

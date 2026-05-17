@@ -70,6 +70,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
         ['Date', selectedEdition.date],
         ['Status', selectedEdition.status],
         ['Format', selectedEdition.formatSummary],
+        ['Packaging', selectedEdition.packaging],
         ['Label', selectedEdition.label],
         ['Catalog #', selectedEdition.catalogNumber],
         ['Barcode', selectedEdition.barcode]

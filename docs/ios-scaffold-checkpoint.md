@@ -49,8 +49,8 @@
 
 ## Product Scope Status
 - Read-only MusicBrainz Search -> Results is active for artist-first album results with release-type filtering for artist-only searches.
-- Album Detail real-data scope now includes selected-result header data, release-group basic enrichment from MusicBrainz, primary cover art from Cover Art Archive, the selected-release tracklist, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing.
-- Album Detail opens immediately from selected Results row data, then fetches release-group basic info, optional primary cover art, selected-release tracklist data, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing in the background.
+- Album Detail real-data scope now includes selected-result header data, release-group basic enrichment from MusicBrainz, primary cover art from Cover Art Archive, selected-release edition metadata, the selected-release tracklist, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing.
+- Album Detail opens immediately from selected Results row data, then fetches release-group basic info, optional primary cover art, selected-release edition metadata, selected-release tracklist data, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing in the background.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 
 ## Search Behavior Contract
@@ -62,7 +62,7 @@
 - Tapping a Search result opens Album Detail with selected MusicBrainz result header data.
 
 ## Album Detail Real-Data Path
-- Current live path: Search -> Results -> Album Detail header -> release-group enrichment -> primary cover art -> selected-release tracklist -> selected-release album-level credits -> selected-release track credits -> selected-release songwriting -> selected-release publishing.
+- Current live path: Search -> Results -> Album Detail header -> release-group enrichment -> primary cover art -> selected-release edition metadata -> selected-release tracklist -> selected-release album-level credits -> selected-release track credits -> selected-release songwriting -> selected-release publishing.
 - The selected-release tracklist milestone is `b13a7f1` Add iOS selected release tracklist.
 - The selected-release album-level credits milestone is `736c51b` Add iOS album-level credits.
 - The selected-release track credits milestone is `6a0a7bf` Add iOS selected release track credits.
@@ -99,6 +99,9 @@
 - iOS prefers selected-release cover art when available and falls back to release-group cover art.
 - Missing or failing cover art preserves the current no-art Album Detail layout silently.
 - Album art gallery, lightbox, zoom, and multiple-image browsing remain deferred.
+- Selected edition metadata uses the already-fetched selected-release response and adds label, catalog number, barcode, format, and packaging when available.
+- No additional MusicBrainz request is used for selected edition metadata.
+- All-editions enrichment remains deferred.
 - Track credits display milestone `0660575` groups available selected-release credits by track and credit category.
 - Track credits disclosure milestone `a1420ba` keeps tracks collapsed by default and lets users expand individual tracks with chevrons while preserving multiple-expanded behavior.
 - Multi-disc releases keep the current flat tracklist UI and use React-style positions such as `2-1`, `2-2`, etc.
@@ -158,7 +161,7 @@
 - Noisy secondary search results remain expected under current shared MusicBrainz/search semantics and are not an iOS-specific bug.
 
 ## Mock-Only / Deferred Scope
-- Album Detail producer graph, album art gallery/lightbox, full edition metadata, canonical studio-albums cleanup, and rich liner-note sections are not loaded yet.
+- Album Detail producer graph, album art gallery/lightbox, all-editions metadata enrichment, canonical studio-albums cleanup, and rich liner-note sections are not loaded yet.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 
 ## Known Deferred Work
@@ -166,7 +169,7 @@
 - Alternate-release fallback probing for album-level credits when the selected release has none.
 - Recording places/studios.
 - Producer graph.
-- Full selected-release edition metadata.
+- All-editions metadata enrichment.
 - Album art gallery, lightbox, zoom, and multiple-image browsing.
 - Real Producer Search.
 - Pagination or load more for larger result sets.
