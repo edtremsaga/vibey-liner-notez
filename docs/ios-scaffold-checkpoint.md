@@ -39,6 +39,7 @@
 - Album Detail section-level disclosure controls use chevrons consistently for Tracklist, Credits, and Editions & Sources.
 - Album Detail supports optional primary cover art from Cover Art Archive.
 - Album Detail Editions & Sources now prioritizes human-readable selected-edition and source labels while keeping technical identifiers and links available for traceability.
+- Album Detail Editions & Sources keeps Release-group editions and Technical links collapsed by default so the selected-edition view stays compact.
 - Album Detail still renders selected mock album content for Producer Search mock results.
 - Visible iOS app copy has been softened so the title reads `Liner Notez`, Album Detail uses user-facing helper text, and the main album card no longer shows the release-group MBID.
 - Search, Results, Album Detail, Producer Search, and Help / Data Sources have screen-owned vertical scrolling for smaller iPhones.

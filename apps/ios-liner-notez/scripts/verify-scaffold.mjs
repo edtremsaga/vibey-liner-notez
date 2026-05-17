@@ -386,8 +386,23 @@ if (
 if (!albumDetailScreenSource.includes('selectedEditionTechnicalRows') || !albumDetailScreenSource.includes('Selected release MBID')) {
   throw new Error('AlbumDetailScreen does not keep selected release technical identifier available')
 }
-if (!albumDetailScreenSource.includes('Technical links')) {
-  throw new Error('AlbumDetailScreen does not visually separate technical source links')
+if (
+  !albumDetailScreenSource.includes('showReleaseGroupEditions, setShowReleaseGroupEditions') ||
+  !albumDetailScreenSource.includes('useState(false)') ||
+  !albumDetailScreenSource.includes("`${showReleaseGroupEditions ? 'Hide' : 'Show'} release-group editions`") ||
+  !albumDetailScreenSource.includes("{showReleaseGroupEditions ? '▾' : '▸'}")
+) {
+  throw new Error('AlbumDetailScreen does not keep release-group editions collapsed behind a chevron disclosure')
+}
+if (
+  !albumDetailScreenSource.includes('showTechnicalLinks, setShowTechnicalLinks') ||
+  !albumDetailScreenSource.includes("`${showTechnicalLinks ? 'Hide' : 'Show'} technical links`") ||
+  !albumDetailScreenSource.includes("{showTechnicalLinks ? '▾' : '▸'}")
+) {
+  throw new Error('AlbumDetailScreen does not keep technical links collapsed behind a chevron disclosure')
+}
+if (!albumDetailScreenSource.includes('Technical links') || !albumDetailScreenSource.includes('showTechnicalLinks ? (')) {
+  throw new Error('AlbumDetailScreen does not visually separate collapsible technical source links')
 }
 if (!albumDetailScreenSource.includes('album.sources.map')) {
   throw new Error('AlbumDetailScreen does not render source attribution field')

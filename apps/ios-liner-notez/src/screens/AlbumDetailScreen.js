@@ -60,6 +60,8 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
   const [showTracklist, setShowTracklist] = useState(true)
   const [showCredits, setShowCredits] = useState(true)
   const [showEditionsSources, setShowEditionsSources] = useState(true)
+  const [showReleaseGroupEditions, setShowReleaseGroupEditions] = useState(false)
+  const [showTechnicalLinks, setShowTechnicalLinks] = useState(false)
   const [showAlbumCredits, setShowAlbumCredits] = useState(false)
   const [expandedCreditTrackIds, setExpandedCreditTrackIds] = useState({})
   const [failedCoverArtUrls, setFailedCoverArtUrls] = useState({})
@@ -519,17 +521,27 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                 )}
                 {editionRows.length > 0 && (
                   <View style={{ marginTop: 10 }}>
-                    <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>
-                      Release-group editions
-                    </Text>
-                    {editionRows.map((edition) => {
-                      const editionSummary = [edition.date, edition.country, edition.status].filter(Boolean).join(' - ')
-                      return (
-                        <Text key={edition.editionId} style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>
-                          {editionSummary || edition.editionId}
-                        </Text>
-                      )
-                    })}
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={`${showReleaseGroupEditions ? 'Hide' : 'Show'} release-group editions`}
+                      onPress={() => setShowReleaseGroupEditions((current) => !current)}
+                      style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>
+                        Release-group editions
+                      </Text>
+                      <Text style={{ color: '#9ca3af', fontSize: 14 }}>{showReleaseGroupEditions ? '▾' : '▸'}</Text>
+                    </TouchableOpacity>
+                    {showReleaseGroupEditions
+                      ? editionRows.map((edition) => {
+                          const editionSummary = [edition.date, edition.country, edition.status].filter(Boolean).join(' - ')
+                          return (
+                            <Text key={edition.editionId} style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>
+                              {editionSummary || edition.editionId}
+                            </Text>
+                          )
+                        })
+                      : null}
                   </View>
                 )}
                 {hasSources ? (
@@ -546,17 +558,29 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                 )}
                 {selectedEditionTechnicalRows.length > 0 || externalLinkRows.length > 0 ? (
                   <View style={{ marginTop: 8 }}>
-                    <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Technical links</Text>
-                    {selectedEditionTechnicalRows.map(([label, value]) => (
-                      <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>
-                        {label}: {value}
-                      </Text>
-                    ))}
-                    {externalLinkRows.map(([label, value]) => (
-                      <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>
-                        {label}: {value}
-                      </Text>
-                    ))}
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={`${showTechnicalLinks ? 'Hide' : 'Show'} technical links`}
+                      onPress={() => setShowTechnicalLinks((current) => !current)}
+                      style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Technical links</Text>
+                      <Text style={{ color: '#9ca3af', fontSize: 14 }}>{showTechnicalLinks ? '▾' : '▸'}</Text>
+                    </TouchableOpacity>
+                    {showTechnicalLinks ? (
+                      <>
+                        {selectedEditionTechnicalRows.map(([label, value]) => (
+                          <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>
+                            {label}: {value}
+                          </Text>
+                        ))}
+                        {externalLinkRows.map(([label, value]) => (
+                          <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>
+                            {label}: {value}
+                          </Text>
+                        ))}
+                      </>
+                    ) : null}
                   </View>
                 ) : (
                   <Text style={{ color: '#9ca3af', marginTop: 6 }}>External links unavailable</Text>
