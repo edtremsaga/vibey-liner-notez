@@ -38,9 +38,9 @@ export function SearchScreen({ onSubmitArtistSearch }) {
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator
     >
-      <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Search Albums</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 24, fontWeight: '700' }}>Find Albums</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Search MusicBrainz albums by artist. Add an album title only to narrow results.
+        Start with an artist. Add an album title when you want to narrow the match.
       </Text>
 
       <Text style={{ color: '#d1d5db', marginTop: 16, marginBottom: 6 }}>Artist name</Text>
@@ -97,7 +97,7 @@ export function SearchScreen({ onSubmitArtistSearch }) {
           <Text style={{ color: '#d1d5db', marginTop: 12, marginBottom: 6 }}>Release Type</Text>
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="Release Type"
+            accessibilityLabel={`${showReleaseTypes ? 'Hide' : 'Show'} release type options`}
             onPress={() => setShowReleaseTypes((current) => !current)}
             style={{
               borderWidth: 1,
@@ -111,7 +111,7 @@ export function SearchScreen({ onSubmitArtistSearch }) {
             }}
           >
             <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>{selectedReleaseType.label}</Text>
-            <Text style={{ color: '#9ca3af' }}>{showReleaseTypes ? 'Hide' : 'Show'}</Text>
+            <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showReleaseTypes ? '▾' : '▸'}</Text>
           </TouchableOpacity>
 
           {showReleaseTypes && (
@@ -167,7 +167,7 @@ export function SearchScreen({ onSubmitArtistSearch }) {
           alignSelf: 'flex-start'
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Search</Text>
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Find Albums</Text>
       </TouchableOpacity>
     </ScrollView>
   )

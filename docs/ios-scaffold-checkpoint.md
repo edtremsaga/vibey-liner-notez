@@ -28,6 +28,7 @@
 - Search requires an artist name, supports an optional album title for narrowing, and shows Release Type for artist-only searches.
 - Album-only search is not supported.
 - SearchScreen is now the real artist-first search entry point; the old mock album preview card has been removed.
+- Search and Results copy/layout have been polished to better match the Album Detail experience without changing search behavior or data fetching.
 - Producer Search shell works.
 - Producer input works.
 - Producer Search result rows are visible/readable.

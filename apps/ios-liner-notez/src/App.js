@@ -275,7 +275,7 @@ export default function App() {
         <Text style={styles.title}>Liner Notez</Text>
         {!!albumSearchArtistName && (
           <Text style={styles.subtitle}>
-            Artist search: {albumSearchArtistName}{albumSearchAlbumTitle ? ` - ${albumSearchAlbumTitle}` : ''}
+            Browsing albums by {albumSearchArtistName}{albumSearchAlbumTitle ? ` matching ${albumSearchAlbumTitle}` : ''}
           </Text>
         )}
       </View>

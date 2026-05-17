@@ -47,6 +47,9 @@ if (!appSource.includes('content: { flex: 1, minHeight: 0, padding: 16 }')) {
 if (!appSource.includes('Liner Notez') || appSource.includes('liner notez (iOS scaffold)')) {
   throw new Error('App visible title still uses scaffold/dev copy')
 }
+if (!appSource.includes('Browsing albums by') || appSource.includes('Artist search:')) {
+  throw new Error('App search context copy still reads like internal state')
+}
 
 const searchScreenSource = readFileSync(path.join(appRoot, 'src/screens/SearchScreen.js'), 'utf8')
 if (!searchScreenSource.includes('ScrollView') || !searchScreenSource.includes('contentContainerStyle')) {
@@ -61,11 +64,11 @@ if (!searchScreenSource.includes('Artist search input')) {
 if (!searchScreenSource.includes('Album search input')) {
   throw new Error('SearchScreen does not include optional album search input marker')
 }
-if (!searchScreenSource.includes('Search Albums')) {
-  throw new Error('SearchScreen does not include album search heading')
+if (!searchScreenSource.includes('Find Albums')) {
+  throw new Error('SearchScreen does not include polished album search heading/action')
 }
-if (!searchScreenSource.includes('>Search</Text>')) {
-  throw new Error('SearchScreen does not include search action')
+if (!searchScreenSource.includes('Start with an artist. Add an album title when you want to narrow the match.')) {
+  throw new Error('SearchScreen does not include user-facing artist-first helper copy')
 }
 if (!searchScreenSource.includes('Please enter an artist name to continue.')) {
   throw new Error('SearchScreen does not include empty-input validation message')
@@ -75,6 +78,12 @@ if (!searchScreenSource.includes('Album title (optional)')) {
 }
 if (!searchScreenSource.includes('Release Type')) {
   throw new Error('SearchScreen does not include release type control')
+}
+if (
+  !searchScreenSource.includes("`${showReleaseTypes ? 'Hide' : 'Show'} release type options`") ||
+  !searchScreenSource.includes("{showReleaseTypes ? '▾' : '▸'}")
+) {
+  throw new Error('SearchScreen release type control does not use chevron disclosure behavior')
 }
 if (!searchScreenSource.includes("value: 'Album', label: 'Studio Albums'")) {
   throw new Error('SearchScreen does not default release type to Studio Albums')
@@ -116,11 +125,11 @@ if (!resultsScreenSource.includes('artistCredit') || !resultsScreenSource.includ
 if (!resultsScreenSource.includes('from MusicBrainz')) {
   throw new Error('ResultsScreen does not describe artist-first MusicBrainz album results')
 }
-if (!resultsScreenSource.includes('${releaseTypeLabel} by ${artistName}.')) {
+if (!resultsScreenSource.includes('${releaseTypeLabel} by ${artistName}')) {
   throw new Error('ResultsScreen does not include release-type-aware artist-only heading')
 }
-if (!resultsScreenSource.includes('Open a result to view album details.')) {
-  throw new Error('ResultsScreen does not explain album detail behavior')
+if (!resultsScreenSource.includes('MusicBrainz may list several editions or similarly named releases. Choose the album that best matches.')) {
+  throw new Error('ResultsScreen does not explain why similar MusicBrainz results may appear')
 }
 if (!resultsScreenSource.includes('Open album detail')) {
   throw new Error('ResultsScreen does not include row album-detail affordance text')

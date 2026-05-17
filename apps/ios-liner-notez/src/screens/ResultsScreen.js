@@ -18,9 +18,9 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
   const releaseTypeLabel = RELEASE_TYPE_LABELS[releaseType] ?? RELEASE_TYPE_LABELS.Album
   const resultsHeading = artistName
     ? albumTitle
-      ? `Albums by ${artistName} matching "${albumTitle}".`
-      : `${releaseTypeLabel} by ${artistName}.`
-    : 'Search by artist to load MusicBrainz album results.'
+      ? `Albums by ${artistName} matching "${albumTitle}"`
+      : `${releaseTypeLabel} by ${artistName}`
+    : 'Find albums by artist'
   const loadingDetail = artistName
     ? albumTitle
       ? `Looking for albums by ${artistName} matching "${albumTitle}".`
@@ -42,7 +42,9 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
           <Text style={{ color: '#9ca3af' }}>
             {albums.length} {albums.length === 1 ? 'result' : 'results'} from MusicBrainz
           </Text>
-          <Text style={{ color: '#6b7280', marginTop: 4 }}>Open a result to view album details.</Text>
+          <Text style={{ color: '#6b7280', marginTop: 4 }}>
+            MusicBrainz may list several editions or similarly named releases. Choose the album that best matches.
+          </Text>
         </View>
       )}
 
