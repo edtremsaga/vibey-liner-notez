@@ -290,9 +290,9 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
             </TouchableOpacity>
             {showTracklist ? (
               hasTracks ? (
-                album.tracks.map((track) => (
+                album.tracks.map((track, index) => (
                   <View
-                    key={track.trackId}
+                    key={`track-${track.trackId ?? track.position ?? 'unknown'}-${index}`}
                     style={{ marginTop: 2, paddingVertical: 4, flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}
                   >
                     <Text style={{ color: '#d1d5db', flex: 1, fontSize: 15 }}>
@@ -372,7 +372,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                     <Text style={{ color: '#9ca3af', marginTop: 8, fontSize: 14 }}>
                       Album and track credits, with songwriting and publishing when available.
                     </Text>
-                    {tracksWithCreditDetails.map((track) => {
+                    {tracksWithCreditDetails.map((track, index) => {
                       const trackCredits = trackCreditsByTrackId[track.trackId] ?? []
                       const groupedCredits = groupTrackCredits(trackCredits)
                       const trackDuration = formatDuration(track.durationMs)
@@ -385,7 +385,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                       const publishingRows = (track.publishing?.publishers ?? []).map((publisherName) => [publisherName, 'Publisher'])
 
                       return (
-                        <View key={`credits-${track.trackId}`} style={{ marginTop: 12 }}>
+                        <View key={`credits-${track.trackId ?? track.position ?? 'unknown'}-${index}`} style={{ marginTop: 12 }}>
                           <TouchableOpacity
                             accessibilityRole="button"
                             accessibilityLabel={`${isTrackExpanded ? 'Hide' : 'Show'} credits for ${track.title}`}
@@ -506,8 +506,8 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                     {selectedEditionDetailSummary ? (
                       <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>{selectedEditionDetailSummary}</Text>
                     ) : null}
-                    {selectedEditionRows.map(([label, value]) => (
-                      <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>
+                    {selectedEditionRows.map(([label, value], index) => (
+                      <Text key={`selected-edition-${label}-${index}`} style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>
                         {label}: {value}
                       </Text>
                     ))}
@@ -533,10 +533,13 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                       <Text style={{ color: '#9ca3af', fontSize: 14 }}>{showReleaseGroupEditions ? '▾' : '▸'}</Text>
                     </TouchableOpacity>
                     {showReleaseGroupEditions
-                      ? editionRows.map((edition) => {
+                      ? editionRows.map((edition, index) => {
                           const editionSummary = [edition.date, edition.country, edition.status].filter(Boolean).join(' - ')
                           return (
-                            <Text key={edition.editionId} style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>
+                            <Text
+                              key={`release-group-edition-${edition.editionId ?? (editionSummary || 'unknown')}-${index}`}
+                              style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}
+                            >
                               {editionSummary || edition.editionId}
                             </Text>
                           )
@@ -547,8 +550,8 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                 {hasSources ? (
                   <View style={{ marginTop: 10 }}>
                     <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Sources</Text>
-                    {album.sources.map((source) => (
-                      <Text key={source.sourceName} style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>
+                    {album.sources.map((source, index) => (
+                      <Text key={`source-${source.sourceName ?? 'unknown'}-${index}`} style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>
                         {source.sourceName}
                       </Text>
                     ))}
@@ -569,13 +572,13 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                     </TouchableOpacity>
                     {showTechnicalLinks ? (
                       <>
-                        {selectedEditionTechnicalRows.map(([label, value]) => (
-                          <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>
+                        {selectedEditionTechnicalRows.map(([label, value], index) => (
+                          <Text key={`technical-id-${label}-${index}`} style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>
                             {label}: {value}
                           </Text>
                         ))}
-                        {externalLinkRows.map(([label, value]) => (
-                          <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>
+                        {externalLinkRows.map(([label, value], index) => (
+                          <Text key={`technical-link-${label}-${index}`} style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>
                             {label}: {value}
                           </Text>
                         ))}

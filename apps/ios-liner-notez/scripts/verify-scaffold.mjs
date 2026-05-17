@@ -407,6 +407,13 @@ if (
   throw new Error('AlbumDetailScreen does not keep release-group editions collapsed behind a chevron disclosure')
 }
 if (
+  !albumDetailScreenSource.includes('editionRows.map((edition, index)') ||
+  !albumDetailScreenSource.includes('release-group-edition-${edition.editionId') ||
+  albumDetailScreenSource.includes('key={edition.editionId}')
+) {
+  throw new Error('AlbumDetailScreen release-group edition rows are not protected against duplicate MusicBrainz release IDs')
+}
+if (
   !albumDetailScreenSource.includes('showTechnicalLinks, setShowTechnicalLinks') ||
   !albumDetailScreenSource.includes("`${showTechnicalLinks ? 'Hide' : 'Show'} technical links`") ||
   !albumDetailScreenSource.includes("{showTechnicalLinks ? '▾' : '▸'}")
