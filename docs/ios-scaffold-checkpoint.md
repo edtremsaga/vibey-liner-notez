@@ -98,6 +98,9 @@
 - Track credits disclosure milestone `a1420ba` keeps tracks collapsed by default and lets users expand individual tracks with chevrons while preserving multiple-expanded behavior.
 - Multi-disc releases keep the current flat tracklist UI and use React-style positions such as `2-1`, `2-2`, etc.
 - Recording places/studios remain deferred.
+- React can display Recording rows for Studio and Location when `recordingInfo` exists, but reliable data likely requires extra `/recording/{id}?inc=place-rels` requests.
+- React currently skips full-album per-recording place fetching because it is too slow; a typical album could require roughly 10-15 extra MusicBrainz requests.
+- iOS should not implement recording places/studios yet. A future implementation should likely lazy-load recording info only when a track credit row is expanded, with caching and rate-limit protection.
 
 ## Release Type Behavior
 - Release Type is only visible for artist-only searches, when Album Name is empty.
@@ -164,9 +167,9 @@
 - Cover art or richer result cards.
 
 ## Recommended Next Safe Slice
-- Diagnose React recording places/studios display before implementing any iOS recording info.
-- The goal should be to identify whether recording places/studios are worth adding, while preserving the current selected-release album-level, track-level, songwriting, and publishing credit extraction and display behavior.
-- Do not change MusicBrainz search query semantics, result filtering, sorting, canonical studio-albums behavior, selected-release tracklist behavior, selected-release album/track/songwriting/publishing behavior, or Producer Search mock-only behavior in that slice.
+- Credits card polish now that Album, Songwriting, Publishing, and track credits are present.
+- Alternative next slice: diagnose Cover Art before implementing any iOS cover-art loading.
+- Do not change MusicBrainz search query semantics, result filtering, sorting, canonical studio-albums behavior, selected-release tracklist behavior, selected-release album/track/songwriting/publishing behavior, recording places/studios, or Producer Search mock-only behavior in either slice.
 
 ## Runtime Lesson Learned
 - If the simulator does not reflect source changes, stale Metro/Expo session state can look like a code bug.
