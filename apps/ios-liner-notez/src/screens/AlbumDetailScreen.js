@@ -41,6 +41,20 @@ function groupTrackCredits(credits) {
   ].filter(([, groupedCredits]) => groupedCredits.length > 0)
 }
 
+const COUNTRY_DISPLAY_NAMES = {
+  AR: 'Argentina',
+  AU: 'Australia',
+  CA: 'Canada',
+  GB: 'United Kingdom',
+  JP: 'Japan',
+  US: 'United States',
+  XE: 'Europe'
+}
+
+function formatCountry(countryCode) {
+  return COUNTRY_DISPLAY_NAMES[countryCode] ?? countryCode
+}
+
 export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResults }) {
   const [showLoading, setShowLoading] = useState(false)
   const [showTracklist, setShowTracklist] = useState(true)
@@ -61,12 +75,15 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
   const hasEditions = hasAlbum && Array.isArray(album.editions) && album.editions.length > 0
   const hasSources = hasAlbum && Array.isArray(album.sources) && album.sources.length > 0
   const selectedEdition = hasEditions ? album.editions[0] : null
-  const selectedEditionLabel = selectedEdition
-    ? selectedEdition.label || selectedEdition.editionId || album.title
+  const selectedEditionSummary = selectedEdition
+    ? [selectedEdition.date, formatCountry(selectedEdition.country), selectedEdition.status].filter(Boolean).join(' · ')
+    : null
+  const selectedEditionDetailSummary = selectedEdition
+    ? [selectedEdition.formatSummary, selectedEdition.label, selectedEdition.catalogNumber].filter(Boolean).join(' · ')
     : null
   const selectedEditionRows = selectedEdition
     ? [
-        ['Country', selectedEdition.country],
+        ['Country', formatCountry(selectedEdition.country)],
         ['Date', selectedEdition.date],
         ['Status', selectedEdition.status],
         ['Format', selectedEdition.formatSummary],
@@ -76,11 +93,15 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
         ['Barcode', selectedEdition.barcode]
       ].filter(([, value]) => !!value)
     : []
+  const selectedEditionTechnicalRows = selectedEdition
+    ? [['Selected release MBID', selectedEdition.editionId]].filter(([, value]) => !!value)
+    : []
   const editionRows = hasEditions ? album.editions.slice(0, 8) : []
   const externalLinks = hasAlbum && album.externalLinks ? album.externalLinks : {}
   const externalLinkRows = [
     ['MusicBrainz release group', externalLinks.musicbrainzReleaseGroupUrl],
     ['MusicBrainz selected release', externalLinks.musicbrainzSelectedReleaseUrl],
+    ['Cover Art Archive', album?.coverArtUrl],
     ['Wikidata', externalLinks.wikidataUrl],
     ['Discogs', externalLinks.discogsUrl]
   ].filter(([, value]) => !!value)
@@ -477,7 +498,12 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                 {selectedEdition ? (
                   <View>
                     <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Selected Edition</Text>
-                    <Text style={{ color: '#d1d5db', marginTop: 4, fontSize: 15 }}>{selectedEditionLabel}</Text>
+                    {selectedEditionSummary ? (
+                      <Text style={{ color: '#d1d5db', marginTop: 4, fontSize: 15 }}>{selectedEditionSummary}</Text>
+                    ) : null}
+                    {selectedEditionDetailSummary ? (
+                      <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>{selectedEditionDetailSummary}</Text>
+                    ) : null}
                     {selectedEditionRows.map(([label, value]) => (
                       <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>
                         {label}: {value}
@@ -507,14 +533,25 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                   </View>
                 )}
                 {hasSources ? (
-                  <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>
-                    Source: {album.sources[0].sourceName}
-                  </Text>
+                  <View style={{ marginTop: 10 }}>
+                    <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Sources</Text>
+                    {album.sources.map((source) => (
+                      <Text key={source.sourceName} style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>
+                        {source.sourceName}
+                      </Text>
+                    ))}
+                  </View>
                 ) : (
                   <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>Source attribution unavailable</Text>
                 )}
-                {externalLinkRows.length > 0 ? (
+                {selectedEditionTechnicalRows.length > 0 || externalLinkRows.length > 0 ? (
                   <View style={{ marginTop: 8 }}>
+                    <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Technical links</Text>
+                    {selectedEditionTechnicalRows.map(([label, value]) => (
+                      <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>
+                        {label}: {value}
+                      </Text>
+                    ))}
                     {externalLinkRows.map(([label, value]) => (
                       <Text key={label} style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>
                         {label}: {value}

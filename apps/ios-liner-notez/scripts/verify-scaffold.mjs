@@ -365,17 +365,31 @@ if (!albumDetailScreenSource.includes('isTrackExpanded') || !albumDetailScreenSo
 if (!albumDetailScreenSource.includes('Editions & Sources')) {
   throw new Error('AlbumDetailScreen does not include Editions & Sources section label')
 }
-if (!albumDetailScreenSource.includes('Selected Edition') || !albumDetailScreenSource.includes('selectedEditionRows')) {
+if (
+  !albumDetailScreenSource.includes('Selected Edition') ||
+  !albumDetailScreenSource.includes('selectedEditionSummary') ||
+  !albumDetailScreenSource.includes('selectedEditionDetailSummary') ||
+  !albumDetailScreenSource.includes('selectedEditionRows')
+) {
   throw new Error('AlbumDetailScreen does not render compact selected edition section')
 }
+if (!albumDetailScreenSource.includes("join(' · ')")) {
+  throw new Error('AlbumDetailScreen does not render human-readable selected edition summaries')
+}
 if (
-  !albumDetailScreenSource.includes("['Country', selectedEdition.country]") ||
+  !albumDetailScreenSource.includes("['Country', formatCountry(selectedEdition.country)]") ||
   !albumDetailScreenSource.includes("['Format', selectedEdition.formatSummary]") ||
   !albumDetailScreenSource.includes("['Packaging', selectedEdition.packaging]")
 ) {
   throw new Error('AlbumDetailScreen does not render selected edition field rows')
 }
-if (!albumDetailScreenSource.includes('album.sources[0].sourceName')) {
+if (!albumDetailScreenSource.includes('selectedEditionTechnicalRows') || !albumDetailScreenSource.includes('Selected release MBID')) {
+  throw new Error('AlbumDetailScreen does not keep selected release technical identifier available')
+}
+if (!albumDetailScreenSource.includes('Technical links')) {
+  throw new Error('AlbumDetailScreen does not visually separate technical source links')
+}
+if (!albumDetailScreenSource.includes('album.sources.map')) {
   throw new Error('AlbumDetailScreen does not render source attribution field')
 }
 if (
@@ -384,7 +398,11 @@ if (
 ) {
   throw new Error('AlbumDetailScreen does not render external link rows')
 }
-if (!albumDetailScreenSource.includes('MusicBrainz release group')) {
+if (
+  !albumDetailScreenSource.includes('MusicBrainz release group') ||
+  !albumDetailScreenSource.includes('MusicBrainz selected release') ||
+  !albumDetailScreenSource.includes('Cover Art Archive')
+) {
   throw new Error('AlbumDetailScreen does not include external link labels in Editions & Sources')
 }
 if (!albumDetailScreenSource.includes('Album unavailable')) {
