@@ -1,4 +1,5 @@
 const MUSICBRAINZ_API_BASE = 'https://musicbrainz.org/ws/2'
+const COVER_ART_ARCHIVE_BASE = 'https://coverartarchive.org'
 const MUSICBRAINZ_USER_AGENT = 'liner-notez-ios/0.0.1 (https://github.com/edtremsaga/vibey-liner-notez)'
 
 function extractArtistCredit(artistCredit) {
@@ -269,6 +270,33 @@ function mapReleaseToTrackCredits(release) {
   return Object.keys(trackCredits).length > 0 ? trackCredits : null
 }
 
+function getPrimaryCoverImageUrl(coverArtData) {
+  const images = Array.isArray(coverArtData?.images) ? coverArtData.images : []
+  const frontImage = images.find((image) => image?.front === true)
+  const primaryImage = frontImage ?? images[0] ?? null
+
+  return primaryImage?.image ? primaryImage.image.replace('http://', 'https://') : null
+}
+
+async function fetchCoverArtArchivePrimaryImage(path) {
+  const response = await fetch(`${COVER_ART_ARCHIVE_BASE}${path}`, {
+    headers: {
+      Accept: 'application/json'
+    }
+  })
+
+  if (response.status === 404) {
+    return null
+  }
+
+  if (!response.ok) {
+    throw new Error(`Cover Art Archive lookup failed: ${response.status} ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return getPrimaryCoverImageUrl(data)
+}
+
 export async function fetchMusicBrainzAlbumBasicInfo(releaseGroupId) {
   if (!releaseGroupId) {
     throw new Error('MusicBrainz release-group id is required')
@@ -360,5 +388,28 @@ export async function fetchMusicBrainzSelectedReleaseTracklist(selectedReleaseId
       albumCredits: extractAlbumCredits(release),
       trackCredits: mapReleaseToTrackCredits(release)
     }
+  }
+}
+
+export async function fetchMusicBrainzPrimaryCoverArt({ releaseGroupId, selectedReleaseId }) {
+  if (!releaseGroupId) {
+    return null
+  }
+
+  if (selectedReleaseId) {
+    try {
+      const releaseCoverArtUrl = await fetchCoverArtArchivePrimaryImage(`/release/${selectedReleaseId}`)
+      if (releaseCoverArtUrl) {
+        return releaseCoverArtUrl
+      }
+    } catch {
+      // Cover art is optional; fall back to release-group art.
+    }
+  }
+
+  try {
+    return await fetchCoverArtArchivePrimaryImage(`/release-group/${releaseGroupId}`)
+  } catch {
+    return null
   }
 }

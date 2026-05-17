@@ -8,6 +8,7 @@ import { HelpDataSourcesScreen } from './screens/HelpDataSourcesScreen'
 import { getMockAlbumById, getMockAlbums } from 'core-liner-notez'
 import {
   fetchMusicBrainzAlbumBasicInfo,
+  fetchMusicBrainzPrimaryCoverArt,
   fetchMusicBrainzSelectedReleaseTracklist
 } from './services/musicbrainzAlbumDetail'
 import { searchMusicBrainzAlbumsByArtist } from './services/musicbrainzAlbumSearch'
@@ -37,7 +38,7 @@ function buildAlbumDetailFromResult(albumId, albumResult, enrichedDetail = null)
     selectedReleaseId: enrichedDetail?.selectedReleaseId ?? null,
     isRealMusicBrainzDetail: true,
     albumType: 'album',
-    coverArtUrl: null,
+    coverArtUrl: enrichedDetail?.coverArtUrl ?? null,
     editions: enrichedDetail?.editions ?? [],
     tracks: enrichedDetail?.tracks ?? [],
     credits: enrichedDetail?.credits ?? {
@@ -58,10 +59,10 @@ function buildAlbumDetailFromResult(albumId, albumResult, enrichedDetail = null)
       }
     ],
     dataNotes: enrichedDetail?.credits?.trackCredits
-      ? 'Selected-release track credits are loaded. Album-level credits, full editions, and cover art are not loaded yet.'
+      ? 'Selected-release track credits are loaded. Album-level credits and full editions are not loaded yet.'
       : enrichedDetail?.tracks?.length > 0
-        ? 'Album-level credits, full editions, and cover art are not loaded yet.'
-      : 'Tracklist, credits, full editions, and cover art are not loaded yet.'
+        ? 'Album-level credits and full editions are not loaded yet.'
+      : 'Tracklist, credits, and full editions are not loaded yet.'
   }
 }
 
@@ -153,6 +154,38 @@ export default function App() {
           setSelectedAlbumDetail(detail)
         }
 
+        fetchMusicBrainzPrimaryCoverArt({
+          releaseGroupId: detail.albumId ?? selectedAlbumId,
+          selectedReleaseId: detail.selectedReleaseId ?? null
+        })
+          .then((coverArtUrl) => {
+            if (!isCurrent || !coverArtUrl) {
+              return
+            }
+
+            setSelectedAlbumDetail((currentDetail) => {
+              const currentSources = currentDetail?.sources ?? detail.sources ?? []
+              const hasCoverArtSource = currentSources.some((source) => source?.sourceName === 'Cover Art Archive')
+
+              return {
+                ...(currentDetail ?? detail),
+                coverArtUrl,
+                sources: hasCoverArtSource
+                  ? currentSources
+                  : [
+                      ...currentSources,
+                      {
+                        sourceName: 'Cover Art Archive',
+                        license: 'CC0'
+                      }
+                    ]
+              }
+            })
+          })
+          .catch(() => {
+            // Cover art is optional and should not block Album Detail.
+          })
+
         if (!detail?.selectedReleaseId) {
           return
         }
@@ -160,15 +193,15 @@ export default function App() {
         try {
           const tracklistDetail = await fetchMusicBrainzSelectedReleaseTracklist(detail.selectedReleaseId)
           if (isCurrent) {
-            setSelectedAlbumDetail({
-              ...detail,
+            setSelectedAlbumDetail((currentDetail) => ({
+              ...(currentDetail ?? detail),
               selectedReleaseId: tracklistDetail.selectedReleaseId ?? detail.selectedReleaseId,
               tracks: tracklistDetail.tracks ?? [],
               credits: tracklistDetail.credits ?? {
                 albumCredits: null,
                 trackCredits: null
               }
-            })
+            }))
           }
         } catch (error) {
           if (isCurrent) {

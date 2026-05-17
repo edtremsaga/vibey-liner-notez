@@ -10,7 +10,7 @@ export function HelpDataSourcesScreen() {
     >
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Help / Data Sources</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        This iOS scaffold uses read-only MusicBrainz artist-first album search and can enrich Album Detail with release-group information while Producer Search remains mock-only.
+        This iOS scaffold uses read-only MusicBrainz artist-first album search and can enrich Album Detail with release-group information, selected-release credits, and optional primary cover art while Producer Search remains mock-only.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Current scaffold scope</Text>
@@ -20,7 +20,7 @@ export function HelpDataSourcesScreen() {
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Not implemented yet</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Tracklists, credits, full edition metadata, and cover art are not loaded yet. No producer traversal is implemented yet.
+        Full edition metadata, album art gallery browsing, recording places/studios, and producer traversal are not loaded yet.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Data sources</Text>

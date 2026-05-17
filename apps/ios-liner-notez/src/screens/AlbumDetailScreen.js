@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
 function formatDuration(durationMs) {
   if (!durationMs || Number.isNaN(durationMs)) {
@@ -48,6 +48,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
   const [showEditionsSources, setShowEditionsSources] = useState(true)
   const [showAlbumCredits, setShowAlbumCredits] = useState(false)
   const [expandedCreditTrackIds, setExpandedCreditTrackIds] = useState({})
+  const [failedCoverArtUrls, setFailedCoverArtUrls] = useState({})
 
   const hasAlbum = !!album
   const isRealMusicBrainzDetail = hasAlbum && album.isRealMusicBrainzDetail
@@ -101,6 +102,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
       })
     : []
   const hasTrackCreditDetails = tracksWithCreditDetails.length > 0
+  const shouldShowCoverArt = hasAlbum && !!album.coverArtUrl && !failedCoverArtUrls[album.coverArtUrl]
 
   function toggleTrackCredits(trackId) {
     setExpandedCreditTrackIds((current) => ({
@@ -211,6 +213,26 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
               backgroundColor: '#181a1f'
             }}
           >
+            {shouldShowCoverArt ? (
+              <Image
+                source={{ uri: album.coverArtUrl }}
+                accessibilityLabel={`${album.title} cover art`}
+                onError={() => {
+                  setFailedCoverArtUrls((current) => ({
+                    ...current,
+                    [album.coverArtUrl]: true
+                  }))
+                }}
+                style={{
+                  width: '100%',
+                  aspectRatio: 1,
+                  borderRadius: 8,
+                  marginBottom: 12,
+                  backgroundColor: '#111827'
+                }}
+                resizeMode="cover"
+              />
+            ) : null}
             <Text style={{ color: '#f3f4f6', fontSize: 20, fontWeight: '700' }}>{album.title}</Text>
             <Text style={{ color: '#d1d5db', marginTop: 4, fontSize: 16 }}>{album.artistName}</Text>
             <Text style={{ color: '#9ca3af', marginTop: 4, fontSize: 15 }}>
