@@ -54,10 +54,10 @@ export function ProducerSearchScreen({ onSelectAlbum }) {
       <View>
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Producer Search</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Mock-only producer search shell (no API calls).
+        Producer search is not connected to real data yet.
       </Text>
 
-      <Text style={{ color: '#d1d5db', marginTop: 12 }}>Producer (mock)</Text>
+      <Text style={{ color: '#d1d5db', marginTop: 12 }}>Producer</Text>
       <TextInput
         accessibilityLabel="Producer search input"
         placeholder="e.g. Butch Vig"
@@ -99,7 +99,7 @@ export function ProducerSearchScreen({ onSelectAlbum }) {
           alignSelf: 'flex-start'
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Search Mock Producers</Text>
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Search Producers</Text>
       </TouchableOpacity>
 
       {showLoading ? (
@@ -113,9 +113,9 @@ export function ProducerSearchScreen({ onSelectAlbum }) {
             backgroundColor: '#181a1f'
           }}
         >
-          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading mock producer results...</Text>
+          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading producer results...</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Simulating producer lookup in the scaffold.
+            Producer search is using local sample data for now.
           </Text>
         </View>
       ) : null}
@@ -131,7 +131,7 @@ export function ProducerSearchScreen({ onSelectAlbum }) {
             backgroundColor: '#2a1215'
           }}
         >
-          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Mock producer error state</Text>
+          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Producer search error</Text>
           <Text style={{ color: '#fca5a5', marginTop: 4 }}>
             We could not load producer results. Please try again.
           </Text>
@@ -150,7 +150,7 @@ export function ProducerSearchScreen({ onSelectAlbum }) {
           }}
         >
           <Text style={{ color: '#d1d5db', fontWeight: '600' }}>
-            No producer results found (mock empty state)
+            No producer results found
           </Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
             Try another producer name.
@@ -169,14 +169,14 @@ export function ProducerSearchScreen({ onSelectAlbum }) {
             backgroundColor: '#181a1f'
           }}
         >
-          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Mock producer results</Text>
+          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Producer results</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Producer shell only. Real producer traversal is not implemented yet.
+            Producer Search is not connected to real data yet.
           </Text>
           {MOCK_PRODUCER_RESULTS.map((result, index) => (
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel={`Open producer mock album result ${index + 1}`}
+              accessibilityLabel={`Open producer album result ${index + 1}`}
               key={`${result.albumId}-${result.label}-${index}`}
               onPress={() => onSelectAlbum?.(result.albumId)}
               style={{

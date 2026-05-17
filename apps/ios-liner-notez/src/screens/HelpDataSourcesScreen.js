@@ -10,10 +10,10 @@ export function HelpDataSourcesScreen() {
     >
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Help / Data Sources</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        This iOS scaffold uses read-only MusicBrainz artist-first album search and can enrich Album Detail with release-group information, selected-release credits, and optional primary cover art while Producer Search remains mock-only.
+        Liner Notez uses read-only MusicBrainz artist-first album search and can enrich Album Detail with release-group information, selected-release credits, and optional primary cover art. Producer Search is not connected to real data yet.
       </Text>
 
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Current scaffold scope</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Current app scope</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Search and Results can display albums by a required artist, with an optional album title to narrow results. Release Type filters artist-only searches.
       </Text>

@@ -123,11 +123,11 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         {isRealMusicBrainzDetail
           ? hasTrackCreditDetails
-            ? 'Real MusicBrainz album header, tracklist, and selected-release credits.'
+            ? 'Album details, credits, editions, and sources.'
             : hasTracks
-              ? 'Real MusicBrainz album header and tracklist. Credits are not documented for this selected release yet.'
-              : 'Real MusicBrainz album header. Tracklist and credits are not loaded yet.'
-          : 'Mock detail layout preview (iOS scaffold only).'}
+              ? 'Album details and tracklist. Credits are not documented for this selected release yet.'
+              : 'Album details are loading.'
+          : 'Album detail.'}
       </Text>
 
       {!isRealMusicBrainzDetail && (
@@ -161,9 +161,9 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
             backgroundColor: '#181a1f'
           }}
         >
-          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading mock album detail...</Text>
+          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading album detail...</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Simulating album detail retrieval before content is available.
+            Preparing album detail content.
           </Text>
         </View>
       )}
@@ -244,11 +244,6 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                 Disambiguation: {album.disambiguation}
               </Text>
             )}
-            {!!album.albumId && (
-              <Text style={{ color: '#9ca3af', marginTop: 4, fontSize: 13 }}>
-                Release-group MBID: {album.albumId}
-              </Text>
-            )}
           </View>
 
           <View
@@ -290,7 +285,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                 <Text style={{ color: '#9ca3af', marginTop: 8 }}>
                   {isRealMusicBrainzDetail
                     ? 'Tracklist is not loaded yet.'
-                    : 'Tracklist preview placeholder'}
+                    : 'Tracklist is not available for this album.'}
                 </Text>
               )
             ) : null}
@@ -449,7 +444,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                   <Text style={{ color: '#9ca3af', marginTop: 8 }}>
                     {isRealMusicBrainzDetail
                       ? 'Credits are unavailable or not documented for this selected release.'
-                      : 'Credits preview placeholder'}
+                      : 'Credits are not available for this album.'}
                   </Text>
                 ) : null}
               </>
@@ -493,7 +488,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                   <Text style={{ color: '#9ca3af', marginTop: 8 }}>
                     {isRealMusicBrainzDetail
                       ? 'Editions are not loaded yet.'
-                      : 'Editions preview placeholder'}
+                      : 'Editions are not available for this album.'}
                   </Text>
                 )}
                 {editionRows.length > 0 && (
@@ -516,7 +511,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                     Source: {album.sources[0].sourceName}
                   </Text>
                 ) : (
-                  <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>Source attribution placeholder</Text>
+                  <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>Source attribution unavailable</Text>
                 )}
                 {externalLinkRows.length > 0 ? (
                   <View style={{ marginTop: 8 }}>
@@ -544,9 +539,9 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
             backgroundColor: '#2a1215'
           }}
         >
-          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Album unavailable (mock not-found state)</Text>
+          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Album unavailable</Text>
           <Text style={{ color: '#fca5a5', marginTop: 4 }}>
-            We could not find this album in the shared mock fixture.
+            We could not find this album.
           </Text>
         </View>
       )}

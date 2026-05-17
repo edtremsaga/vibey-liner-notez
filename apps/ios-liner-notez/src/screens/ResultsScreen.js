@@ -42,7 +42,7 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
           <Text style={{ color: '#9ca3af' }}>
             {albums.length} {albums.length === 1 ? 'result' : 'results'} from MusicBrainz
           </Text>
-          <Text style={{ color: '#6b7280', marginTop: 4 }}>Album detail opens the current preview.</Text>
+          <Text style={{ color: '#6b7280', marginTop: 4 }}>Open a result to view album details.</Text>
         </View>
       )}
 
@@ -129,7 +129,7 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
               {!!album.disambiguation && (
                 <Text style={{ color: '#9ca3af', marginTop: 6 }}>{album.disambiguation}</Text>
               )}
-              <Text style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open preview</Text>
+              <Text style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open album detail</Text>
             </TouchableOpacity>
           )
         })}

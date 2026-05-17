@@ -272,7 +272,7 @@ export default function App() {
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
-        <Text style={styles.title}>liner notez (iOS scaffold)</Text>
+        <Text style={styles.title}>Liner Notez</Text>
         {!!albumSearchArtistName && (
           <Text style={styles.subtitle}>
             Artist search: {albumSearchArtistName}{albumSearchAlbumTitle ? ` - ${albumSearchAlbumTitle}` : ''}

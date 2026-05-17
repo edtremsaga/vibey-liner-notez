@@ -39,6 +39,7 @@
 - Album Detail section-level disclosure controls use chevrons consistently for Tracklist, Credits, and Editions & Sources.
 - Album Detail supports optional primary cover art from Cover Art Archive.
 - Album Detail still renders selected mock album content for Producer Search mock results.
+- Visible iOS app copy has been softened so the title reads `Liner Notez`, Album Detail uses user-facing helper text, and the main album card no longer shows the release-group MBID.
 - Search, Results, Album Detail, Producer Search, and Help / Data Sources have screen-owned vertical scrolling for smaller iPhones.
 - Album Detail scrolling works reliably after simulator restart.
 - Help / Data Sources shows mock-scope, planned sources, and trust-rule content.
@@ -52,6 +53,7 @@
 - Album Detail real-data scope now includes selected-result header data, release-group basic enrichment from MusicBrainz, primary cover art from Cover Art Archive, selected-release edition metadata, the selected-release tracklist, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing.
 - Album Detail opens immediately from selected Results row data, then fetches release-group basic info, optional primary cover art, selected-release edition metadata, selected-release tracklist data, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing in the background.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
+- This does not mean the iOS app is production-ready; several real-data and polish areas remain deferred.
 
 ## Search Behavior Contract
 - Artist Name is required.

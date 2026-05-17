@@ -44,6 +44,9 @@ if (appSource.includes('Placeholder screen for help, attribution, and data-sourc
 if (!appSource.includes('content: { flex: 1, minHeight: 0, padding: 16 }')) {
   throw new Error('App content shell does not provide a bounded scroll host for screen ScrollViews')
 }
+if (!appSource.includes('Liner Notez') || appSource.includes('liner notez (iOS scaffold)')) {
+  throw new Error('App visible title still uses scaffold/dev copy')
+}
 
 const searchScreenSource = readFileSync(path.join(appRoot, 'src/screens/SearchScreen.js'), 'utf8')
 if (!searchScreenSource.includes('ScrollView') || !searchScreenSource.includes('contentContainerStyle')) {
@@ -116,11 +119,14 @@ if (!resultsScreenSource.includes('from MusicBrainz')) {
 if (!resultsScreenSource.includes('${releaseTypeLabel} by ${artistName}.')) {
   throw new Error('ResultsScreen does not include release-type-aware artist-only heading')
 }
-if (!resultsScreenSource.includes('Album detail opens the current preview.')) {
-  throw new Error('ResultsScreen does not explain current preview behavior')
+if (!resultsScreenSource.includes('Open a result to view album details.')) {
+  throw new Error('ResultsScreen does not explain album detail behavior')
 }
-if (!resultsScreenSource.includes('Open preview')) {
-  throw new Error('ResultsScreen does not include row preview affordance text')
+if (!resultsScreenSource.includes('Open album detail')) {
+  throw new Error('ResultsScreen does not include row album-detail affordance text')
+}
+if (resultsScreenSource.includes('Open preview') || resultsScreenSource.includes('current preview')) {
+  throw new Error('ResultsScreen still uses preview/dev copy for real album detail flow')
 }
 if (resultsScreenSource.includes('Search for an album to load MusicBrainz results.')) {
   throw new Error('ResultsScreen still presents album-only search copy')
@@ -136,23 +142,23 @@ if (!producerSearchScreenSource.includes('ScrollView') || !producerSearchScreenS
 if (!producerSearchScreenSource.includes('Producer search input')) {
   throw new Error('ProducerSearchScreen does not include producer input')
 }
-if (!producerSearchScreenSource.includes('Search Mock Producers')) {
-  throw new Error('ProducerSearchScreen does not include mock producer search action')
+if (!producerSearchScreenSource.includes('Search Producers')) {
+  throw new Error('ProducerSearchScreen does not include producer search action')
 }
 if (!producerSearchScreenSource.includes('Please enter a producer name to continue.')) {
   throw new Error('ProducerSearchScreen does not include required-field validation message')
 }
-if (!producerSearchScreenSource.includes('Loading mock producer results...')) {
-  throw new Error('ProducerSearchScreen does not include mock loading state text')
+if (!producerSearchScreenSource.includes('Loading producer results...')) {
+  throw new Error('ProducerSearchScreen does not include loading state text')
 }
-if (!producerSearchScreenSource.includes('Mock producer error state')) {
-  throw new Error('ProducerSearchScreen does not include mock error state text')
+if (!producerSearchScreenSource.includes('Producer search error')) {
+  throw new Error('ProducerSearchScreen does not include error state text')
 }
-if (!producerSearchScreenSource.includes('No producer results found (mock empty state)')) {
-  throw new Error('ProducerSearchScreen does not include mock empty state text')
+if (!producerSearchScreenSource.includes('No producer results found')) {
+  throw new Error('ProducerSearchScreen does not include empty state text')
 }
-if (!producerSearchScreenSource.includes('Producer shell only. Real producer traversal is not implemented yet.')) {
-  throw new Error('ProducerSearchScreen does not include explicit mock-only results copy')
+if (!producerSearchScreenSource.includes('Producer Search is not connected to real data yet.')) {
+  throw new Error('ProducerSearchScreen does not include explicit not-connected copy')
 }
 if (!producerSearchScreenSource.includes("Life's Rich Pageant")) {
   throw new Error("ProducerSearchScreen is missing mock producer result row title: Life's Rich Pageant")
@@ -244,20 +250,20 @@ for (const textDisclosure of [
 if (!albumDetailScreenSource.includes('Back to Results')) {
   throw new Error('AlbumDetailScreen does not include back-to-results action')
 }
-if (!albumDetailScreenSource.includes('Loading mock album detail...')) {
-  throw new Error('AlbumDetailScreen does not include mock loading state text')
+if (!albumDetailScreenSource.includes('Loading album detail...')) {
+  throw new Error('AlbumDetailScreen does not include loading state text')
 }
-if (!albumDetailScreenSource.includes('Real MusicBrainz album header. Tracklist and credits are not loaded yet.')) {
-  throw new Error('AlbumDetailScreen does not include real MusicBrainz header scope copy')
+if (!albumDetailScreenSource.includes('Album details are loading.')) {
+  throw new Error('AlbumDetailScreen does not include user-facing loading-scope copy')
 }
-if (!albumDetailScreenSource.includes('Real MusicBrainz album header, tracklist, and selected-release credits.')) {
-  throw new Error('AlbumDetailScreen does not include real MusicBrainz selected-release credits scope copy')
+if (!albumDetailScreenSource.includes('Album details, credits, editions, and sources.')) {
+  throw new Error('AlbumDetailScreen does not include user-facing album detail scope copy')
 }
-if (!albumDetailScreenSource.includes('Real MusicBrainz album header and tracklist. Credits are not documented for this selected release yet.')) {
-  throw new Error('AlbumDetailScreen does not include real MusicBrainz tracklist scope copy')
+if (!albumDetailScreenSource.includes('Album details and tracklist. Credits are not documented for this selected release yet.')) {
+  throw new Error('AlbumDetailScreen does not include user-facing tracklist scope copy')
 }
-if (!albumDetailScreenSource.includes('Release-group MBID')) {
-  throw new Error('AlbumDetailScreen does not render release-group MBID')
+if (albumDetailScreenSource.includes('Real MusicBrainz album header') || albumDetailScreenSource.includes('Release-group MBID')) {
+  throw new Error('AlbumDetailScreen still uses developer-facing hero copy')
 }
 if (!albumDetailScreenSource.includes('Tracklist is not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include deferred real tracklist copy')
@@ -370,18 +376,18 @@ if (
   throw new Error('AlbumDetailScreen does not render selected edition field rows')
 }
 if (!albumDetailScreenSource.includes('album.sources[0].sourceName')) {
-  throw new Error('AlbumDetailScreen does not render source attribution mock field')
+  throw new Error('AlbumDetailScreen does not render source attribution field')
 }
 if (
   !albumDetailScreenSource.includes('externalLinks.musicbrainzReleaseGroupUrl') ||
   !albumDetailScreenSource.includes('externalLinks.musicbrainzSelectedReleaseUrl')
 ) {
-  throw new Error('AlbumDetailScreen does not render external link rows from mock data')
+  throw new Error('AlbumDetailScreen does not render external link rows')
 }
 if (!albumDetailScreenSource.includes('MusicBrainz release group')) {
   throw new Error('AlbumDetailScreen does not include external link labels in Editions & Sources')
 }
-if (!albumDetailScreenSource.includes('mock not-found state')) {
+if (!albumDetailScreenSource.includes('Album unavailable')) {
   throw new Error('AlbumDetailScreen does not include not-found/unavailable state')
 }
 
