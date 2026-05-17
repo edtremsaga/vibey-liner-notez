@@ -292,6 +292,15 @@ if (!albumDetailScreenSource.includes('track.position') || !albumDetailScreenSou
 if (!albumDetailScreenSource.includes('Credits')) {
   throw new Error('AlbumDetailScreen does not include Credits section label')
 }
+if (!albumDetailScreenSource.includes('showCredits, setShowCredits] = useState(false)')) {
+  throw new Error('AlbumDetailScreen does not keep Credits collapsed by default')
+}
+if (!albumDetailScreenSource.includes('showTracklist, setShowTracklist] = useState(true)')) {
+  throw new Error('AlbumDetailScreen no longer keeps Tracklist open by default')
+}
+if (!albumDetailScreenSource.includes('showEditionsSources, setShowEditionsSources] = useState(true)')) {
+  throw new Error('AlbumDetailScreen no longer keeps Editions & Sources open by default')
+}
 if (
   !albumDetailScreenSource.includes('credit.personName') ||
   !albumDetailScreenSource.includes('credit.role')
@@ -304,8 +313,11 @@ if (
 ) {
   throw new Error('AlbumDetailScreen does not render track-associated credit rows')
 }
-if (!albumDetailScreenSource.includes('Selected-release track credits, songwriting, and publishing from MusicBrainz.')) {
-  throw new Error('AlbumDetailScreen does not include selected-release track credits, songwriting, and publishing scope copy')
+if (!albumDetailScreenSource.includes('Album and track credits, with songwriting and publishing when available.')) {
+  throw new Error('AlbumDetailScreen does not include user-facing credit scope copy')
+}
+if (albumDetailScreenSource.includes('Selected-release track credits, songwriting, and publishing from MusicBrainz.')) {
+  throw new Error('AlbumDetailScreen still includes technical selected-release credit scope copy')
 }
 if (
   !albumDetailScreenSource.includes('tracksWithCreditDetails') ||

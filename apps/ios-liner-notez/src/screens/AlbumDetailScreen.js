@@ -58,7 +58,7 @@ function formatCountry(countryCode) {
 export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResults }) {
   const [showLoading, setShowLoading] = useState(false)
   const [showTracklist, setShowTracklist] = useState(true)
-  const [showCredits, setShowCredits] = useState(true)
+  const [showCredits, setShowCredits] = useState(false)
   const [showEditionsSources, setShowEditionsSources] = useState(true)
   const [showReleaseGroupEditions, setShowReleaseGroupEditions] = useState(false)
   const [showTechnicalLinks, setShowTechnicalLinks] = useState(false)
@@ -370,7 +370,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
                 {hasTrackCreditDetails ? (
                   <>
                     <Text style={{ color: '#9ca3af', marginTop: 8, fontSize: 14 }}>
-                      Selected-release track credits, songwriting, and publishing from MusicBrainz.
+                      Album and track credits, with songwriting and publishing when available.
                     </Text>
                     {tracksWithCreditDetails.map((track) => {
                       const trackCredits = trackCreditsByTrackId[track.trackId] ?? []

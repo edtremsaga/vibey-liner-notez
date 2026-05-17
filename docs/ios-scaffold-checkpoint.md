@@ -36,6 +36,7 @@
 - Album Detail selected-release album-level credits are loaded from the existing selected-release response without adding another MusicBrainz request.
 - Album Detail album-level credits render as a collapsed `Album` disclosure row inside Credits.
 - Album Detail selected-release track credits are grouped by track, collapsed by default, and expandable with iOS-style disclosure chevrons.
+- Album Detail Credits now defaults collapsed to keep dense album pages calmer while preserving full credit detail behind disclosure.
 - Album Detail section-level disclosure controls use chevrons consistently for Tracklist, Credits, and Editions & Sources.
 - Album Detail supports optional primary cover art from Cover Art Archive.
 - Album Detail Editions & Sources now prioritizes human-readable selected-edition and source labels while keeping technical identifiers and links available for traceability.
