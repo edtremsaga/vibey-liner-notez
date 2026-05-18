@@ -35,7 +35,10 @@ for (const route of requiredRoutes) {
 if (!appSource.includes("import { HelpDataSourcesScreen } from './screens/HelpDataSourcesScreen'")) {
   throw new Error('App.js does not import HelpDataSourcesScreen from src/screens')
 }
-if (!appSource.includes("case 'Help / Data Sources':") || !appSource.includes('return <HelpDataSourcesScreen />')) {
+if (
+  !appSource.includes("case 'Help / Data Sources':") ||
+  !appSource.includes('return <HelpDataSourcesScreen onBackToSearch={onBackToSearch} />')
+) {
   throw new Error('App.js does not route Help / Data Sources to HelpDataSourcesScreen')
 }
 if (appSource.includes('Placeholder screen for help, attribution, and data-source disclosures.')) {
@@ -49,6 +52,33 @@ if (!appSource.includes('Liner Notez') || appSource.includes('liner notez (iOS s
 }
 if (!appSource.includes('Browsing albums by') || appSource.includes('Artist search:')) {
   throw new Error('App search context copy still reads like internal state')
+}
+if (
+  appSource.includes('const ROUTES') ||
+  appSource.includes('const tabs') ||
+  appSource.includes('styles.tabs') ||
+  appSource.includes('tabActive') ||
+  appSource.includes('tabLabel')
+) {
+  throw new Error('App.js still exposes the prototype top tab navigation shell')
+}
+if (
+  !appSource.includes("const [detailReturnRoute, setDetailReturnRoute] = useState('Results')") ||
+  !appSource.includes("setDetailReturnRoute('Results')") ||
+  !appSource.includes("setDetailReturnRoute(route === 'Producer Search' ? 'Producer Search' : 'Results')") ||
+  !appSource.includes('setRoute(detailReturnRoute)')
+) {
+  throw new Error('App.js does not preserve contextual Album Detail back routing')
+}
+if (
+  !appSource.includes('handleBackToSearch') ||
+  !appSource.includes("setRoute('Search')") ||
+  !appSource.includes('handleOpenProducerSearch') ||
+  !appSource.includes("setRoute('Producer Search')") ||
+  !appSource.includes('handleOpenHelpDataSources') ||
+  !appSource.includes("setRoute('Help / Data Sources')")
+) {
+  throw new Error('App.js does not expose contextual navigation actions from Search')
 }
 
 const searchScreenSource = readFileSync(path.join(appRoot, 'src/screens/SearchScreen.js'), 'utf8')
@@ -69,6 +99,14 @@ if (!searchScreenSource.includes('Find Albums')) {
 }
 if (!searchScreenSource.includes('Start with an artist. Add an album title when you want to narrow the match.')) {
   throw new Error('SearchScreen does not include user-facing artist-first helper copy')
+}
+if (
+  !searchScreenSource.includes('onOpenProducerSearch') ||
+  !searchScreenSource.includes('onOpenHelpDataSources') ||
+  !searchScreenSource.includes('Producer Search') ||
+  !searchScreenSource.includes('Help / Data Sources')
+) {
+  throw new Error('SearchScreen does not expose secondary navigation actions')
 }
 if (!searchScreenSource.includes('Please enter an artist name to continue.')) {
   throw new Error('SearchScreen does not include empty-input validation message')
@@ -106,6 +144,9 @@ if (!resultsScreenSource.includes('ScrollView') || !resultsScreenSource.includes
 }
 if (!resultsScreenSource.includes('albums.map')) {
   throw new Error('ResultsScreen does not render result list')
+}
+if (!resultsScreenSource.includes('onBackToSearch') || !resultsScreenSource.includes('Back to Search')) {
+  throw new Error('ResultsScreen does not include contextual back-to-search action')
 }
 if (!resultsScreenSource.includes('onSelectAlbum(albumId, album)')) {
   throw new Error('ResultsScreen does not pass selected MusicBrainz result to Album Detail')
@@ -148,6 +189,9 @@ const producerSearchScreenSource = readFileSync(
 if (!producerSearchScreenSource.includes('ScrollView') || !producerSearchScreenSource.includes('contentContainerStyle')) {
   throw new Error('ProducerSearchScreen is not scrollable for mock producer content')
 }
+if (!producerSearchScreenSource.includes('onBackToSearch') || !producerSearchScreenSource.includes('Back to Search')) {
+  throw new Error('ProducerSearchScreen does not include contextual back-to-search action')
+}
 if (!producerSearchScreenSource.includes('Producer search input')) {
   throw new Error('ProducerSearchScreen does not include producer input')
 }
@@ -185,6 +229,9 @@ const helpDataSourcesScreenSource = readFileSync(
 )
 if (!helpDataSourcesScreenSource.includes('ScrollView') || !helpDataSourcesScreenSource.includes('contentContainerStyle')) {
   throw new Error('HelpDataSourcesScreen is not scrollable for help/data-source content')
+}
+if (!helpDataSourcesScreenSource.includes('onBackToSearch') || !helpDataSourcesScreenSource.includes('Back to Search')) {
+  throw new Error('HelpDataSourcesScreen does not include contextual back-to-search action')
 }
 if (helpDataSourcesScreenSource.includes('Placeholder screen for help, attribution, and data-source disclosures.')) {
   throw new Error('HelpDataSourcesScreen still contains placeholder-only copy')
@@ -256,8 +303,11 @@ for (const textDisclosure of [
     throw new Error(`AlbumDetailScreen still uses visible Show/Hide text for section disclosure: ${textDisclosure}`)
   }
 }
-if (!albumDetailScreenSource.includes('Back to Results')) {
-  throw new Error('AlbumDetailScreen does not include back-to-results action')
+if (
+  !albumDetailScreenSource.includes("backLabel = 'Back to Results'") ||
+  !appSource.includes("backLabel={detailReturnRoute === 'Producer Search' ? 'Back to Producer Search' : 'Back to Results'}")
+) {
+  throw new Error('AlbumDetailScreen does not include contextual back action label')
 }
 if (!albumDetailScreenSource.includes('Loading album detail...')) {
   throw new Error('AlbumDetailScreen does not include loading state text')
@@ -485,10 +535,10 @@ if (!appSource.includes('musicbrainzReleaseGroupUrl:') || !appSource.includes('`
 if (!appSource.includes('getMockAlbumById')) {
   throw new Error('App router does not use shared core getMockAlbumById accessor')
 }
-if (!appSource.includes('handleBackToResults') || !appSource.includes("setRoute('Results')")) {
-  throw new Error('App router does not restore results route from album detail')
+if (!appSource.includes('handleBackToAlbumSource') || !appSource.includes('setRoute(detailReturnRoute)')) {
+  throw new Error('App router does not restore contextual source route from album detail')
 }
-if (!appSource.includes('return <ProducerSearchScreen onSelectAlbum={onSelectAlbum} />')) {
+if (!appSource.includes('return <ProducerSearchScreen onBackToSearch={onBackToSearch} onSelectAlbum={onSelectAlbum} />')) {
   throw new Error('App router does not pass album-select handler to ProducerSearchScreen')
 }
 

@@ -10,7 +10,7 @@ const RELEASE_TYPES = [
   { value: 'Soundtrack', label: 'Soundtracks' }
 ]
 
-export function SearchScreen({ onSubmitArtistSearch }) {
+export function SearchScreen({ onOpenHelpDataSources, onOpenProducerSearch, onSubmitArtistSearch }) {
   const [artistInput, setArtistInput] = useState('')
   const [albumInput, setAlbumInput] = useState('')
   const [releaseType, setReleaseType] = useState('Album')
@@ -169,6 +169,45 @@ export function SearchScreen({ onSubmitArtistSearch }) {
       >
         <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Find Albums</Text>
       </TouchableOpacity>
+
+      <View
+        style={{
+          marginTop: 20,
+          borderTopWidth: 1,
+          borderTopColor: '#1f2937',
+          paddingTop: 14
+        }}
+      >
+        <Text style={{ color: '#9ca3af', marginBottom: 8 }}>More</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={onOpenProducerSearch}
+            style={{
+              borderWidth: 1,
+              borderColor: '#4b5563',
+              borderRadius: 8,
+              paddingVertical: 9,
+              paddingHorizontal: 11
+            }}
+          >
+            <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Producer Search</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={onOpenHelpDataSources}
+            style={{
+              borderWidth: 1,
+              borderColor: '#4b5563',
+              borderRadius: 8,
+              paddingVertical: 9,
+              paddingHorizontal: 11
+            }}
+          >
+            <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Help / Data Sources</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </ScrollView>
   )
 }

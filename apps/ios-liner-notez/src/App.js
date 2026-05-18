@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SearchScreen } from './screens/SearchScreen'
 import { ResultsScreen } from './screens/ResultsScreen'
@@ -12,8 +12,6 @@ import {
   fetchMusicBrainzSelectedReleaseTracklist
 } from './services/musicbrainzAlbumDetail'
 import { searchMusicBrainzAlbumsByArtist } from './services/musicbrainzAlbumSearch'
-
-const ROUTES = ['Search', 'Results', 'Album Detail', 'Producer Search', 'Help / Data Sources']
 
 function buildAlbumDetailFromResult(albumId, albumResult, enrichedDetail = null) {
   if (!albumResult) {
@@ -81,7 +79,11 @@ function ScreenRouter({
   albumDetailError,
   onSubmitArtistSearch,
   onSelectAlbum,
-  onBackToResults
+  onBackToSearch,
+  onBackToAlbumSource,
+  onOpenProducerSearch,
+  onOpenHelpDataSources,
+  detailReturnRoute
 }) {
   const selectedAlbum = selectedAlbumResult
     ? buildAlbumDetailFromResult(selectedAlbumId, selectedAlbumResult, selectedAlbumDetail)
@@ -99,6 +101,7 @@ function ScreenRouter({
           releaseType={albumSearchReleaseType}
           errorMessage={albumSearchError}
           isLoading={albumSearchLoading}
+          onBackToSearch={onBackToSearch}
           onSelectAlbum={onSelectAlbum}
         />
       )
@@ -108,16 +111,23 @@ function ScreenRouter({
           album={selectedAlbum}
           errorMessage={albumDetailError}
           isLoading={albumDetailLoading}
-          onBackToResults={onBackToResults}
+          onBackToResults={onBackToAlbumSource}
+          backLabel={detailReturnRoute === 'Producer Search' ? 'Back to Producer Search' : 'Back to Results'}
         />
       )
     case 'Producer Search':
-      return <ProducerSearchScreen onSelectAlbum={onSelectAlbum} />
+      return <ProducerSearchScreen onBackToSearch={onBackToSearch} onSelectAlbum={onSelectAlbum} />
     case 'Help / Data Sources':
-      return <HelpDataSourcesScreen />
+      return <HelpDataSourcesScreen onBackToSearch={onBackToSearch} />
     case 'Search':
     default:
-      return <SearchScreen onSubmitArtistSearch={onSubmitArtistSearch} />
+      return (
+        <SearchScreen
+          onOpenHelpDataSources={onOpenHelpDataSources}
+          onOpenProducerSearch={onOpenProducerSearch}
+          onSubmitArtistSearch={onSubmitArtistSearch}
+        />
+      )
   }
 }
 
@@ -134,7 +144,7 @@ export default function App() {
   const [selectedAlbumDetail, setSelectedAlbumDetail] = useState(null)
   const [albumDetailLoading, setAlbumDetailLoading] = useState(false)
   const [albumDetailError, setAlbumDetailError] = useState('')
-  const tabs = useMemo(() => ROUTES, [])
+  const [detailReturnRoute, setDetailReturnRoute] = useState('Results')
 
   useEffect(() => {
     if (!selectedAlbumResult || !selectedAlbumId) {
@@ -233,6 +243,7 @@ export default function App() {
     setAlbumSearchResults([])
     setAlbumSearchError('')
     setAlbumSearchLoading(true)
+    setDetailReturnRoute('Results')
     setRoute('Results')
 
     try {
@@ -251,6 +262,7 @@ export default function App() {
       setSelectedAlbumResult(albumResult)
       setSelectedAlbumDetail(null)
       setAlbumDetailError('')
+      setDetailReturnRoute('Results')
       setRoute('Album Detail')
       return
     }
@@ -261,12 +273,25 @@ export default function App() {
       setSelectedAlbumResult(null)
       setSelectedAlbumDetail(null)
       setAlbumDetailError('')
+      setDetailReturnRoute(route === 'Producer Search' ? 'Producer Search' : 'Results')
       setRoute('Album Detail')
     }
   }
 
-  function handleBackToResults() {
-    setRoute('Results')
+  function handleBackToAlbumSource() {
+    setRoute(detailReturnRoute)
+  }
+
+  function handleBackToSearch() {
+    setRoute('Search')
+  }
+
+  function handleOpenProducerSearch() {
+    setRoute('Producer Search')
+  }
+
+  function handleOpenHelpDataSources() {
+    setRoute('Help / Data Sources')
   }
 
   return (
@@ -278,18 +303,6 @@ export default function App() {
             Browsing albums by {albumSearchArtistName}{albumSearchAlbumTitle ? ` matching ${albumSearchAlbumTitle}` : ''}
           </Text>
         )}
-      </View>
-      <View style={styles.tabs}>
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            accessibilityRole="button"
-            key={tab}
-            onPress={() => setRoute(tab)}
-            style={[styles.tab, route === tab && styles.tabActive]}
-          >
-            <Text style={styles.tabLabel}>{tab}</Text>
-          </TouchableOpacity>
-        ))}
       </View>
       <View style={styles.content}>
         <ScreenRouter
@@ -307,7 +320,11 @@ export default function App() {
           albumDetailError={albumDetailError}
           onSubmitArtistSearch={handleSubmitArtistSearch}
           onSelectAlbum={handleSelectAlbum}
-          onBackToResults={handleBackToResults}
+          onBackToSearch={handleBackToSearch}
+          onBackToAlbumSource={handleBackToAlbumSource}
+          onOpenProducerSearch={handleOpenProducerSearch}
+          onOpenHelpDataSources={handleOpenHelpDataSources}
+          detailReturnRoute={detailReturnRoute}
         />
       </View>
     </SafeAreaView>
@@ -319,23 +336,5 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 16, paddingVertical: 12 },
   title: { color: '#f3f4f6', fontSize: 22, fontWeight: '600' },
   subtitle: { color: '#9ca3af', marginTop: 6, fontSize: 12 },
-  tabs: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingBottom: 8
-  },
-  tab: {
-    borderWidth: 1,
-    borderColor: '#4b5563',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8
-  },
-  tabActive: {
-    borderColor: '#f3f4f6'
-  },
-  tabLabel: { color: '#e5e7eb', fontSize: 12 },
   content: { flex: 1, minHeight: 0, padding: 16 }
 })

@@ -10,7 +10,7 @@ const RELEASE_TYPE_LABELS = {
   Soundtrack: 'Soundtracks'
 }
 
-export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, isLoading, releaseType = 'Album', onSelectAlbum }) {
+export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, isLoading, releaseType = 'Album', onBackToSearch, onSelectAlbum }) {
   const showLoading = isLoading
   const showError = !isLoading && !!errorMessage
   const showEmpty = !isLoading && !errorMessage && artistName && albums.length === 0
@@ -36,6 +36,22 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
       contentContainerStyle={{ paddingBottom: 40 }}
       showsVerticalScrollIndicator
     >
+      <TouchableOpacity
+        accessibilityRole="button"
+        onPress={onBackToSearch}
+        style={{
+          borderWidth: 1,
+          borderColor: '#4b5563',
+          borderRadius: 8,
+          paddingVertical: 8,
+          paddingHorizontal: 10,
+          alignSelf: 'flex-start',
+          marginBottom: 14
+        }}
+      >
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Search</Text>
+      </TouchableOpacity>
+
       <Text style={{ color: '#f3f4f6', fontSize: 24, fontWeight: '700' }}>{resultsHeading}</Text>
       {showResults && (
         <View style={{ marginTop: 8 }}>

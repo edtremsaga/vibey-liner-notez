@@ -25,7 +25,7 @@ const MOCK_PRODUCER_RESULTS = [
   }
 ]
 
-export function ProducerSearchScreen({ onSelectAlbum }) {
+export function ProducerSearchScreen({ onBackToSearch, onSelectAlbum }) {
   const [producerName, setProducerName] = useState('')
   const [showValidation, setShowValidation] = useState(false)
   const [mockState, setMockState] = useState('results')
@@ -52,6 +52,22 @@ export function ProducerSearchScreen({ onSelectAlbum }) {
       showsVerticalScrollIndicator
     >
       <View>
+      <TouchableOpacity
+        accessibilityRole="button"
+        onPress={onBackToSearch}
+        style={{
+          borderWidth: 1,
+          borderColor: '#4b5563',
+          borderRadius: 8,
+          paddingVertical: 8,
+          paddingHorizontal: 10,
+          alignSelf: 'flex-start',
+          marginBottom: 14
+        }}
+      >
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Search</Text>
+      </TouchableOpacity>
+
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Producer Search</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Producer search is not connected to real data yet.

@@ -1,13 +1,29 @@
 import React from 'react'
-import { ScrollView, Text } from 'react-native'
+import { ScrollView, Text, TouchableOpacity } from 'react-native'
 
-export function HelpDataSourcesScreen() {
+export function HelpDataSourcesScreen({ onBackToSearch }) {
   return (
     <ScrollView
       style={{ flex: 1 }}
       contentContainerStyle={{ paddingBottom: 40 }}
       showsVerticalScrollIndicator
     >
+      <TouchableOpacity
+        accessibilityRole="button"
+        onPress={onBackToSearch}
+        style={{
+          borderWidth: 1,
+          borderColor: '#4b5563',
+          borderRadius: 8,
+          paddingVertical: 8,
+          paddingHorizontal: 10,
+          alignSelf: 'flex-start',
+          marginBottom: 14
+        }}
+      >
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Search</Text>
+      </TouchableOpacity>
+
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Help / Data Sources</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Liner Notez uses read-only MusicBrainz artist-first album search and can enrich Album Detail with release-group information, selected-release credits, and optional primary cover art. Producer Search is not connected to real data yet.

@@ -55,7 +55,7 @@ function formatCountry(countryCode) {
   return COUNTRY_DISPLAY_NAMES[countryCode] ?? countryCode
 }
 
-export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResults }) {
+export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorMessage, isLoading, onBackToResults }) {
   const [showLoading, setShowLoading] = useState(false)
   const [showTracklist, setShowTracklist] = useState(true)
   const [showCredits, setShowCredits] = useState(false)
@@ -623,7 +623,7 @@ export function AlbumDetailScreen({ album, errorMessage, isLoading, onBackToResu
           alignSelf: 'flex-start'
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Results</Text>
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>{backLabel}</Text>
       </TouchableOpacity>
     </ScrollView>
   )
