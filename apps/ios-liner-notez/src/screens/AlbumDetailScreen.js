@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { Image, Modal, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 
 function formatDuration(durationMs) {
   if (!durationMs || Number.isNaN(durationMs)) {
@@ -55,7 +55,32 @@ function formatCountry(countryCode) {
   return COUNTRY_DISPLAY_NAMES[countryCode] ?? countryCode
 }
 
+function getArtworkTypeLabel(image) {
+  if (Array.isArray(image?.types) && image.types.length > 0) {
+    return image.types.join(', ')
+  }
+
+  if (image?.front) {
+    return 'Front'
+  }
+
+  if (image?.back) {
+    return 'Back'
+  }
+
+  return 'Image'
+}
+
+function getArtworkThumbnailUrl(image) {
+  return image?.thumbnails?.['500'] ||
+    image?.thumbnails?.['250'] ||
+    image?.thumbnails?.small ||
+    image?.image ||
+    null
+}
+
 export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorMessage, isLoading, onBackToResults }) {
+  const { width: viewportWidth, height: viewportHeight } = useWindowDimensions()
   const [showLoading, setShowLoading] = useState(false)
   const [showTracklist, setShowTracklist] = useState(true)
   const [showCredits, setShowCredits] = useState(false)
@@ -65,6 +90,8 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
   const [showAlbumCredits, setShowAlbumCredits] = useState(false)
   const [expandedCreditTrackIds, setExpandedCreditTrackIds] = useState({})
   const [failedCoverArtUrls, setFailedCoverArtUrls] = useState({})
+  const [failedArtworkUrls, setFailedArtworkUrls] = useState({})
+  const [selectedArtworkIndex, setSelectedArtworkIndex] = useState(null)
 
   const hasAlbum = !!album
   const isRealMusicBrainzDetail = hasAlbum && album.isRealMusicBrainzDetail
@@ -127,6 +154,30 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
     : []
   const hasTrackCreditDetails = tracksWithCreditDetails.length > 0
   const shouldShowCoverArt = hasAlbum && !!album.coverArtUrl && !failedCoverArtUrls[album.coverArtUrl]
+  const artworkImages = hasAlbum && Array.isArray(album.artworkImages) ? album.artworkImages : []
+  const hasArtworkGallery = artworkImages.length > 0
+  const fallbackCoverArtwork = hasAlbum && album.coverArtUrl
+    ? [{
+        id: 'primary-cover',
+        image: album.coverArtUrl,
+        thumbnails: null,
+        front: true,
+        back: false,
+        types: ['Front'],
+        approved: true
+      }]
+    : []
+  const viewerImages = hasArtworkGallery ? artworkImages : fallbackCoverArtwork
+  const selectedArtwork = selectedArtworkIndex === null ? null : viewerImages[selectedArtworkIndex] ?? null
+  const viewerImageCount = viewerImages.length
+
+  function openArtworkViewer(index = 0) {
+    if (viewerImages.length === 0) {
+      return
+    }
+
+    setSelectedArtworkIndex(Math.max(0, Math.min(index, viewerImages.length - 1)))
+  }
 
   function toggleTrackCredits(trackId) {
     setExpandedCreditTrackIds((current) => ({
@@ -254,24 +305,36 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
             }}
           >
             {shouldShowCoverArt ? (
-              <Image
-                source={{ uri: album.coverArtUrl }}
+              <TouchableOpacity
+                accessibilityRole="imagebutton"
                 accessibilityLabel={`${album.title} cover art`}
-                onError={() => {
-                  setFailedCoverArtUrls((current) => ({
-                    ...current,
-                    [album.coverArtUrl]: true
-                  }))
+                onPress={() => {
+                  const galleryCoverIndex = artworkImages.findIndex((image) =>
+                    image?.image === album.coverArtUrl ||
+                    image?.front ||
+                    getArtworkThumbnailUrl(image) === album.coverArtUrl
+                  )
+                  openArtworkViewer(galleryCoverIndex >= 0 ? galleryCoverIndex : 0)
                 }}
-                style={{
-                  width: '100%',
-                  aspectRatio: 1,
-                  borderRadius: 8,
-                  marginBottom: 12,
-                  backgroundColor: '#111827'
-                }}
-                resizeMode="cover"
-              />
+              >
+                <Image
+                  source={{ uri: album.coverArtUrl }}
+                  onError={() => {
+                    setFailedCoverArtUrls((current) => ({
+                      ...current,
+                      [album.coverArtUrl]: true
+                    }))
+                  }}
+                  style={{
+                    width: '100%',
+                    aspectRatio: 1,
+                    borderRadius: 8,
+                    marginBottom: 12,
+                    backgroundColor: '#111827'
+                  }}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
             ) : null}
             <Text style={{ color: '#f3f4f6', fontSize: 20, fontWeight: '700' }}>{album.title}</Text>
             <Text style={{ color: '#d1d5db', marginTop: 4, fontSize: 16 }}>{album.artistName}</Text>
@@ -284,6 +347,69 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
               </Text>
             )}
           </View>
+
+          {hasArtworkGallery ? (
+            <View
+              style={{
+                marginTop: 12,
+                borderWidth: 1,
+                borderColor: '#374151',
+                borderRadius: 10,
+                padding: 14,
+                backgroundColor: '#181a1f'
+              }}
+            >
+              <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Artwork</Text>
+              <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>
+                Cover Art Archive images for this release group.
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ marginTop: 12 }}
+              >
+                {artworkImages.map((image, index) => {
+                  const thumbnailUrl = getArtworkThumbnailUrl(image)
+                  if (!thumbnailUrl || failedArtworkUrls[thumbnailUrl]) {
+                    return null
+                  }
+
+                  return (
+                    <TouchableOpacity
+                      key={`artwork-${image.id ?? image.image ?? 'image'}-${index}`}
+                      accessibilityRole="imagebutton"
+                      accessibilityLabel={`Open ${getArtworkTypeLabel(image)} artwork image ${index + 1} of ${artworkImages.length}`}
+                      onPress={() => openArtworkViewer(index)}
+                      style={{ width: 104, marginRight: 10 }}
+                    >
+                      <Image
+                        source={{ uri: thumbnailUrl }}
+                        onError={() => {
+                          setFailedArtworkUrls((current) => ({
+                            ...current,
+                            [thumbnailUrl]: true
+                          }))
+                        }}
+                        style={{
+                          width: 104,
+                          height: 104,
+                          borderRadius: 8,
+                          backgroundColor: '#111827'
+                        }}
+                        resizeMode="cover"
+                      />
+                      <Text
+                        numberOfLines={1}
+                        style={{ color: '#9ca3af', marginTop: 5, fontSize: 12 }}
+                      >
+                        {getArtworkTypeLabel(image)}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                })}
+              </ScrollView>
+            </View>
+          ) : null}
 
           <View
             style={{
@@ -641,6 +767,99 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
       >
         <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>{backLabel}</Text>
       </TouchableOpacity>
+
+      <Modal
+        visible={selectedArtworkIndex !== null}
+        animationType="fade"
+        transparent={false}
+        onRequestClose={() => setSelectedArtworkIndex(null)}
+      >
+        <View style={{ flex: 1, backgroundColor: '#050608' }}>
+          <View
+            style={{
+              paddingTop: 54,
+              paddingHorizontal: 16,
+              paddingBottom: 12,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
+          >
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Close artwork viewer"
+              onPress={() => setSelectedArtworkIndex(null)}
+              style={{
+                borderWidth: 1,
+                borderColor: '#4b5563',
+                borderRadius: 8,
+                paddingVertical: 8,
+                paddingHorizontal: 10
+              }}
+            >
+              <Text style={{ color: '#f3f4f6', fontWeight: '700' }}>Close</Text>
+            </TouchableOpacity>
+            <View style={{ alignItems: 'flex-end', flex: 1, marginLeft: 12 }}>
+              <Text style={{ color: '#f3f4f6', fontWeight: '700' }}>
+                {selectedArtwork ? getArtworkTypeLabel(selectedArtwork) : 'Artwork'}
+              </Text>
+              {viewerImageCount > 0 ? (
+                <Text style={{ color: '#9ca3af', marginTop: 2 }}>
+                  {(selectedArtworkIndex ?? 0) + 1} of {viewerImageCount}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+
+          {viewerImageCount > 0 ? (
+            <ScrollView
+              key={`artwork-viewer-${selectedArtworkIndex ?? 0}`}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              contentOffset={{ x: (selectedArtworkIndex ?? 0) * viewportWidth, y: 0 }}
+              onMomentumScrollEnd={(event) => {
+                const nextIndex = Math.round(event.nativeEvent.contentOffset.x / viewportWidth)
+                setSelectedArtworkIndex(Math.max(0, Math.min(nextIndex, viewerImageCount - 1)))
+              }}
+              style={{ flex: 1 }}
+            >
+              {viewerImages.map((image, index) => (
+                <View
+                  key={`viewer-artwork-${image.id ?? image.image ?? 'image'}-${index}`}
+                  style={{ width: viewportWidth, height: viewportHeight - 118 }}
+                >
+                  <ScrollView
+                    maximumZoomScale={4}
+                    minimumZoomScale={1}
+                    centerContent
+                    bouncesZoom
+                    showsHorizontalScrollIndicator={false}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{
+                      width: viewportWidth,
+                      minHeight: viewportHeight - 118,
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <Image
+                      source={{ uri: image.image }}
+                      accessibilityLabel={`${getArtworkTypeLabel(image)} artwork image ${index + 1} of ${viewerImageCount}`}
+                      style={{
+                        width: viewportWidth,
+                        height: viewportHeight - 118,
+                        backgroundColor: '#050608'
+                      }}
+                      resizeMode="contain"
+                    />
+                  </ScrollView>
+                </View>
+              ))}
+            </ScrollView>
+          ) : null}
+        </View>
+      </Modal>
     </ScrollView>
   )
 }

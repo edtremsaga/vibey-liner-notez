@@ -8,6 +8,7 @@ import { HelpDataSourcesScreen } from './screens/HelpDataSourcesScreen'
 import { getMockAlbumById, getMockAlbums } from 'core-liner-notez'
 import {
   fetchMusicBrainzAlbumBasicInfo,
+  fetchMusicBrainzArtworkGallery,
   fetchMusicBrainzPrimaryCoverArt,
   fetchMusicBrainzSelectedReleaseTracklist
 } from './services/musicbrainzAlbumDetail'
@@ -37,6 +38,7 @@ function buildAlbumDetailFromResult(albumId, albumResult, enrichedDetail = null)
     isRealMusicBrainzDetail: true,
     albumType: 'album',
     coverArtUrl: enrichedDetail?.coverArtUrl ?? null,
+    artworkImages: enrichedDetail?.artworkImages ?? [],
     editions: enrichedDetail?.editions ?? [],
     tracks: enrichedDetail?.tracks ?? [],
     credits: enrichedDetail?.credits ?? {
@@ -194,6 +196,35 @@ export default function App() {
           })
           .catch(() => {
             // Cover art is optional and should not block Album Detail.
+          })
+
+        fetchMusicBrainzArtworkGallery(detail.albumId ?? selectedAlbumId)
+          .then((artworkImages) => {
+            if (!isCurrent || !Array.isArray(artworkImages) || artworkImages.length === 0) {
+              return
+            }
+
+            setSelectedAlbumDetail((currentDetail) => {
+              const currentSources = currentDetail?.sources ?? detail.sources ?? []
+              const hasCoverArtSource = currentSources.some((source) => source?.sourceName === 'Cover Art Archive')
+
+              return {
+                ...(currentDetail ?? detail),
+                artworkImages,
+                sources: hasCoverArtSource
+                  ? currentSources
+                  : [
+                      ...currentSources,
+                      {
+                        sourceName: 'Cover Art Archive',
+                        license: 'CC0'
+                      }
+                    ]
+              }
+            })
+          })
+          .catch(() => {
+            // Gallery art is optional and should not block Album Detail.
           })
 
         if (!detail?.selectedReleaseId) {

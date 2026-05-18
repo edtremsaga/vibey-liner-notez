@@ -248,8 +248,8 @@ if (!helpDataSourcesScreenSource.includes('Release Type filters artist-only sear
 if (!helpDataSourcesScreenSource.includes('release-group information')) {
   throw new Error('HelpDataSourcesScreen does not disclose real release-group enrichment scope')
 }
-if (!helpDataSourcesScreenSource.includes('optional primary cover art')) {
-  throw new Error('HelpDataSourcesScreen does not disclose optional primary cover art scope')
+if (!helpDataSourcesScreenSource.includes('optional cover art and artwork gallery images')) {
+  throw new Error('HelpDataSourcesScreen does not disclose optional cover art gallery scope')
 }
 if (!helpDataSourcesScreenSource.includes('producer traversal are not loaded yet')) {
   throw new Error('HelpDataSourcesScreen does not include no-producer-traversal copy')
@@ -403,6 +403,20 @@ if (
   !albumDetailScreenSource.includes('failedCoverArtUrls')
 ) {
   throw new Error('AlbumDetailScreen does not render optional primary cover art with silent image-failure handling')
+}
+if (
+  !albumDetailScreenSource.includes('Modal') ||
+  !albumDetailScreenSource.includes('Artwork') ||
+  !albumDetailScreenSource.includes('artworkImages.map') ||
+  !albumDetailScreenSource.includes('openArtworkViewer') ||
+  !albumDetailScreenSource.includes('pagingEnabled') ||
+  !albumDetailScreenSource.includes('maximumZoomScale={4}') ||
+  !albumDetailScreenSource.includes('minimumZoomScale={1}') ||
+  !albumDetailScreenSource.includes('Close artwork viewer') ||
+  !albumDetailScreenSource.includes('getArtworkTypeLabel') ||
+  !albumDetailScreenSource.includes('getArtworkThumbnailUrl')
+) {
+  throw new Error('AlbumDetailScreen does not include the optional artwork gallery viewer wiring')
 }
 if (
   !albumDetailScreenSource.includes('showAlbumCredits') ||
@@ -645,10 +659,18 @@ if (
 ) {
   throw new Error('iOS MusicBrainz album detail service does not include the narrow primary Cover Art Archive path')
 }
-for (const deferredCoverArtMarker of ['fetchAllAlbumArt', 'galleryImages', 'lightbox', 'selectedImage', 'currentImageIndex']) {
-  if (musicBrainzAlbumDetailSource.includes(deferredCoverArtMarker) || albumDetailScreenSource.includes(deferredCoverArtMarker)) {
-    throw new Error(`iOS cover-art slice includes deferred gallery/lightbox work: ${deferredCoverArtMarker}`)
-  }
+if (
+  !musicBrainzAlbumDetailSource.includes('fetchMusicBrainzArtworkGallery') ||
+  !musicBrainzAlbumDetailSource.includes('mapCoverArtImages') ||
+  !musicBrainzAlbumDetailSource.includes('.slice(0, 20)') ||
+  !musicBrainzAlbumDetailSource.includes('thumbnails') ||
+  !musicBrainzAlbumDetailSource.includes('front: image?.front || false') ||
+  !musicBrainzAlbumDetailSource.includes('back: image?.back || false') ||
+  !musicBrainzAlbumDetailSource.includes('types: Array.isArray(image?.types) ? image.types : []') ||
+  !musicBrainzAlbumDetailSource.includes('approved: image?.approved || false') ||
+  !musicBrainzAlbumDetailSource.includes('fetchCoverArtArchiveJson(`/release-group/${releaseGroupId}`)')
+) {
+  throw new Error('iOS MusicBrainz album detail service does not include the optional release-group artwork gallery fetch')
 }
 if (
   !appSource.includes('fetchMusicBrainzPrimaryCoverArt') ||
@@ -656,6 +678,13 @@ if (
   !appSource.includes("sourceName: 'Cover Art Archive'")
 ) {
   throw new Error('App router does not fetch and merge optional primary cover art for Album Detail')
+}
+if (
+  !appSource.includes('fetchMusicBrainzArtworkGallery') ||
+  !appSource.includes('artworkImages') ||
+  !appSource.includes('Gallery art is optional and should not block Album Detail.')
+) {
+  throw new Error('App router does not fetch and merge optional artwork gallery images for Album Detail')
 }
 for (const deferredDetailMarker of ['trackCreditsMap', 'fetchAlbumCredits', 'fetchRelease(candidate', 'fetchRelease(releaseInfo']) {
   if (musicBrainzAlbumDetailSource.includes(deferredDetailMarker)) {

@@ -26,7 +26,7 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Help / Data Sources</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Liner Notez uses read-only MusicBrainz artist-first album search and can enrich Album Detail with release-group information, selected-release credits, and optional primary cover art. Producer Search is not connected to real data yet.
+        Liner Notez uses read-only MusicBrainz artist-first album search and can enrich Album Detail with release-group information, selected-release credits, and optional cover art and artwork gallery images. Producer Search is not connected to real data yet.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Current app scope</Text>
@@ -36,7 +36,7 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Not implemented yet</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Full edition metadata, album art gallery browsing, recording places/studios, and producer traversal are not loaded yet.
+        All-editions metadata enrichment, recording places/studios, and producer traversal are not loaded yet.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Data sources</Text>

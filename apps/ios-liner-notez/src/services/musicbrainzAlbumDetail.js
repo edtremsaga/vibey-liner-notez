@@ -308,6 +308,31 @@ function getPrimaryCoverImageUrl(coverArtData) {
   return primaryImage?.image ? primaryImage.image.replace('http://', 'https://') : null
 }
 
+function mapCoverArtImages(coverArtData) {
+  const images = Array.isArray(coverArtData?.images) ? coverArtData.images : []
+
+  return images
+    .slice(0, 20)
+    .map((image) => ({
+      id: image?.id ?? null,
+      image: image?.image ? image.image.replace('http://', 'https://') : null,
+      thumbnails: image?.thumbnails
+        ? {
+            small: image.thumbnails.small ? image.thumbnails.small.replace('http://', 'https://') : null,
+            large: image.thumbnails.large ? image.thumbnails.large.replace('http://', 'https://') : null,
+            '250': image.thumbnails['250'] ? image.thumbnails['250'].replace('http://', 'https://') : null,
+            '500': image.thumbnails['500'] ? image.thumbnails['500'].replace('http://', 'https://') : null,
+            '1200': image.thumbnails['1200'] ? image.thumbnails['1200'].replace('http://', 'https://') : null
+          }
+        : null,
+      front: image?.front || false,
+      back: image?.back || false,
+      types: Array.isArray(image?.types) ? image.types : [],
+      approved: image?.approved || false
+    }))
+    .filter((image) => image.image)
+}
+
 async function fetchCoverArtArchivePrimaryImage(path) {
   const response = await fetch(`${COVER_ART_ARCHIVE_BASE}${path}`, {
     headers: {
@@ -325,6 +350,24 @@ async function fetchCoverArtArchivePrimaryImage(path) {
 
   const data = await response.json()
   return getPrimaryCoverImageUrl(data)
+}
+
+async function fetchCoverArtArchiveJson(path) {
+  const response = await fetch(`${COVER_ART_ARCHIVE_BASE}${path}`, {
+    headers: {
+      Accept: 'application/json'
+    }
+  })
+
+  if (response.status === 404) {
+    return null
+  }
+
+  if (!response.ok) {
+    throw new Error(`Cover Art Archive lookup failed: ${response.status} ${response.statusText}`)
+  }
+
+  return response.json()
 }
 
 export async function fetchMusicBrainzAlbumBasicInfo(releaseGroupId) {
@@ -443,4 +486,13 @@ export async function fetchMusicBrainzPrimaryCoverArt({ releaseGroupId, selected
   } catch {
     return null
   }
+}
+
+export async function fetchMusicBrainzArtworkGallery(releaseGroupId) {
+  if (!releaseGroupId) {
+    return []
+  }
+
+  const coverArtData = await fetchCoverArtArchiveJson(`/release-group/${releaseGroupId}`)
+  return coverArtData ? mapCoverArtImages(coverArtData) : []
 }

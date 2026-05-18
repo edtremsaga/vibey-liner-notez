@@ -41,7 +41,7 @@
 - Album Detail selected-release track credits are grouped by track, collapsed by default, and expandable with iOS-style disclosure chevrons.
 - Album Detail Credits now defaults collapsed to keep dense album pages calmer while preserving full credit detail behind disclosure.
 - Album Detail section-level disclosure controls use chevrons consistently for Tracklist, Credits, and Editions & Sources.
-- Album Detail supports optional primary cover art from Cover Art Archive.
+- Album Detail supports optional primary cover art and release-group artwork gallery images from Cover Art Archive.
 - Album Detail Editions & Sources now prioritizes human-readable selected-edition and source labels while keeping technical identifiers and links available for traceability.
 - Album Detail Editions & Sources keeps Release-group editions and Technical links collapsed by default so the selected-edition view stays compact.
 - Album Detail still renders selected mock album content for Producer Search mock results.
@@ -56,8 +56,8 @@
 
 ## Product Scope Status
 - Read-only MusicBrainz Search -> Results is active for artist-first album results with release-type filtering for artist-only searches.
-- Album Detail real-data scope now includes selected-result header data, release-group basic enrichment from MusicBrainz, primary cover art from Cover Art Archive, selected-release edition metadata, the selected-release tracklist, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing.
-- Album Detail opens immediately from selected Results row data, then fetches release-group basic info, optional primary cover art, selected-release edition metadata, selected-release tracklist data, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing in the background.
+- Album Detail real-data scope now includes selected-result header data, release-group basic enrichment from MusicBrainz, primary cover art and release-group artwork gallery images from Cover Art Archive, selected-release edition metadata, the selected-release tracklist, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing.
+- Album Detail opens immediately from selected Results row data, then fetches release-group basic info, optional cover art/gallery images, selected-release edition metadata, selected-release tracklist data, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing in the background.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 - This does not mean the iOS app is production-ready; several real-data and polish areas remain deferred.
 
@@ -70,7 +70,7 @@
 - Tapping a Search result opens Album Detail with selected MusicBrainz result header data.
 
 ## Album Detail Real-Data Path
-- Current live path: Search -> Results -> Album Detail header -> release-group enrichment -> primary cover art -> selected-release edition metadata -> selected-release tracklist -> selected-release album-level credits -> selected-release track credits -> selected-release songwriting -> selected-release publishing.
+- Current live path: Search -> Results -> Album Detail header -> release-group enrichment -> primary cover art/artwork gallery -> selected-release edition metadata -> selected-release tracklist -> selected-release album-level credits -> selected-release track credits -> selected-release songwriting -> selected-release publishing.
 - The selected-release tracklist milestone is `b13a7f1` Add iOS selected release tracklist.
 - The selected-release album-level credits milestone is `736c51b` Add iOS album-level credits.
 - The selected-release track credits milestone is `6a0a7bf` Add iOS selected release track credits.
@@ -106,7 +106,10 @@
 - Primary cover art uses Cover Art Archive and is optional/non-blocking.
 - iOS prefers selected-release cover art when available and falls back to release-group cover art.
 - Missing or failing cover art preserves the current no-art Album Detail layout silently.
-- Album art gallery, lightbox, zoom, and multiple-image browsing remain deferred.
+- Artwork gallery images use Cover Art Archive release-group JSON, are limited to 20 images, and are optional/non-blocking.
+- Album Detail shows Artwork thumbnails when gallery images are available.
+- Tapping primary cover art or an Artwork thumbnail opens a full-screen viewer with close, swipe paging, image count, type labels, and iOS ScrollView pinch zoom/pan.
+- Gallery data is iOS-local for now; the shared album schema still only defines `coverArtUrl`.
 - Selected edition metadata uses the already-fetched selected-release response and adds label, catalog number, barcode, format, and packaging when available.
 - No additional MusicBrainz request is used for selected edition metadata.
 - All-editions enrichment remains deferred.
@@ -169,7 +172,7 @@
 - Noisy secondary search results remain expected under current shared MusicBrainz/search semantics and are not an iOS-specific bug.
 
 ## Mock-Only / Deferred Scope
-- Album Detail producer graph, album art gallery/lightbox, all-editions metadata enrichment, canonical studio-albums cleanup, and rich liner-note sections are not loaded yet.
+- Album Detail producer graph, all-editions metadata enrichment, canonical studio-albums cleanup, and rich liner-note sections are not loaded yet.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 
 ## Known Deferred Work
@@ -178,15 +181,14 @@
 - Recording places/studios.
 - Producer graph.
 - All-editions metadata enrichment.
-- Album art gallery, lightbox, zoom, and multiple-image browsing.
+- Artwork gallery schema promotion beyond the current iOS-local image list.
 - Real Producer Search.
 - Pagination or load more for larger result sets.
 - Richer result cards.
 
 ## Recommended Next Safe Slice
-- Credits card polish now that Album, Songwriting, Publishing, and track credits are present.
-- Alternative next slice: diagnose richer cover-art gallery/lightbox behavior before implementing any multi-image browsing.
-- Do not change MusicBrainz search query semantics, result filtering, sorting, canonical studio-albums behavior, selected-release tracklist behavior, selected-release album/track/songwriting/publishing behavior, recording places/studios, or Producer Search mock-only behavior in either slice.
+- Manual UX review of the iOS Artwork viewer on a few image-heavy albums before adding more gallery features.
+- Do not change MusicBrainz search query semantics, result filtering, sorting, canonical studio-albums behavior, selected-release tracklist behavior, selected-release album/track/songwriting/publishing behavior, recording places/studios, or Producer Search mock-only behavior in the next slice.
 
 ## Runtime Lesson Learned
 - If the simulator does not reflect source changes, stale Metro/Expo session state can look like a code bug.
