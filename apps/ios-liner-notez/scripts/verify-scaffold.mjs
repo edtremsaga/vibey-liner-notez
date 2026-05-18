@@ -413,10 +413,17 @@ if (
   !albumDetailScreenSource.includes('maximumZoomScale={4}') ||
   !albumDetailScreenSource.includes('minimumZoomScale={1}') ||
   !albumDetailScreenSource.includes('Close artwork viewer') ||
+  !albumDetailScreenSource.includes('isArtworkViewerOpen') ||
+  !albumDetailScreenSource.includes('visible={isArtworkViewerOpen}') ||
+  !albumDetailScreenSource.includes('function closeArtworkViewer') ||
+  !albumDetailScreenSource.includes('if (!isArtworkViewerOpen)') ||
   !albumDetailScreenSource.includes('getArtworkTypeLabel') ||
   !albumDetailScreenSource.includes('getArtworkThumbnailUrl')
 ) {
   throw new Error('AlbumDetailScreen does not include the optional artwork gallery viewer wiring')
+}
+if (albumDetailScreenSource.includes('visible={selectedArtworkIndex !== null}')) {
+  throw new Error('AlbumDetailScreen couples artwork viewer visibility to selectedArtworkIndex, which can reopen after Close')
 }
 if (
   !albumDetailScreenSource.includes('showAlbumCredits') ||

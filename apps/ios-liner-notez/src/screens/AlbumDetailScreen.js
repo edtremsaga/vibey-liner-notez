@@ -188,7 +188,8 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
   const [expandedCreditTrackIds, setExpandedCreditTrackIds] = useState({})
   const [failedCoverArtUrls, setFailedCoverArtUrls] = useState({})
   const [failedArtworkUrls, setFailedArtworkUrls] = useState({})
-  const [selectedArtworkIndex, setSelectedArtworkIndex] = useState(null)
+  const [selectedArtworkIndex, setSelectedArtworkIndex] = useState(0)
+  const [isArtworkViewerOpen, setIsArtworkViewerOpen] = useState(false)
 
   const hasAlbum = !!album
   const isRealMusicBrainzDetail = hasAlbum && album.isRealMusicBrainzDetail
@@ -273,7 +274,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
       }]
     : []
   const viewerImages = hasArtworkGallery ? artworkImages : fallbackCoverArtwork
-  const selectedArtwork = selectedArtworkIndex === null ? null : viewerImages[selectedArtworkIndex] ?? null
+  const selectedArtwork = isArtworkViewerOpen ? viewerImages[selectedArtworkIndex] ?? null : null
   const viewerImageCount = viewerImages.length
 
   function openArtworkViewer(index = 0) {
@@ -282,6 +283,11 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
     }
 
     setSelectedArtworkIndex(Math.max(0, Math.min(index, viewerImages.length - 1)))
+    setIsArtworkViewerOpen(true)
+  }
+
+  function closeArtworkViewer() {
+    setIsArtworkViewerOpen(false)
   }
 
   function toggleTrackCredits(trackId) {
@@ -911,10 +917,10 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
       </TouchableOpacity>
 
       <Modal
-        visible={selectedArtworkIndex !== null}
+        visible={isArtworkViewerOpen}
         animationType="fade"
         transparent={false}
-        onRequestClose={() => setSelectedArtworkIndex(null)}
+        onRequestClose={closeArtworkViewer}
       >
         <View style={{ flex: 1, backgroundColor: '#050608' }}>
           <View
@@ -930,7 +936,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityLabel="Close artwork viewer"
-              onPress={() => setSelectedArtworkIndex(null)}
+              onPress={closeArtworkViewer}
               style={{
                 borderWidth: 1,
                 borderColor: '#4b5563',
@@ -961,6 +967,10 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
               showsHorizontalScrollIndicator={false}
               contentOffset={{ x: (selectedArtworkIndex ?? 0) * viewportWidth, y: 0 }}
               onMomentumScrollEnd={(event) => {
+                if (!isArtworkViewerOpen) {
+                  return
+                }
+
                 const nextIndex = Math.round(event.nativeEvent.contentOffset.x / viewportWidth)
                 setSelectedArtworkIndex(Math.max(0, Math.min(nextIndex, viewerImageCount - 1)))
               }}
