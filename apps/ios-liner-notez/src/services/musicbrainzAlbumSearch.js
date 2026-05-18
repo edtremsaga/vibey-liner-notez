@@ -120,15 +120,21 @@ export function mapMusicBrainzReleaseGroup(releaseGroup) {
   const firstReleaseDate = formatReleaseDate(releaseGroup?.['first-release-date'])
   const releases = Array.isArray(releaseGroup?.releases) ? releaseGroup.releases : []
   const isBootleg = releases.length > 0 && releases.every((release) => release?.['status-id'] === BOOTLEG_STATUS_ID)
+  const secondaryTypes = Array.isArray(releaseGroup?.['secondary-types']) ? releaseGroup['secondary-types'] : []
+  const officialReleaseCount = releases.filter((release) => getReleaseStatus(release) === 'official').length
 
   return {
     id: releaseGroup?.id ?? null,
     releaseGroupId: releaseGroup?.id ?? null,
     title: releaseGroup?.title ?? 'Untitled album',
     artistCredit: extractArtistCredit(releaseGroup?.['artist-credit']) ?? 'Unknown artist',
+    primaryType: releaseGroup?.['primary-type'] ?? null,
+    secondaryTypes,
     firstReleaseDate,
     releaseYear: firstReleaseDate ? firstReleaseDate.slice(0, 4) : null,
     disambiguation: releaseGroup?.disambiguation || null,
+    releaseCount: releases.length,
+    officialReleaseCount,
     isBootleg
   }
 }

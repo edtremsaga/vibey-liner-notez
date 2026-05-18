@@ -29,6 +29,7 @@
 - iOS album search resolves a confident MusicBrainz artist identity before release-group lookup and uses artist MBID release-group search when possible.
 - iOS Studio Albums search applies local release-group post-filtering so obvious demos, remixes, interviews, spokenword releases, singles, EPs, live albums, compilations, soundtracks, and all-bootleg/non-official album-type groups do not appear as studio albums.
 - Results can reorder already-loaded artist-only results client-side with `Oldest first` / `Newest first`; artist-only Studio Albums defaults to `Oldest first` for chronological discography browsing.
+- Results cards label first-release dates, call out `aka` disambiguation as `Also known as`, and show compact MusicBrainz edition counts when available.
 - Album-only search is not supported.
 - SearchScreen is now the real artist-first search entry point; the old mock album preview card has been removed.
 - Search and Results copy/layout have been polished to better match the Album Detail experience without changing search behavior or data fetching.

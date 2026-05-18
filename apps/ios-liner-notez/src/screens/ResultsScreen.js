@@ -50,6 +50,19 @@ function sortAlbums(albums, sortOption) {
   })
 }
 
+function getDisambiguationLabel(disambiguation) {
+  return String(disambiguation ?? '').trim().toLowerCase().startsWith('aka') ? 'Also known as' : 'Note'
+}
+
+function getEditionContext(album) {
+  const releaseCount = Number(album?.releaseCount ?? 0)
+  if (releaseCount <= 1) {
+    return null
+  }
+
+  return `${releaseCount} editions in MusicBrainz`
+}
+
 export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, isLoading, releaseType = 'Album', onBackToSearch, onSelectAlbum }) {
   const [sortOption, setSortOption] = useState(() => getDefaultSortOption({ albumTitle, releaseType }))
   const showLoading = isLoading
@@ -207,7 +220,7 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
           }
 
           const releaseDate = album.firstReleaseDate ?? album.releaseYear ?? null
-          const artistAndDate = [album.artistCredit ?? album.artistName, releaseDate].filter(Boolean).join(' - ')
+          const editionContext = getEditionContext(album)
 
           return (
             <TouchableOpacity
@@ -224,9 +237,19 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
               }}
             >
               <Text style={{ color: '#f9fafb', fontWeight: '700', fontSize: 18 }}>{album.title}</Text>
-              {!!artistAndDate && <Text style={{ color: '#d1d5db', marginTop: 6 }}>{artistAndDate}</Text>}
+              {!!(album.artistCredit ?? album.artistName) && (
+                <Text style={{ color: '#d1d5db', marginTop: 6 }}>{album.artistCredit ?? album.artistName}</Text>
+              )}
+              {!!releaseDate && (
+                <Text style={{ color: '#9ca3af', marginTop: 6 }}>First released: {releaseDate}</Text>
+              )}
               {!!album.disambiguation && (
-                <Text style={{ color: '#9ca3af', marginTop: 6 }}>{album.disambiguation}</Text>
+                <Text style={{ color: '#9ca3af', marginTop: 6 }}>
+                  {getDisambiguationLabel(album.disambiguation)}: {album.disambiguation}
+                </Text>
+              )}
+              {!!editionContext && (
+                <Text style={{ color: '#6b7280', marginTop: 6 }}>{editionContext}</Text>
               )}
               <Text style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open album detail</Text>
             </TouchableOpacity>

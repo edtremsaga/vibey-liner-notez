@@ -182,6 +182,14 @@ if (!resultsScreenSource.includes('Searching MusicBrainz')) {
 if (!resultsScreenSource.includes('artistCredit') || !resultsScreenSource.includes('firstReleaseDate')) {
   throw new Error('ResultsScreen does not render compact MusicBrainz album fields')
 }
+if (
+  !resultsScreenSource.includes('First released:') ||
+  !resultsScreenSource.includes('getDisambiguationLabel') ||
+  !resultsScreenSource.includes('Also known as') ||
+  !resultsScreenSource.includes('editions in MusicBrainz')
+) {
+  throw new Error('ResultsScreen does not include clarified release date, aka/note, and edition context copy')
+}
 if (!resultsScreenSource.includes('from MusicBrainz')) {
   throw new Error('ResultsScreen does not describe artist-first MusicBrainz album results')
 }
@@ -839,8 +847,12 @@ if (musicBrainzAlbumSearchSource.includes('releasegroup:"${trimmedQuery}"')) {
 }
 if (
   !musicBrainzAlbumSearchSource.includes('artistCredit') ||
+  !musicBrainzAlbumSearchSource.includes('primaryType') ||
+  !musicBrainzAlbumSearchSource.includes('secondaryTypes') ||
   !musicBrainzAlbumSearchSource.includes('firstReleaseDate') ||
-  !musicBrainzAlbumSearchSource.includes('disambiguation')
+  !musicBrainzAlbumSearchSource.includes('disambiguation') ||
+  !musicBrainzAlbumSearchSource.includes('releaseCount') ||
+  !musicBrainzAlbumSearchSource.includes('officialReleaseCount')
 ) {
   throw new Error('iOS MusicBrainz album search adapter does not expose compact result fields')
 }
