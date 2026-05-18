@@ -735,6 +735,9 @@ if (!musicBrainzAlbumSearchSource.includes('https://musicbrainz.org/ws/2')) {
 if (!musicBrainzAlbumSearchSource.includes('/release-group?')) {
   throw new Error('iOS MusicBrainz album search adapter does not use release-group search')
 }
+if (!musicBrainzAlbumSearchSource.includes('/artist?')) {
+  throw new Error('iOS MusicBrainz album search adapter does not resolve artist identity first')
+}
 if (!musicBrainzAlbumSearchSource.includes('searchMusicBrainzAlbumsByArtist')) {
   throw new Error('iOS MusicBrainz album search adapter is not artist-first')
 }
@@ -743,6 +746,18 @@ if (!musicBrainzAlbumSearchSource.includes('Artist name is required')) {
 }
 if (!musicBrainzAlbumSearchSource.includes('RELEASE_TYPE_QUERIES')) {
   throw new Error('iOS MusicBrainz album search adapter does not define release type query mapping')
+}
+if (
+  !musicBrainzAlbumSearchSource.includes('function normalizeArtistMatchValue') ||
+  !musicBrainzAlbumSearchSource.includes("replace(/[.\\s']/g, '')") ||
+  !musicBrainzAlbumSearchSource.includes('function resolveMusicBrainzArtist') ||
+  !musicBrainzAlbumSearchSource.includes('alias:"${trimmedArtist}"') ||
+  !musicBrainzAlbumSearchSource.includes('isConfidentArtistMatch')
+) {
+  throw new Error('iOS MusicBrainz album search adapter does not include conservative artist identity resolution')
+}
+if (musicBrainzAlbumSearchSource.includes('R.E.M.') || musicBrainzAlbumSearchSource.includes('REM ->')) {
+  throw new Error('iOS MusicBrainz album search adapter must not hard-code R.E.M. artist normalization')
 }
 for (const typeQuery of [
   'primarytype:album NOT secondarytype:live NOT secondarytype:compilation NOT secondarytype:soundtrack',
@@ -757,10 +772,27 @@ for (const typeQuery of [
   }
 }
 if (!musicBrainzAlbumSearchSource.includes('artist:"${trimmedArtist}" AND ${releaseTypeQuery}')) {
-  throw new Error('iOS MusicBrainz album search adapter does not search artist-only albums')
+  throw new Error('iOS MusicBrainz album search adapter does not preserve broad artist-only fallback search')
 }
 if (!musicBrainzAlbumSearchSource.includes('artist:"${trimmedArtist}" AND release:"${trimmedAlbum}"')) {
-  throw new Error('iOS MusicBrainz album search adapter does not support artist plus album narrowing')
+  throw new Error('iOS MusicBrainz album search adapter does not preserve broad artist plus album fallback search')
+}
+if (
+  !musicBrainzAlbumSearchSource.includes('arid:${artistMbid} AND ${releaseTypeQuery}') ||
+  !musicBrainzAlbumSearchSource.includes('arid:${artistMbid} AND release:"${trimmedAlbum}"')
+) {
+  throw new Error('iOS MusicBrainz album search adapter does not use artist MBID release-group search when resolved')
+}
+if (
+  !musicBrainzAlbumSearchSource.includes('STUDIO_ALBUM_EXCLUDED_SECONDARY_TYPES') ||
+  !musicBrainzAlbumSearchSource.includes('function isStudioAlbumReleaseGroup') ||
+  !musicBrainzAlbumSearchSource.includes("primaryType === 'album'") ||
+  !musicBrainzAlbumSearchSource.includes("'demo'") ||
+  !musicBrainzAlbumSearchSource.includes("'remix'") ||
+  !musicBrainzAlbumSearchSource.includes("'interview'") ||
+  !musicBrainzAlbumSearchSource.includes("'spokenword'")
+) {
+  throw new Error('iOS MusicBrainz album search adapter does not locally filter Studio Albums release groups')
 }
 if (!musicBrainzAlbumSearchSource.includes("limit: isArtistOnlySearch ? '100' : '20'")) {
   throw new Error('iOS MusicBrainz album search adapter does not use React-parity artist-only limit')

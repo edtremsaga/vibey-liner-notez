@@ -10,6 +10,91 @@ const RELEASE_TYPE_QUERIES = {
   Soundtrack: 'primarytype:album AND secondarytype:soundtrack'
 }
 const BOOTLEG_STATUS_ID = '1156806e-d06a-38bd-83f0-cf2284a808b9'
+const STUDIO_ALBUM_EXCLUDED_SECONDARY_TYPES = new Set([
+  'live',
+  'compilation',
+  'soundtrack',
+  'demo',
+  'remix',
+  'interview',
+  'spokenword'
+])
+
+function normalizeArtistMatchValue(value) {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[.\s']/g, '')
+}
+
+function getArtistCandidateNames(artist) {
+  const aliases = Array.isArray(artist?.aliases) ? artist.aliases : []
+
+  return [
+    artist?.name,
+    artist?.['sort-name'],
+    ...aliases.flatMap((alias) => [alias?.name, alias?.['sort-name']])
+  ].filter(Boolean)
+}
+
+function isConfidentArtistMatch(input, artist) {
+  const normalizedInput = normalizeArtistMatchValue(input)
+
+  if (!normalizedInput || !artist?.id) {
+    return false
+  }
+
+  return getArtistCandidateNames(artist).some((name) => normalizeArtistMatchValue(name) === normalizedInput)
+}
+
+async function resolveMusicBrainzArtist(artistName) {
+  const trimmedArtist = artistName.trim()
+  const params = new URLSearchParams({
+    query: `artist:"${trimmedArtist}" OR alias:"${trimmedArtist}"`,
+    limit: '10',
+    fmt: 'json'
+  })
+  const url = `${MUSICBRAINZ_API_BASE}/artist?${params.toString()}`
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': MUSICBRAINZ_USER_AGENT
+      }
+    })
+
+    if (!response.ok) {
+      return null
+    }
+
+    const data = await response.json()
+    const artists = Array.isArray(data?.artists) ? data.artists : []
+    const confidentMatches = artists
+      .filter((artist) => isConfidentArtistMatch(trimmedArtist, artist))
+      .map((artist) => ({
+        ...artist,
+        score: Number(artist.score ?? 0)
+      }))
+      .sort((a, b) => b.score - a.score)
+
+    if (confidentMatches.length === 0) {
+      return null
+    }
+
+    const [bestMatch, secondMatch] = confidentMatches
+    if (secondMatch && secondMatch.score === bestMatch.score && secondMatch.id !== bestMatch.id) {
+      return null
+    }
+
+    return {
+      id: bestMatch.id,
+      name: bestMatch.name ?? trimmedArtist
+    }
+  } catch {
+    return null
+  }
+}
 
 function extractArtistCredit(artistCredit) {
   if (!Array.isArray(artistCredit)) {
@@ -69,6 +154,27 @@ function sortArtistOnlyResults(results) {
   })
 }
 
+function buildReleaseGroupQuery({ trimmedArtist, trimmedAlbum, releaseTypeQuery, artistMbid }) {
+  if (artistMbid) {
+    return trimmedAlbum
+      ? `arid:${artistMbid} AND release:"${trimmedAlbum}"`
+      : `arid:${artistMbid} AND ${releaseTypeQuery}`
+  }
+
+  return trimmedAlbum
+    ? `artist:"${trimmedArtist}" AND release:"${trimmedAlbum}"`
+    : `artist:"${trimmedArtist}" AND ${releaseTypeQuery}`
+}
+
+function isStudioAlbumReleaseGroup(releaseGroup) {
+  const primaryType = String(releaseGroup?.['primary-type'] ?? '').toLowerCase()
+  const secondaryTypes = Array.isArray(releaseGroup?.['secondary-types'])
+    ? releaseGroup['secondary-types'].map((type) => String(type).toLowerCase())
+    : []
+
+  return primaryType === 'album' && !secondaryTypes.some((type) => STUDIO_ALBUM_EXCLUDED_SECONDARY_TYPES.has(type))
+}
+
 export async function searchMusicBrainzAlbumsByArtist({ artistName, albumTitle = '', releaseType = 'Album' }) {
   const trimmedArtist = artistName.trim()
   const trimmedAlbum = albumTitle.trim()
@@ -78,10 +184,14 @@ export async function searchMusicBrainzAlbumsByArtist({ artistName, albumTitle =
   }
 
   const releaseTypeQuery = RELEASE_TYPE_QUERIES[releaseType] ?? RELEASE_TYPE_QUERIES.Album
-  const query = trimmedAlbum
-    ? `artist:"${trimmedArtist}" AND release:"${trimmedAlbum}"`
-    : `artist:"${trimmedArtist}" AND ${releaseTypeQuery}`
   const isArtistOnlySearch = !trimmedAlbum
+  const resolvedArtist = await resolveMusicBrainzArtist(trimmedArtist)
+  const query = buildReleaseGroupQuery({
+    trimmedArtist,
+    trimmedAlbum,
+    releaseTypeQuery,
+    artistMbid: resolvedArtist?.id ?? null
+  })
 
   const params = new URLSearchParams({
     query,
@@ -105,7 +215,10 @@ export async function searchMusicBrainzAlbumsByArtist({ artistName, albumTitle =
 
   const data = await response.json()
   const releaseGroups = Array.isArray(data?.['release-groups']) ? data['release-groups'] : []
-  const results = releaseGroups.map(mapMusicBrainzReleaseGroup).filter((result) => result.id && result.title)
+  const filteredReleaseGroups = isArtistOnlySearch && releaseType === 'Album'
+    ? releaseGroups.filter(isStudioAlbumReleaseGroup)
+    : releaseGroups
+  const results = filteredReleaseGroups.map(mapMusicBrainzReleaseGroup).filter((result) => result.id && result.title)
 
   return isArtistOnlySearch ? sortArtistOnlyResults(results) : results
 }

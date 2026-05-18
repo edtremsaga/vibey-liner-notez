@@ -26,6 +26,8 @@
 - Search -> Results -> Album Detail flow works.
 - Tapping a real MusicBrainz result opens Album Detail with real selected-result header data.
 - Search requires an artist name, supports an optional album title for narrowing, and shows Release Type for artist-only searches.
+- iOS album search resolves a confident MusicBrainz artist identity before release-group lookup and uses artist MBID release-group search when possible.
+- iOS Studio Albums search applies local release-group post-filtering so obvious demos, remixes, interviews, spokenword releases, singles, EPs, live albums, compilations, and soundtracks do not appear as studio albums.
 - Album-only search is not supported.
 - SearchScreen is now the real artist-first search entry point; the old mock album preview card has been removed.
 - Search and Results copy/layout have been polished to better match the Album Detail experience without changing search behavior or data fetching.
@@ -69,6 +71,25 @@
 - Artist + Album search narrows MusicBrainz release-group results to albums by that artist matching the album text.
 - Album-only search is not a supported product flow and should not be presented as valid UI.
 - Tapping a Search result opens Album Detail with selected MusicBrainz result header data.
+
+## Search Quality Diagnosis: `REM`
+- Earlier iOS searches for artist `REM` with Release Type `Studio Albums` could return unrelated MusicBrainz release groups such as `Fryderyk Chopin, Rem Urasin`, `Rém`, or `rem†non†rem`.
+- Root cause: the iOS adapter sent a direct release-group text query:
+  - `artist:"REM" AND primarytype:album NOT secondarytype:live NOT secondarytype:compilation NOT secondarytype:soundtrack`
+- That query searches MusicBrainz release-group artist text and does not resolve the artist identity first.
+- Earlier iOS search did not normalize `REM` to `R.E.M.`, inspect aliases, resolve an artist MBID, or post-filter release groups by exact artist identity.
+- Earlier Studio Albums filtering only constrained release-group type/secondary-type; it did not validate the returned artist credit.
+- The React web app uses the same broad release-group text-query model for album search, so this is a shared search-semantics issue rather than an iOS-only regression.
+- The iOS search adapter now applies the recommended first search-quality fix:
+  - Search MusicBrainz `/artist` for the entered artist.
+  - Prefer the best exact normalized name or alias match.
+  - Use the resolved artist MBID in the release-group search, likely via an artist-id query field such as `arid:<artistMbid>` plus the existing release-type query.
+  - Keep existing release-type behavior, sorting, and Album Detail behavior unchanged.
+- The iOS adapter keeps a broad release-group search fallback when artist resolution is uncertain.
+- The iOS adapter also locally filters Studio Albums release groups by `primary-type` / `secondary-types` to remove obvious non-studio albums such as demos, remixes, interviews, spokenword releases, singles, EPs, live albums, compilations, and soundtracks.
+- This remains an iOS-first search-quality slice; the React web app still uses the broader release-group text-query model.
+- Avoid a one-off `REM` -> `R.E.M.` hard-code.
+- Later, consider promoting the same artist-identity search semantics into the React web app so iOS and web remain aligned.
 
 ## Album Detail Real-Data Path
 - Current live path: Search -> Results -> Album Detail header -> release-group enrichment -> primary cover art/artwork gallery -> selected-release edition metadata -> selected-release tracklist -> selected-release album-level credits -> selected-release track credits -> selected-release songwriting -> selected-release publishing.
@@ -143,8 +164,10 @@
   - `inc=releases`
   - bootleg detection uses the same MusicBrainz bootleg status id
   - artist-only results are sorted newest-first with title as the tiebreak
-- Manual smoke testing confirmed iOS search results now have parity with the React app for R.E.M. and David Bowie.
-- This milestone is React parity, not stricter canonical studio-albums-only filtering.
+- iOS now improves on the earlier broad React-parity search path by resolving confident artist MBIDs first and applying stricter local Studio Albums post-filtering.
+- Manual smoke testing previously confirmed iOS search results had parity with the React app for R.E.M. and David Bowie.
+- Current iOS search now intentionally diverges from the earlier broad React-parity path for artist identity resolution and obvious non-studio release-group cleanup.
+- This is still not a full canonical studio-albums-only system.
 - Do not start canonical studio albums cleanup here; that is a later shared React+iOS search-semantics project.
 
 ## Manual Smoke Status
