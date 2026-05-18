@@ -29,6 +29,28 @@ function isProductionCredit(credit) {
   return role.includes('producer') || role.includes('engineer') || role.includes('mix') || role.includes('mastering')
 }
 
+function getCreditHighlightCategory(role) {
+  const normalizedRole = role?.toLowerCase() ?? ''
+
+  if (normalizedRole.includes('producer')) {
+    return 'Producers'
+  }
+
+  if (
+    normalizedRole.includes('engineer') ||
+    normalizedRole.includes('mix') ||
+    normalizedRole.includes('mastering')
+  ) {
+    return 'Engineers / Mixers / Mastering'
+  }
+
+  if (isPerformerCredit({ role })) {
+    return 'Performers & Instruments'
+  }
+
+  return null
+}
+
 function groupTrackCredits(credits) {
   const performers = credits.filter(isPerformerCredit)
   const production = credits.filter(isProductionCredit)
@@ -39,6 +61,80 @@ function groupTrackCredits(credits) {
     ['Production & Technical', production],
     ['Other', other]
   ].filter(([, groupedCredits]) => groupedCredits.length > 0)
+}
+
+function addCreditHighlight(categoryMap, category, personName, role, trackId = null) {
+  if (!category || !personName) {
+    return
+  }
+
+  const roleLabel = role || category
+  const key = `${category}|${personName}|${roleLabel}`
+  const existing = categoryMap.get(key)
+
+  if (existing) {
+    if (trackId) {
+      existing.trackIds.add(trackId)
+    }
+    return
+  }
+
+  categoryMap.set(key, {
+    personName,
+    role: roleLabel,
+    trackIds: trackId ? new Set([trackId]) : new Set()
+  })
+}
+
+function buildCreditHighlights(albumCredits, tracks, trackCreditsByTrackId) {
+  const categoryMaps = {
+    Producers: new Map(),
+    'Engineers / Mixers / Mastering': new Map(),
+    'Performers & Instruments': new Map(),
+    Songwriting: new Map(),
+    Publishing: new Map()
+  }
+
+  for (const credit of albumCredits) {
+    const category = getCreditHighlightCategory(credit?.role)
+    addCreditHighlight(categoryMaps[category], category, credit?.personName, credit?.role)
+  }
+
+  for (const track of tracks) {
+    const trackId = track?.trackId
+    if (!trackId) {
+      continue
+    }
+
+    const trackCredits = Array.isArray(trackCreditsByTrackId[trackId]) ? trackCreditsByTrackId[trackId] : []
+    for (const credit of trackCredits) {
+      const category = getCreditHighlightCategory(credit?.role)
+      addCreditHighlight(categoryMaps[category], category, credit?.personName, credit?.role, trackId)
+    }
+
+    for (const personName of track.songwriting?.writers ?? []) {
+      addCreditHighlight(categoryMaps.Songwriting, 'Songwriting', personName, 'Writer', trackId)
+    }
+    for (const personName of track.songwriting?.composers ?? []) {
+      addCreditHighlight(categoryMaps.Songwriting, 'Songwriting', personName, 'Composer', trackId)
+    }
+    for (const personName of track.songwriting?.lyricists ?? []) {
+      addCreditHighlight(categoryMaps.Songwriting, 'Songwriting', personName, 'Lyricist', trackId)
+    }
+    for (const publisherName of track.publishing?.publishers ?? []) {
+      addCreditHighlight(categoryMaps.Publishing, 'Publishing', publisherName, 'Publisher', trackId)
+    }
+  }
+
+  return Object.entries(categoryMaps)
+    .map(([category, contributorMap]) => [
+      category,
+      Array.from(contributorMap.values()).sort((a, b) => {
+        const trackCountDifference = b.trackIds.size - a.trackIds.size
+        return trackCountDifference || a.personName.localeCompare(b.personName)
+      })
+    ])
+    .filter(([, contributors]) => contributors.length > 0)
 }
 
 const COUNTRY_DISPLAY_NAMES = {
@@ -87,6 +183,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
   const [showEditionsSources, setShowEditionsSources] = useState(true)
   const [showReleaseGroupEditions, setShowReleaseGroupEditions] = useState(false)
   const [showTechnicalLinks, setShowTechnicalLinks] = useState(false)
+  const [showCreditHighlights, setShowCreditHighlights] = useState(false)
   const [showAlbumCredits, setShowAlbumCredits] = useState(false)
   const [expandedCreditTrackIds, setExpandedCreditTrackIds] = useState({})
   const [failedCoverArtUrls, setFailedCoverArtUrls] = useState({})
@@ -153,6 +250,14 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
       })
     : []
   const hasTrackCreditDetails = tracksWithCreditDetails.length > 0
+  const creditHighlights = hasAlbum
+    ? buildCreditHighlights(
+        hasAlbumCredits ? album.credits.albumCredits : [],
+        hasTracks ? album.tracks : [],
+        trackCreditsByTrackId
+      )
+    : []
+  const hasCreditHighlights = creditHighlights.length > 0
   const shouldShowCoverArt = hasAlbum && !!album.coverArtUrl && !failedCoverArtUrls[album.coverArtUrl]
   const artworkImages = hasAlbum && Array.isArray(album.artworkImages) ? album.artworkImages : []
   const hasArtworkGallery = artworkImages.length > 0
@@ -477,6 +582,43 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
             </TouchableOpacity>
             {showCredits ? (
               <>
+                {hasCreditHighlights ? (
+                  <View style={{ marginTop: 12 }}>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={`${showCreditHighlights ? 'Hide' : 'Show'} credit highlights`}
+                      onPress={() => setShowCreditHighlights((current) => !current)}
+                      style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
+                    >
+                      <Text style={{ color: '#d1d5db', flex: 1, fontWeight: '700', fontSize: 15 }}>
+                        Credit Highlights
+                      </Text>
+                      <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showCreditHighlights ? '▾' : '▸'}</Text>
+                    </TouchableOpacity>
+                    {showCreditHighlights
+                      ? creditHighlights.map(([category, contributors]) => (
+                          <View key={`credit-highlight-${category}`} style={{ marginTop: 8 }}>
+                            <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
+                              {category}
+                            </Text>
+                            {contributors.slice(0, 8).map((contributor, index) => {
+                              const trackCount = contributor.trackIds.size
+                              return (
+                                <Text
+                                  key={`credit-highlight-${category}-${contributor.personName}-${contributor.role}-${index}`}
+                                  style={{ color: '#d1d5db', marginTop: 2, fontSize: 14 }}
+                                >
+                                  {contributor.personName}
+                                  {contributor.role ? ` — ${contributor.role}` : ''}
+                                  {trackCount > 0 ? ` (${trackCount} ${trackCount === 1 ? 'track' : 'tracks'})` : ''}
+                                </Text>
+                              )
+                            })}
+                          </View>
+                        ))
+                      : null}
+                  </View>
+                ) : null}
                 {hasAlbumCredits ? (
                   <View style={{ marginTop: 12 }}>
                     <TouchableOpacity

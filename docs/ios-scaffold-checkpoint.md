@@ -38,6 +38,7 @@
 - Album Detail shows real selected-result header data for Search results, enriches release-group Editions & Sources from MusicBrainz, loads the selected-release tracklist, and displays selected-release album-level credits, track-level credits, songwriting, and publishing when documented.
 - Album Detail selected-release album-level credits are loaded from the existing selected-release response without adding another MusicBrainz request.
 - Album Detail album-level credits render as a collapsed `Album` disclosure row inside Credits.
+- Album Detail Credits includes a collapsed `Credit Highlights` row that derives scan-friendly producers, engineers/mixers/mastering, performers, songwriting, and publishing summaries from already-loaded selected-release data.
 - Album Detail selected-release track credits are grouped by track, collapsed by default, and expandable with iOS-style disclosure chevrons.
 - Album Detail Credits now defaults collapsed to keep dense album pages calmer while preserving full credit detail behind disclosure.
 - Album Detail section-level disclosure controls use chevrons consistently for Tracklist, Credits, and Editions & Sources.
@@ -92,6 +93,8 @@
 - iOS extracts selected-release album-level credits from release `relations` using the same compact credit shape.
 - Album-level credits use the already-fetched selected-release response; iOS does not probe alternate releases for album credits yet.
 - Album-level credits render as a collapsed `Album` disclosure row and use the same credit grouping labels as track credits when expanded.
+- Credit Highlights are derived in the iOS UI from already-loaded album credits, track credits, songwriting, and publishing; they do not add MusicBrainz requests or schema fields.
+- Credit Highlights show contributor names, roles, and track counts when the contributor came from track-level data.
 - iOS extracts selected-release songwriting from already-fetched recording relations:
   - `writers`
   - `composers`
@@ -161,6 +164,7 @@
 - Selected-release songwriting loaded when documented.
 - Selected-release publishing loaded when documented.
 - Album-level credits are shown as a collapsed `Album` row in Credits and expand with a chevron.
+- Credit Highlights summarize loaded contributors without changing the underlying credit data.
 - Songwriting appears in expanded track credit rows when writer/composer/lyricist data is documented.
 - Publishing appears in expanded track credit rows when publisher label data is documented.
 - Track credits are readable, grouped, collapsed by default, and expandable per track with chevrons.

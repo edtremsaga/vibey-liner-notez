@@ -426,6 +426,32 @@ if (
 ) {
   throw new Error('AlbumDetailScreen does not render album-level credits as a collapsed disclosure row')
 }
+if (
+  !albumDetailScreenSource.includes('Credit Highlights') ||
+  !albumDetailScreenSource.includes('showCreditHighlights') ||
+  !albumDetailScreenSource.includes('buildCreditHighlights') ||
+  !albumDetailScreenSource.includes("accessibilityLabel={`${showCreditHighlights ? 'Hide' : 'Show'} credit highlights`}") ||
+  !albumDetailScreenSource.includes("{showCreditHighlights ? '▾' : '▸'}")
+) {
+  throw new Error('AlbumDetailScreen does not render credit highlights as a collapsed disclosure row')
+}
+for (const creditHighlightLabel of [
+  'Producers',
+  'Engineers / Mixers / Mastering',
+  'Performers & Instruments',
+  'Songwriting',
+  'Publishing'
+]) {
+  if (!albumDetailScreenSource.includes(creditHighlightLabel)) {
+    throw new Error(`AlbumDetailScreen is missing credit highlight category: ${creditHighlightLabel}`)
+  }
+}
+if (
+  !albumDetailScreenSource.includes('trackIds.size') ||
+  !albumDetailScreenSource.includes("trackCount === 1 ? 'track' : 'tracks'")
+) {
+  throw new Error('AlbumDetailScreen credit highlights do not include derived track counts')
+}
 for (const creditGroupLabel of ['Performers & Instruments', 'Production & Technical', 'Other']) {
   if (!albumDetailScreenSource.includes(creditGroupLabel)) {
     throw new Error(`AlbumDetailScreen is missing track credit group label: ${creditGroupLabel}`)
