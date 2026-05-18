@@ -142,8 +142,27 @@ const resultsScreenSource = readFileSync(path.join(appRoot, 'src/screens/Results
 if (!resultsScreenSource.includes('ScrollView') || !resultsScreenSource.includes('contentContainerStyle')) {
   throw new Error('ResultsScreen is not scrollable for long MusicBrainz result lists')
 }
-if (!resultsScreenSource.includes('albums.map')) {
+if (!resultsScreenSource.includes('displayedAlbums.map')) {
   throw new Error('ResultsScreen does not render result list')
+}
+if (
+  !resultsScreenSource.includes('SORT_OPTIONS') ||
+  !resultsScreenSource.includes('Oldest first') ||
+  !resultsScreenSource.includes('Newest first')
+) {
+  throw new Error('ResultsScreen does not include Oldest/Newest sort controls')
+}
+if (
+  !resultsScreenSource.includes('getDefaultSortOption') ||
+  !resultsScreenSource.includes("releaseType === 'Album' ? 'oldest' : 'newest'")
+) {
+  throw new Error('ResultsScreen does not default artist-only Studio Albums to Oldest first')
+}
+if (
+  !resultsScreenSource.includes('sortAlbums(albums, sortOption)') ||
+  !resultsScreenSource.includes('setSortOption')
+) {
+  throw new Error('ResultsScreen does not sort already-loaded results client-side')
 }
 if (!resultsScreenSource.includes('onBackToSearch') || !resultsScreenSource.includes('Back to Search')) {
   throw new Error('ResultsScreen does not include contextual back-to-search action')
@@ -358,8 +377,8 @@ if (!albumDetailScreenSource.includes('showCredits, setShowCredits] = useState(f
 if (!albumDetailScreenSource.includes('showTracklist, setShowTracklist] = useState(true)')) {
   throw new Error('AlbumDetailScreen no longer keeps Tracklist open by default')
 }
-if (!albumDetailScreenSource.includes('showEditionsSources, setShowEditionsSources] = useState(true)')) {
-  throw new Error('AlbumDetailScreen no longer keeps Editions & Sources open by default')
+if (!albumDetailScreenSource.includes('showEditionsSources, setShowEditionsSources] = useState(false)')) {
+  throw new Error('AlbumDetailScreen no longer keeps Editions & Sources collapsed by default')
 }
 if (
   !albumDetailScreenSource.includes('credit.personName') ||

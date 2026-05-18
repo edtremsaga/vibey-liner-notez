@@ -28,6 +28,7 @@
 - Search requires an artist name, supports an optional album title for narrowing, and shows Release Type for artist-only searches.
 - iOS album search resolves a confident MusicBrainz artist identity before release-group lookup and uses artist MBID release-group search when possible.
 - iOS Studio Albums search applies local release-group post-filtering so obvious demos, remixes, interviews, spokenword releases, singles, EPs, live albums, compilations, soundtracks, and all-bootleg/non-official album-type groups do not appear as studio albums.
+- Results can reorder already-loaded artist-only results client-side with `Oldest first` / `Newest first`; artist-only Studio Albums defaults to `Oldest first` for chronological discography browsing.
 - Album-only search is not supported.
 - SearchScreen is now the real artist-first search entry point; the old mock album preview card has been removed.
 - Search and Results copy/layout have been polished to better match the Album Detail experience without changing search behavior or data fetching.
@@ -46,6 +47,7 @@
 - Album Detail section-level disclosure controls use chevrons consistently for Tracklist, Credits, and Editions & Sources.
 - Album Detail supports optional primary cover art and release-group artwork gallery images from Cover Art Archive.
 - Album Detail Editions & Sources now prioritizes human-readable selected-edition and source labels while keeping technical identifiers and links available for traceability.
+- Album Detail Editions & Sources defaults collapsed so the first detail view stays focused on the album, tracklist, and credit overview.
 - Album Detail Editions & Sources keeps Release-group editions and Technical links collapsed by default so the selected-edition view stays compact.
 - Album Detail still renders selected mock album content for Producer Search mock results.
 - Visible iOS app copy has been softened so the title reads `Liner Notez`, Album Detail uses user-facing helper text, and the main album card no longer shows the release-group MBID.
@@ -165,7 +167,7 @@
   - `offset=0`
   - `inc=releases`
   - bootleg detection uses the same MusicBrainz bootleg status id
-  - artist-only results are sorted newest-first with title as the tiebreak
+  - the adapter returns artist-only results newest-first with title as the tiebreak; the iOS Results UI can reorder the already-loaded list client-side and defaults artist-only Studio Albums to Oldest first
 - iOS now improves on the earlier broad React-parity search path by resolving confident artist MBIDs first and applying stricter local Studio Albums post-filtering.
 - Phase 1 Studio Albums filtering uses MusicBrainz release status data already returned by `inc=releases`; it does not add title keyword blacklists, new release types, curated canonical lists, or external data sources.
 - Manual smoke testing previously confirmed iOS search results had parity with the React app for R.E.M. and David Bowie.

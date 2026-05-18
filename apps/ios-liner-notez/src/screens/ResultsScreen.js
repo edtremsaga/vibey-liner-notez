@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
 const RELEASE_TYPE_LABELS = {
@@ -10,11 +10,57 @@ const RELEASE_TYPE_LABELS = {
   Soundtrack: 'Soundtracks'
 }
 
+const SORT_OPTIONS = [
+  { value: 'oldest', label: 'Oldest first' },
+  { value: 'newest', label: 'Newest first' }
+]
+
+function getDefaultSortOption({ albumTitle, releaseType }) {
+  return !albumTitle && releaseType === 'Album' ? 'oldest' : 'newest'
+}
+
+function getSortableYear(album) {
+  const year = album?.releaseYear ? Number(album.releaseYear) : null
+  if (year && !Number.isNaN(year)) {
+    return year
+  }
+
+  const dateYear = album?.firstReleaseDate ? Number(String(album.firstReleaseDate).slice(0, 4)) : null
+  return dateYear && !Number.isNaN(dateYear) ? dateYear : null
+}
+
+function sortAlbums(albums, sortOption) {
+  return [...albums].sort((a, b) => {
+    const aYear = getSortableYear(a)
+    const bYear = getSortableYear(b)
+
+    if (aYear && bYear && aYear !== bYear) {
+      return sortOption === 'oldest' ? aYear - bYear : bYear - aYear
+    }
+
+    if (aYear && !bYear) {
+      return -1
+    }
+
+    if (!aYear && bYear) {
+      return 1
+    }
+
+    return (a.title || '').localeCompare(b.title || '')
+  })
+}
+
 export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, isLoading, releaseType = 'Album', onBackToSearch, onSelectAlbum }) {
+  const [sortOption, setSortOption] = useState(() => getDefaultSortOption({ albumTitle, releaseType }))
   const showLoading = isLoading
   const showError = !isLoading && !!errorMessage
   const showEmpty = !isLoading && !errorMessage && artistName && albums.length === 0
   const showResults = !isLoading && !errorMessage && albums.length > 0
+  const canSortResults = showResults && !albumTitle
+  const displayedAlbums = useMemo(
+    () => (canSortResults ? sortAlbums(albums, sortOption) : albums),
+    [albums, canSortResults, sortOption]
+  )
   const releaseTypeLabel = RELEASE_TYPE_LABELS[releaseType] ?? RELEASE_TYPE_LABELS.Album
   const resultsHeading = artistName
     ? albumTitle
@@ -29,6 +75,10 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
   const emptyDetail = albumTitle
     ? 'Try another album title or search by artist only.'
     : 'Try another artist name or choose a different release type.'
+
+  useEffect(() => {
+    setSortOption(getDefaultSortOption({ albumTitle, releaseType }))
+  }, [albumTitle, releaseType, artistName])
 
   return (
     <ScrollView
@@ -61,6 +111,37 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
           <Text style={{ color: '#6b7280', marginTop: 4 }}>
             MusicBrainz may list several editions or similarly named releases. Choose the album that best matches.
           </Text>
+        </View>
+      )}
+
+      {canSortResults && (
+        <View style={{ marginTop: 14 }}>
+          <Text style={{ color: '#d1d5db', fontWeight: '700', marginBottom: 8 }}>Sort</Text>
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+            {SORT_OPTIONS.map((option) => {
+              const isActive = sortOption === option.value
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Sort results ${option.label.toLowerCase()}`}
+                  onPress={() => setSortOption(option.value)}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: isActive ? '#f3f4f6' : '#4b5563',
+                    borderRadius: 8,
+                    paddingVertical: 8,
+                    paddingHorizontal: 10,
+                    backgroundColor: isActive ? '#1f2937' : 'transparent'
+                  }}
+                >
+                  <Text style={{ color: '#f3f4f6', fontWeight: isActive ? '700' : '500' }}>
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              )
+            })}
+          </View>
         </View>
       )}
 
@@ -119,7 +200,7 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
       )}
 
       {showResults &&
-        albums.map((album) => {
+        displayedAlbums.map((album) => {
           const albumId = album?.releaseGroupId ?? album?.id ?? album?.albumId ?? null
           if (!albumId) {
             return null
