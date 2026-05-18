@@ -27,7 +27,7 @@
 - Tapping a real MusicBrainz result opens Album Detail with real selected-result header data.
 - Search requires an artist name, supports an optional album title for narrowing, and shows Release Type for artist-only searches.
 - iOS album search resolves a confident MusicBrainz artist identity before release-group lookup and uses artist MBID release-group search when possible.
-- iOS Studio Albums search applies local release-group post-filtering so obvious demos, remixes, interviews, spokenword releases, singles, EPs, live albums, compilations, and soundtracks do not appear as studio albums.
+- iOS Studio Albums search applies local release-group post-filtering so obvious demos, remixes, interviews, spokenword releases, singles, EPs, live albums, compilations, soundtracks, and all-bootleg/non-official album-type groups do not appear as studio albums.
 - Album-only search is not supported.
 - SearchScreen is now the real artist-first search entry point; the old mock album preview card has been removed.
 - Search and Results copy/layout have been polished to better match the Album Detail experience without changing search behavior or data fetching.
@@ -87,6 +87,8 @@
   - Keep existing release-type behavior, sorting, and Album Detail behavior unchanged.
 - The iOS adapter keeps a broad release-group search fallback when artist resolution is uncertain.
 - The iOS adapter also locally filters Studio Albums release groups by `primary-type` / `secondary-types` to remove obvious non-studio albums such as demos, remixes, interviews, spokenword releases, singles, EPs, live albums, compilations, and soundtracks.
+- Phase 1 Studio Albums filtering also requires at least one `Official` release in the release group and excludes release groups whose known releases are all `Bootleg`.
+- Mixed release groups with at least one `Official` release remain visible even when they also contain Bootleg or Promotion releases.
 - This remains an iOS-first search-quality slice; the React web app still uses the broader release-group text-query model.
 - Avoid a one-off `REM` -> `R.E.M.` hard-code.
 - Later, consider promoting the same artist-identity search semantics into the React web app so iOS and web remain aligned.
@@ -165,6 +167,7 @@
   - bootleg detection uses the same MusicBrainz bootleg status id
   - artist-only results are sorted newest-first with title as the tiebreak
 - iOS now improves on the earlier broad React-parity search path by resolving confident artist MBIDs first and applying stricter local Studio Albums post-filtering.
+- Phase 1 Studio Albums filtering uses MusicBrainz release status data already returned by `inc=releases`; it does not add title keyword blacklists, new release types, curated canonical lists, or external data sources.
 - Manual smoke testing previously confirmed iOS search results had parity with the React app for R.E.M. and David Bowie.
 - Current iOS search now intentionally diverges from the earlier broad React-parity path for artist identity resolution and obvious non-studio release-group cleanup.
 - This is still not a full canonical studio-albums-only system.

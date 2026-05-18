@@ -785,8 +785,14 @@ if (
 }
 if (
   !musicBrainzAlbumSearchSource.includes('STUDIO_ALBUM_EXCLUDED_SECONDARY_TYPES') ||
+  !musicBrainzAlbumSearchSource.includes('function hasOfficialRelease') ||
+  !musicBrainzAlbumSearchSource.includes('function isAllBootlegReleaseGroup') ||
   !musicBrainzAlbumSearchSource.includes('function isStudioAlbumReleaseGroup') ||
   !musicBrainzAlbumSearchSource.includes("primaryType === 'album'") ||
+  !musicBrainzAlbumSearchSource.includes("getReleaseStatus(release) === 'official'") ||
+  !musicBrainzAlbumSearchSource.includes("getReleaseStatus(release) === 'bootleg'") ||
+  !musicBrainzAlbumSearchSource.includes('!isAllBootlegReleaseGroup(releaseGroup)') ||
+  !musicBrainzAlbumSearchSource.includes('hasOfficialRelease(releaseGroup)') ||
   !musicBrainzAlbumSearchSource.includes("'demo'") ||
   !musicBrainzAlbumSearchSource.includes("'remix'") ||
   !musicBrainzAlbumSearchSource.includes("'interview'") ||

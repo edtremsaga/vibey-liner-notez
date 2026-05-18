@@ -166,13 +166,34 @@ function buildReleaseGroupQuery({ trimmedArtist, trimmedAlbum, releaseTypeQuery,
     : `artist:"${trimmedArtist}" AND ${releaseTypeQuery}`
 }
 
+function getReleaseStatus(release) {
+  return String(release?.status ?? '').toLowerCase()
+}
+
+function hasOfficialRelease(releaseGroup) {
+  const releases = Array.isArray(releaseGroup?.releases) ? releaseGroup.releases : []
+  return releases.some((release) => getReleaseStatus(release) === 'official')
+}
+
+function isAllBootlegReleaseGroup(releaseGroup) {
+  const releases = Array.isArray(releaseGroup?.releases) ? releaseGroup.releases : []
+  return releases.length > 0 && releases.every((release) =>
+    release?.['status-id'] === BOOTLEG_STATUS_ID || getReleaseStatus(release) === 'bootleg'
+  )
+}
+
 function isStudioAlbumReleaseGroup(releaseGroup) {
   const primaryType = String(releaseGroup?.['primary-type'] ?? '').toLowerCase()
   const secondaryTypes = Array.isArray(releaseGroup?.['secondary-types'])
     ? releaseGroup['secondary-types'].map((type) => String(type).toLowerCase())
     : []
 
-  return primaryType === 'album' && !secondaryTypes.some((type) => STUDIO_ALBUM_EXCLUDED_SECONDARY_TYPES.has(type))
+  return (
+    primaryType === 'album' &&
+    !secondaryTypes.some((type) => STUDIO_ALBUM_EXCLUDED_SECONDARY_TYPES.has(type)) &&
+    !isAllBootlegReleaseGroup(releaseGroup) &&
+    hasOfficialRelease(releaseGroup)
+  )
 }
 
 export async function searchMusicBrainzAlbumsByArtist({ artistName, albumTitle = '', releaseType = 'Album' }) {
