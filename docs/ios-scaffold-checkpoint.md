@@ -30,6 +30,7 @@
 - SearchScreen is now the real artist-first search entry point; the old mock album preview card has been removed.
 - Search and Results copy/layout have been polished to better match the Album Detail experience without changing search behavior or data fetching.
 - The prototype-style persistent top tab bar has been replaced with contextual navigation: Search is the root screen, Results and Album Detail are reached through the album lookup flow, and Producer Search / Help remain secondary actions from Search.
+- Non-root screens keep primary back navigation near the top so Results, Album Detail, Producer Search, and Help / Data Sources do not require scrolling to navigate back.
 - Producer Search shell works.
 - Producer input works.
 - Producer Search result rows are visible/readable.

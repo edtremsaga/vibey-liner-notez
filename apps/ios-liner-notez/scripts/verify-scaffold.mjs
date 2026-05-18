@@ -305,9 +305,10 @@ for (const textDisclosure of [
 }
 if (
   !albumDetailScreenSource.includes("backLabel = 'Back to Results'") ||
-  !appSource.includes("backLabel={detailReturnRoute === 'Producer Search' ? 'Back to Producer Search' : 'Back to Results'}")
+  !appSource.includes("backLabel={detailReturnRoute === 'Producer Search' ? 'Back to Producer Search' : 'Back to Results'}") ||
+  !albumDetailScreenSource.includes('marginBottom: 14')
 ) {
-  throw new Error('AlbumDetailScreen does not include contextual back action label')
+  throw new Error('AlbumDetailScreen does not include top contextual back action label')
 }
 if (!albumDetailScreenSource.includes('Loading album detail...')) {
   throw new Error('AlbumDetailScreen does not include loading state text')

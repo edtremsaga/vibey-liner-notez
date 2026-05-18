@@ -142,6 +142,22 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
       alwaysBounceVertical
       showsVerticalScrollIndicator
     >
+      <TouchableOpacity
+        accessibilityRole="button"
+        onPress={onBackToResults}
+        style={{
+          borderWidth: 1,
+          borderColor: '#4b5563',
+          borderRadius: 8,
+          paddingVertical: 8,
+          paddingHorizontal: 10,
+          alignSelf: 'flex-start',
+          marginBottom: 14
+        }}
+      >
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>{backLabel}</Text>
+      </TouchableOpacity>
+
       <Text style={{ color: '#e5e7eb', fontSize: 30, fontWeight: '500' }}>Album Detail</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         {isRealMusicBrainzDetail
