@@ -468,11 +468,34 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                 Disambiguation: {album.disambiguation}
               </Text>
             )}
-          </View>
+	          </View>
 
-          {hasArtworkGallery ? (
-            <View
-              style={{
+	          {album?.wikipediaArticle?.url ? (
+	            <TouchableOpacity
+	              accessibilityRole="link"
+	              accessibilityLabel="Read album article on Wikipedia"
+	              onPress={() => Linking.openURL(album.wikipediaArticle.url)}
+	              style={{
+	                marginTop: 12,
+	                borderWidth: 1,
+	                borderColor: '#374151',
+	                borderRadius: 10,
+	                padding: 14,
+	                backgroundColor: '#181a1f'
+	              }}
+	            >
+	              <Text style={{ color: '#93c5fd', fontSize: 16, fontWeight: '700' }}>
+	                Read album article on Wikipedia
+	              </Text>
+	              <Text style={{ color: '#9ca3af', marginTop: 5, fontSize: 14 }}>
+	                Background, release history, reception, and legacy.
+	              </Text>
+	            </TouchableOpacity>
+	          ) : null}
+
+	          {hasArtworkGallery ? (
+	            <View
+	              style={{
                 marginTop: 12,
                 borderWidth: 1,
                 borderColor: '#374151',

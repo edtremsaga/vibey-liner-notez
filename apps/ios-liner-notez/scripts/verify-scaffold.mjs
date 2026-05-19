@@ -641,6 +641,7 @@ if (
   !albumDetailScreenSource.includes('Cover Art Archive') ||
   !albumDetailScreenSource.includes('Wikipedia article') ||
   !albumDetailScreenSource.includes('Read album article on Wikipedia') ||
+  !albumDetailScreenSource.includes('Background, release history, reception, and legacy.') ||
   !albumDetailScreenSource.includes('Linking.openURL(album.wikipediaArticle.url)') ||
   !albumDetailScreenSource.includes('externalLinks.wikidataUrl')
 ) {
