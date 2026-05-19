@@ -74,6 +74,36 @@
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 - This does not mean the iOS app is production-ready; several real-data and polish areas remain deferred.
 
+## Album Workflow Phase-Complete Checkpoint
+- The iOS album-search workflow is phase-complete for the current read-only vertical slice.
+- Stable capabilities:
+  - Search starts from a required Artist name with optional Album title narrowing.
+  - Search fields are retained for the current app session and include in-field clear controls.
+  - Artist search resolves confident MusicBrainz artist MBIDs before release-group lookup and falls back to broad release-group search when confidence is low.
+  - Studio Albums filtering removes obvious non-studio secondary types plus all-bootleg/non-official album-type groups.
+  - Results support client-side Oldest first / Newest first sorting, clearer card metadata, and contextual navigation.
+  - Album Detail shows the selected album identity, primary cover art, source-backed Wikipedia link, Album Art & Liner Images viewer, selected-release tracklist, selected-release album/track credits, work-level songwriting, instrument-specific credits, publishing, and traceable Editions & Sources.
+- Manual smoke-test checklist:
+  - Search `David Bowie` / `Hunky Dory` / Studio Albums and open the correct album.
+  - Search `R.E.M.` or `REM` / Studio Albums and confirm artist identity resolution avoids unrelated `Rem`/`Rém` results.
+  - Search `Steely Dan` / `Aja` and confirm cover art, tracklist, selected edition metadata, and sources load.
+  - Open Album Detail and confirm the Wikipedia link appears when resolved and opens the album article.
+  - Open Album Art & Liner Images, swipe/zoom images, close the viewer, and confirm it stays closed.
+  - Expand Credits, confirm Credit Highlights, songwriting, publishing, and instrument-specific track credits render when documented.
+  - Expand Editions & Sources and confirm source labels plus technical links remain available.
+  - Navigate Album Detail -> Results -> Search and confirm retained Search fields can be edited or cleared.
+- Known deferred items:
+  - Producer Search real-data implementation.
+  - React/shared search parity for the iOS artist-MBID and Studio Albums quality improvements.
+  - Canonical studio-discography semantics beyond current MusicBrainz filtering.
+  - Per-work/per-recording fallback requests.
+  - Recording places/studios.
+  - Advanced credit compaction/dedupe.
+  - Wikipedia summary text.
+  - Persistent/recent searches.
+- Next planned lane: diagnose and implement real Producer Search in small, bounded slices.
+- Later, not now: port the iOS album-search quality improvements back into shared/web search behavior.
+
 ## Search Behavior Contract
 - Artist Name is required.
 - Album Name is optional.
