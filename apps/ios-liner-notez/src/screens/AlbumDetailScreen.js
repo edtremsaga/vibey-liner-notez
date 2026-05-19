@@ -262,15 +262,6 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
   const tracklistSummary = hasTracks
     ? `${album.tracks.length} ${album.tracks.length === 1 ? 'track' : 'tracks'}`
     : null
-  const creditsSummary = hasCreditHighlights
-    ? 'Credit highlights available'
-    : hasAlbumCredits && hasTrackCreditDetails
-      ? 'Album and track credits'
-      : hasAlbumCredits
-        ? 'Album credits available'
-        : hasTrackCreditDetails
-          ? `${tracksWithCreditDetails.length} ${tracksWithCreditDetails.length === 1 ? 'track' : 'tracks'} with credits`
-          : null
   const editionsSourcesSummary = selectedEdition && hasSources
     ? 'Selected edition and sources'
     : hasEditions
@@ -612,9 +603,6 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
             >
               <View style={{ flex: 1 }}>
                 <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Credits</Text>
-                {!!creditsSummary && (
-                  <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>{creditsSummary}</Text>
-                )}
               </View>
               <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showCredits ? '▾' : '▸'}</Text>
             </TouchableOpacity>
