@@ -724,8 +724,12 @@ if (!musicBrainzAlbumDetailSource.includes('fetchMusicBrainzSelectedReleaseTrack
 if (!musicBrainzAlbumDetailSource.includes('/release/${selectedReleaseId}?')) {
   throw new Error('iOS MusicBrainz album detail service does not fetch selected-release tracklist')
 }
-if (!musicBrainzAlbumDetailSource.includes('recordings+artist-credits+recording-level-rels+release-rels+labels+artist-rels')) {
-  throw new Error('iOS MusicBrainz album detail service does not use React-parity selected-release includes')
+if (
+  !musicBrainzAlbumDetailSource.includes('recordings+artist-credits+recording-level-rels+work-rels+work-level-rels+release-rels+labels+artist-rels') ||
+  !musicBrainzAlbumDetailSource.includes("relation?.['target-type'] !== 'work'") ||
+  !musicBrainzAlbumDetailSource.includes('relation?.work?.relations')
+) {
+  throw new Error('iOS MusicBrainz album detail service does not include work-level songwriting relations on the selected-release request')
 }
 if (!musicBrainzAlbumDetailSource.includes('parseTrackPosition') || !musicBrainzAlbumDetailSource.includes('${medium.position}-${track.number}')) {
   throw new Error('iOS MusicBrainz album detail service does not preserve React multi-disc track positions')
@@ -735,12 +739,14 @@ if (!musicBrainzAlbumDetailSource.includes('extractTrackCredits') || !musicBrain
 }
 if (
   !musicBrainzAlbumDetailSource.includes('function extractSongwriting') ||
-  !musicBrainzAlbumDetailSource.includes('writers: writers.length > 0 ? writers : null') ||
-  !musicBrainzAlbumDetailSource.includes('composers: composers.length > 0 ? composers : null') ||
-  !musicBrainzAlbumDetailSource.includes('lyricists: lyricists.length > 0 ? lyricists : null') ||
+  !musicBrainzAlbumDetailSource.includes('const writers = new Set()') ||
+  !musicBrainzAlbumDetailSource.includes('function addSongwritingRelation') ||
+  !musicBrainzAlbumDetailSource.includes('writers: writers.size > 0 ? Array.from(writers) : null') ||
+  !musicBrainzAlbumDetailSource.includes('composers: composers.size > 0 ? Array.from(composers) : null') ||
+  !musicBrainzAlbumDetailSource.includes('lyricists: lyricists.size > 0 ? Array.from(lyricists) : null') ||
   !musicBrainzAlbumDetailSource.includes('songwriting: extractSongwriting(recording)')
 ) {
-  throw new Error('iOS MusicBrainz album detail service does not extract selected-release songwriting from recording relations')
+  throw new Error('iOS MusicBrainz album detail service does not extract and dedupe selected-release songwriting')
 }
 if (
   !musicBrainzAlbumDetailSource.includes('function extractPublishing') ||

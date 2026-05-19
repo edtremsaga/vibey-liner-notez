@@ -117,38 +117,51 @@ function extractTrackCredits(recording) {
 
 function extractSongwriting(recording) {
   const relations = Array.isArray(recording?.relations) ? recording.relations : []
-  const writers = []
-  const composers = []
-  const lyricists = []
+  const writers = new Set()
+  const composers = new Set()
+  const lyricists = new Set()
 
-  for (const relation of relations) {
+  function addSongwritingRelation(relation) {
     if (relation?.['target-type'] !== 'artist') {
-      continue
+      return
     }
 
     const role = (relation.type || '').toLowerCase()
     const personName = relation.artist?.name || relation['target-credit'] || null
     if (!personName) {
-      continue
+      return
     }
 
     if (role.includes('lyricist')) {
-      lyricists.push(personName)
+      lyricists.add(personName)
     } else if (role.includes('composer')) {
-      composers.push(personName)
+      composers.add(personName)
     } else if (role.includes('writer') || role.includes('songwriter')) {
-      writers.push(personName)
+      writers.add(personName)
     }
   }
 
-  if (writers.length === 0 && composers.length === 0 && lyricists.length === 0) {
+  for (const relation of relations) {
+    addSongwritingRelation(relation)
+
+    if (relation?.['target-type'] !== 'work') {
+      continue
+    }
+
+    const workRelations = Array.isArray(relation?.work?.relations) ? relation.work.relations : []
+    for (const workRelation of workRelations) {
+      addSongwritingRelation(workRelation)
+    }
+  }
+
+  if (writers.size === 0 && composers.size === 0 && lyricists.size === 0) {
     return null
   }
 
   return {
-    writers: writers.length > 0 ? writers : null,
-    composers: composers.length > 0 ? composers : null,
-    lyricists: lyricists.length > 0 ? lyricists : null
+    writers: writers.size > 0 ? Array.from(writers) : null,
+    composers: composers.size > 0 ? Array.from(composers) : null,
+    lyricists: lyricists.size > 0 ? Array.from(lyricists) : null
   }
 }
 
@@ -437,7 +450,7 @@ export async function fetchMusicBrainzSelectedReleaseTracklist(selectedReleaseId
   }
 
   const params = new URLSearchParams({
-    inc: 'recordings+artist-credits+recording-level-rels+release-rels+labels+artist-rels',
+    inc: 'recordings+artist-credits+recording-level-rels+work-rels+work-level-rels+release-rels+labels+artist-rels',
     fmt: 'json'
   })
   const url = `${MUSICBRAINZ_API_BASE}/release/${selectedReleaseId}?${params.toString()}`

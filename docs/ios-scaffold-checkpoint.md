@@ -125,12 +125,12 @@
 - Album-level credits render as a collapsed `Album` disclosure row and use the same credit grouping labels as track credits when expanded.
 - Credit Highlights are derived in the iOS UI from already-loaded album credits, track credits, songwriting, and publishing; they do not add MusicBrainz requests or schema fields.
 - Credit Highlights show contributor names, roles, and track counts when the contributor came from track-level data.
-- iOS extracts selected-release songwriting from already-fetched recording relations:
+- iOS extracts selected-release songwriting from already-fetched recording relations and nested work-level relations:
   - `writers`
   - `composers`
   - `lyricists`
 - Songwriting appears inside expanded track credit rows before the general credit groups.
-- No additional MusicBrainz request is used for selected-release songwriting.
+- Work-level songwriting uses `work-rels` and `work-level-rels` on the existing selected-release request; no per-track or per-work MusicBrainz requests are used.
 - iOS extracts selected-release publishing from already-fetched recording relations:
   - label-target relations whose type includes `publisher`
   - `publishing.publishers`
