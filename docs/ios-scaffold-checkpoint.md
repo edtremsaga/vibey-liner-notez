@@ -33,6 +33,8 @@
 - Album-only search is not supported.
 - SearchScreen is now the real artist-first search entry point; the old mock album preview card has been removed.
 - SearchScreen root copy now states the product promise around albums, credits, tracklists, editions, sources, and liner images while keeping the same artist-first behavior.
+- SearchScreen keeps Artist name, Album title, and Release Type in session-only app state so users can return from Results or Album Detail and adjust a search without retyping.
+- SearchScreen has per-field clear controls for Artist name and Album title; clearing Album title restores the artist-only Release Type control.
 - Search and Results copy/layout have been polished to better match the Album Detail experience without changing search behavior or data fetching.
 - The prototype-style persistent top tab bar has been replaced with contextual navigation: Search is the root screen, Results and Album Detail are reached through the album lookup flow, and Producer Search / Help remain secondary actions from Search.
 - Non-root screens keep primary back navigation near the top so Results, Album Detail, Producer Search, and Help / Data Sources do not require scrolling to navigate back.

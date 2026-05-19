@@ -80,10 +80,37 @@ if (
 ) {
   throw new Error('App.js does not expose contextual navigation actions from Search')
 }
+if (
+  !appSource.includes("const [searchFormArtistName, setSearchFormArtistName] = useState('')") ||
+  !appSource.includes("const [searchFormAlbumTitle, setSearchFormAlbumTitle] = useState('')") ||
+  !appSource.includes("const [searchFormReleaseType, setSearchFormReleaseType] = useState('Album')") ||
+  !appSource.includes('searchFormArtistName={searchFormArtistName}') ||
+  !appSource.includes('searchFormAlbumTitle={searchFormAlbumTitle}') ||
+  !appSource.includes('searchFormReleaseType={searchFormReleaseType}')
+) {
+  throw new Error('App.js does not retain Search form values in session state')
+}
+if (
+  !appSource.includes('setSearchFormArtistName(artistName)') ||
+  !appSource.includes('setSearchFormAlbumTitle(albumTitle)') ||
+  !appSource.includes('setSearchFormReleaseType(releaseType)')
+) {
+  throw new Error('App.js does not sync submitted Search values back to the retained form')
+}
+if (appSource.includes('AsyncStorage') || appSource.includes('localStorage')) {
+  throw new Error('Search form retention must remain session-only and not use persistent storage')
+}
 
 const searchScreenSource = readFileSync(path.join(appRoot, 'src/screens/SearchScreen.js'), 'utf8')
 if (!searchScreenSource.includes('ScrollView') || !searchScreenSource.includes('contentContainerStyle')) {
   throw new Error('SearchScreen is not scrollable for expanded release-type content')
+}
+if (
+  searchScreenSource.includes("const [artistInput, setArtistInput] = useState('')") ||
+  searchScreenSource.includes("const [albumInput, setAlbumInput] = useState('')") ||
+  searchScreenSource.includes("const [releaseType, setReleaseType] = useState('Album')")
+) {
+  throw new Error('SearchScreen still owns reset-prone local input state')
 }
 if (searchScreenSource.includes('getMockAlbums') || searchScreenSource.includes('Mock album preview')) {
   throw new Error('SearchScreen still includes mock album preview content')
@@ -93,6 +120,16 @@ if (!searchScreenSource.includes('Artist search input')) {
 }
 if (!searchScreenSource.includes('Album search input')) {
   throw new Error('SearchScreen does not include optional album search input marker')
+}
+if (
+  !searchScreenSource.includes('Clear artist name') ||
+  !searchScreenSource.includes('Clear album title') ||
+  !searchScreenSource.includes('onArtistInputChange') ||
+  !searchScreenSource.includes('onAlbumInputChange') ||
+  !searchScreenSource.includes("onAlbumInputChange('')") ||
+  !searchScreenSource.includes("onArtistInputChange('')")
+) {
+  throw new Error('SearchScreen does not include per-field accessible clear controls')
 }
 if (!searchScreenSource.includes('Explore Album Liner Notes') || !searchScreenSource.includes('Find Albums')) {
   throw new Error('SearchScreen does not include polished album search heading/action')
@@ -131,6 +168,9 @@ if (
   !searchScreenSource.includes("{showReleaseTypes ? '▾' : '▸'}")
 ) {
   throw new Error('SearchScreen release type control does not use chevron disclosure behavior')
+}
+if (!searchScreenSource.includes('onReleaseTypeChange(type.value)')) {
+  throw new Error('SearchScreen does not update retained release type form state')
 }
 if (!searchScreenSource.includes("value: 'Album', label: 'Studio Albums'")) {
   throw new Error('SearchScreen does not default release type to Studio Albums')

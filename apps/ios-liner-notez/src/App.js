@@ -85,6 +85,12 @@ function ScreenRouter({
   onBackToAlbumSource,
   onOpenProducerSearch,
   onOpenHelpDataSources,
+  onSearchFormAlbumTitleChange,
+  onSearchFormArtistNameChange,
+  onSearchFormReleaseTypeChange,
+  searchFormAlbumTitle,
+  searchFormArtistName,
+  searchFormReleaseType,
   detailReturnRoute
 }) {
   const selectedAlbum = selectedAlbumResult
@@ -125,9 +131,15 @@ function ScreenRouter({
     default:
       return (
         <SearchScreen
+          albumInput={searchFormAlbumTitle}
+          artistInput={searchFormArtistName}
           onOpenHelpDataSources={onOpenHelpDataSources}
           onOpenProducerSearch={onOpenProducerSearch}
+          onAlbumInputChange={onSearchFormAlbumTitleChange}
+          onArtistInputChange={onSearchFormArtistNameChange}
+          onReleaseTypeChange={onSearchFormReleaseTypeChange}
           onSubmitArtistSearch={onSubmitArtistSearch}
+          releaseType={searchFormReleaseType}
         />
       )
   }
@@ -135,6 +147,9 @@ function ScreenRouter({
 
 export default function App() {
   const [route, setRoute] = useState('Search')
+  const [searchFormArtistName, setSearchFormArtistName] = useState('')
+  const [searchFormAlbumTitle, setSearchFormAlbumTitle] = useState('')
+  const [searchFormReleaseType, setSearchFormReleaseType] = useState('Album')
   const [albumSearchResults, setAlbumSearchResults] = useState([])
   const [albumSearchAlbumTitle, setAlbumSearchAlbumTitle] = useState('')
   const [albumSearchArtistName, setAlbumSearchArtistName] = useState('')
@@ -268,6 +283,9 @@ export default function App() {
   }, [selectedAlbumId, selectedAlbumResult])
 
   async function handleSubmitArtistSearch({ artistName, albumTitle, releaseType }) {
+    setSearchFormArtistName(artistName)
+    setSearchFormAlbumTitle(albumTitle)
+    setSearchFormReleaseType(releaseType)
     setAlbumSearchArtistName(artistName)
     setAlbumSearchAlbumTitle(albumTitle)
     setAlbumSearchReleaseType(releaseType)
@@ -355,6 +373,12 @@ export default function App() {
           onBackToAlbumSource={handleBackToAlbumSource}
           onOpenProducerSearch={handleOpenProducerSearch}
           onOpenHelpDataSources={handleOpenHelpDataSources}
+          onSearchFormAlbumTitleChange={setSearchFormAlbumTitle}
+          onSearchFormArtistNameChange={setSearchFormArtistName}
+          onSearchFormReleaseTypeChange={setSearchFormReleaseType}
+          searchFormAlbumTitle={searchFormAlbumTitle}
+          searchFormArtistName={searchFormArtistName}
+          searchFormReleaseType={searchFormReleaseType}
           detailReturnRoute={detailReturnRoute}
         />
       </View>

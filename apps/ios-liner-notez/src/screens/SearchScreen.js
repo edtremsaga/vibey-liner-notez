@@ -10,14 +10,35 @@ const RELEASE_TYPES = [
   { value: 'Soundtrack', label: 'Soundtracks' }
 ]
 
-export function SearchScreen({ onOpenHelpDataSources, onOpenProducerSearch, onSubmitArtistSearch }) {
-  const [artistInput, setArtistInput] = useState('')
-  const [albumInput, setAlbumInput] = useState('')
-  const [releaseType, setReleaseType] = useState('Album')
+export function SearchScreen({
+  albumInput = '',
+  artistInput = '',
+  onAlbumInputChange,
+  onArtistInputChange,
+  onOpenHelpDataSources,
+  onOpenProducerSearch,
+  onReleaseTypeChange,
+  onSubmitArtistSearch,
+  releaseType = 'Album'
+}) {
   const [showReleaseTypes, setShowReleaseTypes] = useState(false)
   const [validationMessage, setValidationMessage] = useState('')
   const selectedReleaseType = RELEASE_TYPES.find((type) => type.value === releaseType) ?? RELEASE_TYPES[0]
   const showReleaseTypeSelector = !albumInput.trim()
+
+  function handleClearArtist() {
+    onArtistInputChange('')
+    if (validationMessage) {
+      setValidationMessage('')
+    }
+  }
+
+  function handleClearAlbum() {
+    onAlbumInputChange('')
+    if (validationMessage) {
+      setValidationMessage('')
+    }
+  }
 
   function handleSearchPress() {
     const trimmedArtist = artistInput.trim()
@@ -44,53 +65,95 @@ export function SearchScreen({ onOpenHelpDataSources, onOpenProducerSearch, onSu
       </Text>
 
       <Text style={{ color: '#d1d5db', marginTop: 16, marginBottom: 6 }}>Artist name</Text>
-      <TextInput
-        accessibilityLabel="Artist search input"
-        autoCapitalize="words"
-        onChangeText={(value) => {
-          setArtistInput(value)
-          if (validationMessage) {
-            setValidationMessage('')
-          }
-        }}
-        placeholder="e.g. David Bowie"
-        placeholderTextColor="#6b7280"
-        style={{
-          borderWidth: 1,
-          borderColor: '#4b5563',
-          borderRadius: 8,
-          paddingVertical: 10,
-          paddingHorizontal: 12,
-          color: '#f3f4f6'
-        }}
-        value={artistInput}
-      />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <TextInput
+          accessibilityLabel="Artist search input"
+          autoCapitalize="words"
+          onChangeText={(value) => {
+            onArtistInputChange(value)
+            if (validationMessage) {
+              setValidationMessage('')
+            }
+          }}
+          placeholder="e.g. David Bowie"
+          placeholderTextColor="#6b7280"
+          style={{
+            borderWidth: 1,
+            borderColor: '#4b5563',
+            borderRadius: 8,
+            paddingVertical: 10,
+            paddingHorizontal: 12,
+            color: '#f3f4f6',
+            flex: 1
+          }}
+          value={artistInput}
+        />
+        {!!artistInput && (
+          <TouchableOpacity
+            accessibilityLabel="Clear artist name"
+            accessibilityRole="button"
+            onPress={handleClearArtist}
+            style={{
+              borderWidth: 1,
+              borderColor: '#374151',
+              borderRadius: 8,
+              minHeight: 42,
+              minWidth: 42,
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <Text style={{ color: '#9ca3af', fontSize: 18, fontWeight: '700' }}>×</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       <Text style={{ color: '#d1d5db', marginTop: 12, marginBottom: 6 }}>Album title (optional)</Text>
-      <TextInput
-        accessibilityLabel="Album search input"
-        autoCapitalize="words"
-        onChangeText={(value) => {
-          setAlbumInput(value)
-          if (value.trim()) {
-            setShowReleaseTypes(false)
-          }
-          if (validationMessage) {
-            setValidationMessage('')
-          }
-        }}
-        placeholder="e.g. Aladdin Sane (optional)"
-        placeholderTextColor="#6b7280"
-        style={{
-          borderWidth: 1,
-          borderColor: '#4b5563',
-          borderRadius: 8,
-          paddingVertical: 10,
-          paddingHorizontal: 12,
-          color: '#f3f4f6'
-        }}
-        value={albumInput}
-      />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <TextInput
+          accessibilityLabel="Album search input"
+          autoCapitalize="words"
+          onChangeText={(value) => {
+            onAlbumInputChange(value)
+            if (value.trim()) {
+              setShowReleaseTypes(false)
+            }
+            if (validationMessage) {
+              setValidationMessage('')
+            }
+          }}
+          placeholder="e.g. Aladdin Sane (optional)"
+          placeholderTextColor="#6b7280"
+          style={{
+            borderWidth: 1,
+            borderColor: '#4b5563',
+            borderRadius: 8,
+            paddingVertical: 10,
+            paddingHorizontal: 12,
+            color: '#f3f4f6',
+            flex: 1
+          }}
+          value={albumInput}
+        />
+        {!!albumInput && (
+          <TouchableOpacity
+            accessibilityLabel="Clear album title"
+            accessibilityRole="button"
+            onPress={handleClearAlbum}
+            style={{
+              borderWidth: 1,
+              borderColor: '#374151',
+              borderRadius: 8,
+              minHeight: 42,
+              minWidth: 42,
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <Text style={{ color: '#9ca3af', fontSize: 18, fontWeight: '700' }}>×</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       <Text style={{ color: '#6b7280', marginTop: 5, fontSize: 13 }}>
         Optional: narrow results to a specific album.
       </Text>
@@ -137,7 +200,7 @@ export function SearchScreen({ onOpenHelpDataSources, onOpenProducerSearch, onSu
                   accessibilityLabel={`Select ${type.label}`}
                   key={type.value}
                   onPress={() => {
-                    setReleaseType(type.value)
+                    onReleaseTypeChange(type.value)
                     setShowReleaseTypes(false)
                   }}
                   style={{
