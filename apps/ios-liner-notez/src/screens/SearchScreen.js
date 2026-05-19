@@ -38,9 +38,9 @@ export function SearchScreen({ onOpenHelpDataSources, onOpenProducerSearch, onSu
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator
     >
-      <Text style={{ color: '#e5e7eb', fontSize: 24, fontWeight: '700' }}>Find Albums</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 24, fontWeight: '700' }}>Explore Album Liner Notes</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Start with an artist. Add an album title when you want to narrow the match.
+        Search by artist to browse albums, credits, tracklists, editions, sources, and liner images.
       </Text>
 
       <Text style={{ color: '#d1d5db', marginTop: 16, marginBottom: 6 }}>Artist name</Text>
@@ -91,6 +91,9 @@ export function SearchScreen({ onOpenHelpDataSources, onOpenProducerSearch, onSu
         }}
         value={albumInput}
       />
+      <Text style={{ color: '#6b7280', marginTop: 5, fontSize: 13 }}>
+        Optional: narrow results to a specific album.
+      </Text>
 
       {showReleaseTypeSelector && (
         <View>
@@ -113,6 +116,9 @@ export function SearchScreen({ onOpenHelpDataSources, onOpenProducerSearch, onSu
             <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>{selectedReleaseType.label}</Text>
             <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showReleaseTypes ? '▾' : '▸'}</Text>
           </TouchableOpacity>
+          <Text style={{ color: '#6b7280', marginTop: 5, fontSize: 13 }}>
+            Used when browsing an artist's albums.
+          </Text>
 
           {showReleaseTypes && (
             <View
@@ -178,7 +184,7 @@ export function SearchScreen({ onOpenHelpDataSources, onOpenProducerSearch, onSu
           paddingTop: 14
         }}
       >
-        <Text style={{ color: '#9ca3af', marginBottom: 8 }}>More</Text>
+        <Text style={{ color: '#9ca3af', marginBottom: 8 }}>Other tools</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           <TouchableOpacity
             accessibilityRole="button"

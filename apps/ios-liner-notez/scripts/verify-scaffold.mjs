@@ -94,11 +94,20 @@ if (!searchScreenSource.includes('Artist search input')) {
 if (!searchScreenSource.includes('Album search input')) {
   throw new Error('SearchScreen does not include optional album search input marker')
 }
-if (!searchScreenSource.includes('Find Albums')) {
+if (!searchScreenSource.includes('Explore Album Liner Notes') || !searchScreenSource.includes('Find Albums')) {
   throw new Error('SearchScreen does not include polished album search heading/action')
 }
-if (!searchScreenSource.includes('Start with an artist. Add an album title when you want to narrow the match.')) {
+if (!searchScreenSource.includes('Search by artist to browse albums, credits, tracklists, editions, sources, and liner images.')) {
   throw new Error('SearchScreen does not include user-facing artist-first helper copy')
+}
+if (!searchScreenSource.includes('Optional: narrow results to a specific album.')) {
+  throw new Error('SearchScreen does not include optional album helper copy')
+}
+if (!searchScreenSource.includes("Used when browsing an artist's albums.")) {
+  throw new Error('SearchScreen does not explain artist-only release type behavior')
+}
+if (!searchScreenSource.includes('Other tools')) {
+  throw new Error('SearchScreen does not use polished secondary tools label')
 }
 if (
   !searchScreenSource.includes('onOpenProducerSearch') ||
