@@ -51,6 +51,7 @@
 - Album Detail section-level disclosure controls use chevrons consistently for Tracklist, Credits, and Editions & Sources.
 - Album Detail disclosure headers show compact summaries for Tracklist, Credits, and Editions & Sources so collapsed sections remain scannable.
 - Album Detail supports optional primary cover art and release-group artwork gallery images from Cover Art Archive.
+- Album Detail can show a source-backed Wikipedia album article link resolved from MusicBrainz release-group Wikidata relations.
 - Album Detail Editions & Sources now prioritizes human-readable selected-edition and source labels while keeping technical identifiers and links available for traceability.
 - Album Detail Editions & Sources defaults collapsed so the first detail view stays focused on the album, tracklist, and credit overview.
 - Album Detail Editions & Sources keeps Release-group editions and Technical links collapsed by default so the selected-edition view stays compact.
@@ -66,8 +67,8 @@
 
 ## Product Scope Status
 - Read-only MusicBrainz Search -> Results is active for artist-first album results with release-type filtering for artist-only searches.
-- Album Detail real-data scope now includes selected-result header data, release-group basic enrichment from MusicBrainz, primary cover art and release-group artwork gallery images from Cover Art Archive, selected-release edition metadata, the selected-release tracklist, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing.
-- Album Detail opens immediately from selected Results row data, then fetches release-group basic info, optional cover art/gallery images, selected-release edition metadata, selected-release tracklist data, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing in the background.
+- Album Detail real-data scope now includes selected-result header data, release-group basic enrichment from MusicBrainz, source-backed Wikipedia album links, primary cover art and release-group artwork gallery images from Cover Art Archive, selected-release edition metadata, the selected-release tracklist, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing.
+- Album Detail opens immediately from selected Results row data, then fetches release-group basic info, optional Wikipedia article links, optional cover art/gallery images, selected-release edition metadata, selected-release tracklist data, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing in the background.
 - Producer Search remains mock-only; no producer traversal is implemented yet.
 - This does not mean the iOS app is production-ready; several real-data and polish areas remain deferred.
 
@@ -101,7 +102,7 @@
 - Later, consider promoting the same artist-identity search semantics into the React web app so iOS and web remain aligned.
 
 ## Album Detail Real-Data Path
-- Current live path: Search -> Results -> Album Detail header -> release-group enrichment -> primary cover art/artwork gallery -> selected-release edition metadata -> selected-release tracklist -> selected-release album-level credits -> selected-release track credits -> selected-release songwriting -> selected-release publishing.
+- Current live path: Search -> Results -> Album Detail header -> release-group enrichment -> Wikipedia article link -> primary cover art/artwork gallery -> selected-release edition metadata -> selected-release tracklist -> selected-release album-level credits -> selected-release track credits -> selected-release songwriting -> selected-release publishing.
 - The selected-release tracklist milestone is `b13a7f1` Add iOS selected release tracklist.
 - The selected-release album-level credits milestone is `736c51b` Add iOS album-level credits.
 - The selected-release track credits milestone is `6a0a7bf` Add iOS selected release track credits.
@@ -143,6 +144,8 @@
 - Album Detail shows `Album Art & Liner Images` thumbnails with product-facing copy and an image-count/full-screen cue when gallery images are available.
 - Tapping primary cover art or an Album Art & Liner Images thumbnail opens a full-screen viewer with close, swipe paging, image count, type labels, and iOS ScrollView pinch zoom/pan.
 - Gallery data is iOS-local for now; the shared album schema still only defines `coverArtUrl`.
+- Wikipedia album links are resolved through MusicBrainz release-group `url-rels` -> Wikidata QID -> English Wikipedia sitelink.
+- Wikipedia links are optional/non-blocking, do not fetch summary text, and are not guessed from artist/title strings.
 - Selected edition metadata uses the already-fetched selected-release response and adds label, catalog number, barcode, format, and packaging when available.
 - No additional MusicBrainz request is used for selected edition metadata.
 - All-editions enrichment remains deferred.

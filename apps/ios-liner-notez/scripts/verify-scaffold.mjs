@@ -638,7 +638,11 @@ if (
 if (
   !albumDetailScreenSource.includes('MusicBrainz release group') ||
   !albumDetailScreenSource.includes('MusicBrainz selected release') ||
-  !albumDetailScreenSource.includes('Cover Art Archive')
+  !albumDetailScreenSource.includes('Cover Art Archive') ||
+  !albumDetailScreenSource.includes('Wikipedia article') ||
+  !albumDetailScreenSource.includes('Read album article on Wikipedia') ||
+  !albumDetailScreenSource.includes('Linking.openURL(album.wikipediaArticle.url)') ||
+  !albumDetailScreenSource.includes('externalLinks.wikidataUrl')
 ) {
   throw new Error('AlbumDetailScreen does not include external link labels in Editions & Sources')
 }
@@ -702,6 +706,18 @@ if (!musicBrainzAlbumDetailSource.includes('/release-group/${releaseGroupId}?'))
 }
 if (!musicBrainzAlbumDetailSource.includes('releases+artist-credits+release-group-rels+artist-rels+url-rels')) {
   throw new Error('iOS MusicBrainz album detail service does not use React-parity release-group includes')
+}
+if (
+  !musicBrainzAlbumDetailSource.includes('function extractWikidataUrl') ||
+  !musicBrainzAlbumDetailSource.includes("releaseGroup?.['url-rels']") ||
+  !musicBrainzAlbumDetailSource.includes('function extractWikidataId') ||
+  !musicBrainzAlbumDetailSource.includes('fetchWikipediaArticleFromWikidataUrl') ||
+  !musicBrainzAlbumDetailSource.includes("action: 'wbgetentities'") ||
+  !musicBrainzAlbumDetailSource.includes('sitelinks?.enwiki') ||
+  musicBrainzAlbumDetailSource.includes('artistName}/') ||
+  musicBrainzAlbumDetailSource.includes('albumTitle}/')
+) {
+  throw new Error('iOS MusicBrainz album detail service does not resolve Wikipedia links through MusicBrainz/Wikidata sitelinks')
 }
 if (!musicBrainzAlbumDetailSource.includes("release?.status === 'Official'") || !musicBrainzAlbumDetailSource.includes('dateA.localeCompare(dateB)')) {
   throw new Error('iOS MusicBrainz album detail service does not choose selected release like React basic info')
@@ -828,6 +844,14 @@ if (
   !appSource.includes('Gallery art is optional and should not block Album Detail.')
 ) {
   throw new Error('App router does not fetch and merge optional artwork gallery images for Album Detail')
+}
+if (
+  !appSource.includes('fetchWikipediaArticleFromWikidataUrl') ||
+  !appSource.includes('wikipediaArticle') ||
+  !appSource.includes("sourceName: 'Wikipedia'") ||
+  !appSource.includes('Wikipedia links are optional and should not block Album Detail.')
+) {
+  throw new Error('App router does not fetch and merge optional Wikipedia article links for Album Detail')
 }
 for (const deferredDetailMarker of ['trackCreditsMap', 'fetchAlbumCredits', 'fetchRelease(candidate', 'fetchRelease(releaseInfo']) {
   if (musicBrainzAlbumDetailSource.includes(deferredDetailMarker)) {

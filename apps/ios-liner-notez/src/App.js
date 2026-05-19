@@ -10,7 +10,8 @@ import {
   fetchMusicBrainzAlbumBasicInfo,
   fetchMusicBrainzArtworkGallery,
   fetchMusicBrainzPrimaryCoverArt,
-  fetchMusicBrainzSelectedReleaseTracklist
+  fetchMusicBrainzSelectedReleaseTracklist,
+  fetchWikipediaArticleFromWikidataUrl
 } from './services/musicbrainzAlbumDetail'
 import { searchMusicBrainzAlbumsByArtist } from './services/musicbrainzAlbumSearch'
 
@@ -39,6 +40,7 @@ function buildAlbumDetailFromResult(albumId, albumResult, enrichedDetail = null)
     albumType: 'album',
     coverArtUrl: enrichedDetail?.coverArtUrl ?? null,
     artworkImages: enrichedDetail?.artworkImages ?? [],
+    wikipediaArticle: enrichedDetail?.wikipediaArticle ?? null,
     editions: enrichedDetail?.editions ?? [],
     tracks: enrichedDetail?.tracks ?? [],
     credits: enrichedDetail?.credits ?? {
@@ -241,6 +243,37 @@ export default function App() {
           .catch(() => {
             // Gallery art is optional and should not block Album Detail.
           })
+
+        if (detail.externalLinks?.wikidataUrl) {
+          fetchWikipediaArticleFromWikidataUrl(detail.externalLinks.wikidataUrl)
+            .then((wikipediaArticle) => {
+              if (!isCurrent || !wikipediaArticle?.url) {
+                return
+              }
+
+              setSelectedAlbumDetail((currentDetail) => {
+                const currentSources = currentDetail?.sources ?? detail.sources ?? []
+                const hasWikipediaSource = currentSources.some((source) => source?.sourceName === 'Wikipedia')
+
+                return {
+                  ...(currentDetail ?? detail),
+                  wikipediaArticle,
+                  sources: hasWikipediaSource
+                    ? currentSources
+                    : [
+                        ...currentSources,
+                        {
+                          sourceName: 'Wikipedia',
+                          license: 'CC BY-SA'
+                        }
+                      ]
+                }
+              })
+            })
+            .catch(() => {
+              // Wikipedia links are optional and should not block Album Detail.
+            })
+        }
 
         if (!detail?.selectedReleaseId) {
           return

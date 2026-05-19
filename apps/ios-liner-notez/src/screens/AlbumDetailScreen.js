@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Image, Modal, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import { Image, Linking, Modal, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 
 function formatDuration(durationMs) {
   if (!durationMs || Number.isNaN(durationMs)) {
@@ -226,6 +226,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
   const editionRows = hasEditions ? album.editions.slice(0, 8) : []
   const externalLinks = hasAlbum && album.externalLinks ? album.externalLinks : {}
   const externalLinkRows = [
+    ['Wikipedia article', album?.wikipediaArticle?.url],
     ['MusicBrainz release group', externalLinks.musicbrainzReleaseGroupUrl],
     ['MusicBrainz selected release', externalLinks.musicbrainzSelectedReleaseUrl],
     ['Cover Art Archive', album?.coverArtUrl],
@@ -870,6 +871,18 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                         {source.sourceName}
                       </Text>
                     ))}
+                    {album?.wikipediaArticle?.url ? (
+                      <TouchableOpacity
+                        accessibilityRole="link"
+                        accessibilityLabel="Read album article on Wikipedia"
+                        onPress={() => Linking.openURL(album.wikipediaArticle.url)}
+                        style={{ marginTop: 8 }}
+                      >
+                        <Text style={{ color: '#93c5fd', fontSize: 14, fontWeight: '600' }}>
+                          Read album article on Wikipedia
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null}
                   </View>
                 ) : (
                   <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>Source attribution unavailable</Text>

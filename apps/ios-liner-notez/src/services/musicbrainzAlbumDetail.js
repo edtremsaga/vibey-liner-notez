@@ -23,6 +23,41 @@ function getReleaseYear(firstReleaseDate) {
   return Number.isNaN(releaseYear) ? null : releaseYear
 }
 
+function extractWikidataUrl(releaseGroup) {
+  const urlRelations = Array.isArray(releaseGroup?.['url-rels']) ? releaseGroup['url-rels'] : []
+  const relations = Array.isArray(releaseGroup?.relations) ? releaseGroup.relations : []
+
+  for (const relation of [...urlRelations, ...relations]) {
+    const url = relation?.url?.resource || relation?.url || null
+    if (!url) {
+      continue
+    }
+
+    if (relation?.type === 'wikidata' || url.includes('wikidata.org')) {
+      return url
+    }
+  }
+
+  return null
+}
+
+function extractWikidataId(wikidataUrl) {
+  if (!wikidataUrl) {
+    return null
+  }
+
+  const match = wikidataUrl.match(/\/(Q\d+)(?:$|[/?#])/)
+  return match ? match[1] : null
+}
+
+function buildWikipediaUrlFromSitelinkTitle(title) {
+  if (!title) {
+    return null
+  }
+
+  return `https://en.wikipedia.org/wiki/${encodeURIComponent(title).replace(/%20/g, '_')}`
+}
+
 function sortReleasesForSelectedRelease(releases) {
   const sorted = [...releases].sort((a, b) => {
     const dateA = a?.date || '9999'
@@ -431,6 +466,7 @@ export async function fetchMusicBrainzAlbumBasicInfo(releaseGroupId) {
   ].map(mapReleaseToEdition).filter((edition) => edition.editionId)
   const firstReleaseDate = releaseGroup?.['first-release-date'] ?? null
   const retrievedAt = new Date().toISOString()
+  const wikidataUrl = extractWikidataUrl(releaseGroup)
 
   return {
     albumId: releaseGroup?.id ?? releaseGroupId,
@@ -444,7 +480,7 @@ export async function fetchMusicBrainzAlbumBasicInfo(releaseGroupId) {
     externalLinks: {
       musicbrainzReleaseGroupUrl: `https://musicbrainz.org/release-group/${releaseGroup?.id ?? releaseGroupId}`,
       musicbrainzSelectedReleaseUrl: selectedReleaseId ? `https://musicbrainz.org/release/${selectedReleaseId}` : null,
-      wikidataUrl: null,
+      wikidataUrl,
       discogsUrl: null
     },
     sources: [
@@ -454,6 +490,46 @@ export async function fetchMusicBrainzAlbumBasicInfo(releaseGroupId) {
         retrievedAt
       }
     ]
+  }
+}
+
+export async function fetchWikipediaArticleFromWikidataUrl(wikidataUrl) {
+  const wikidataId = extractWikidataId(wikidataUrl)
+  if (!wikidataId) {
+    return null
+  }
+
+  const params = new URLSearchParams({
+    action: 'wbgetentities',
+    ids: wikidataId,
+    props: 'sitelinks',
+    format: 'json',
+    origin: '*'
+  })
+  const url = `https://www.wikidata.org/w/api.php?${params.toString()}`
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': MUSICBRAINZ_USER_AGENT
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error(`Wikidata sitelink lookup failed: ${response.status} ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  const sitelink = data?.entities?.[wikidataId]?.sitelinks?.enwiki
+  const title = sitelink?.title ?? null
+  const articleUrl = sitelink?.url ?? buildWikipediaUrlFromSitelinkTitle(title)
+
+  if (!title || !articleUrl) {
+    return null
+  }
+
+  return {
+    title,
+    url: articleUrl
   }
 }
 
