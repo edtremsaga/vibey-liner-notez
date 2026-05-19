@@ -26,26 +26,38 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Help / Data Sources</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Liner Notez uses read-only MusicBrainz artist-first album search and can enrich Album Detail with release-group information, selected-release credits, and optional cover art and artwork gallery images. Producer Search is not connected to real data yet.
+        Liner Notez helps explore albums, tracklists, credits, editions, sources, liner images, and album context from source-backed music data.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Current app scope</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Search and Results can display albums by a required artist, with an optional album title to narrow results. Release Type filters artist-only searches.
+        Search and Results use read-only MusicBrainz artist-first album search. Artist name is required, Album title can narrow results, and Release Type filters artist-only searches. The album workflow is the main polished path; Producer Search remains separate and future-oriented.
       </Text>
-
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Not implemented yet</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        All-editions metadata enrichment, recording places/studios, and producer traversal are not loaded yet.
+        Search resolves confident MusicBrainz artist identities, can filter Studio Albums, can sort loaded Results by Oldest first or Newest first, and keeps Search fields editable during the current app session.
       </Text>
 
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Data sources</Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>MusicBrainz</Text>
-      <Text style={{ color: '#9ca3af', marginTop: 4 }}>Cover Art Archive</Text>
-      <Text style={{ color: '#9ca3af', marginTop: 4 }}>Wikidata</Text>
-      <Text style={{ color: '#9ca3af', marginTop: 4 }}>Wikipedia</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>MusicBrainz</Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        MusicBrainz provides artist and release-group search, selected releases, tracklists, relationships, album and track credits, songwriting, instruments, publishing, edition details, and source links.
+      </Text>
 
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Data trust rule</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Cover Art Archive</Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Cover Art Archive provides album art, booklet pages, media images, tray images, back covers, and other release artwork when available.
+      </Text>
+
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Wikidata and Wikipedia</Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Wikidata is used only when MusicBrainz provides a Wikidata relation for the album release group. Wikipedia album article links are resolved from Wikidata sitelinks. Wikipedia URLs are not guessed from artist or title, and Wikipedia summary text is not fetched.
+      </Text>
+
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Data limitations</Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Credits depend on what MusicBrainz contributors have entered. Some albums may have sparse credits, missing artwork, or no Wikipedia link. MusicBrainz release groups can include regional or unusual official album entries, so missing or surprising data should be expected sometimes.
+      </Text>
+
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Trust rule</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         We do not invent credits. If data is missing, it should be shown as unavailable or not documented.
       </Text>

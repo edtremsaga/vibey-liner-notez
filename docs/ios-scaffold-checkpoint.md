@@ -61,7 +61,7 @@
 - Visible iOS app copy has been softened so the title reads `Liner Notez`, Album Detail uses user-facing helper text, and the main album card no longer shows the release-group MBID.
 - Search, Results, Album Detail, Producer Search, and Help / Data Sources have screen-owned vertical scrolling for smaller iPhones.
 - Album Detail scrolling works reliably after simulator restart.
-- Help / Data Sources shows mock-scope, planned sources, and trust-rule content.
+- Help / Data Sources reflects the current album workflow, source roles, Wikidata/Wikipedia behavior, data limitations, Producer Search scope, and trust rules.
 - Internal marker strings are removed from visible UI.
 - Outdated “Placeholder screen for album search flow” copy is removed.
 - `apps/ios-liner-notez/.expo/` is ignored as generated local Expo state.

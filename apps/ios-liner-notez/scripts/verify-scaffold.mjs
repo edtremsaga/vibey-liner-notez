@@ -319,22 +319,31 @@ if (!helpDataSourcesScreenSource.includes('onBackToSearch') || !helpDataSourcesS
 if (helpDataSourcesScreenSource.includes('Placeholder screen for help, attribution, and data-source disclosures.')) {
   throw new Error('HelpDataSourcesScreen still contains placeholder-only copy')
 }
-if (!helpDataSourcesScreenSource.includes('read-only MusicBrainz artist-first album search')) {
+if (
+  !helpDataSourcesScreenSource.includes('explore albums, tracklists, credits, editions, sources, liner images, and album context') ||
+  !helpDataSourcesScreenSource.includes('read-only MusicBrainz artist-first album search')
+) {
   throw new Error('HelpDataSourcesScreen does not disclose read-only MusicBrainz album search scope')
 }
-if (!helpDataSourcesScreenSource.includes('required artist')) {
+if (!helpDataSourcesScreenSource.includes('Artist name is required')) {
   throw new Error('HelpDataSourcesScreen does not explain required artist search scope')
 }
 if (!helpDataSourcesScreenSource.includes('Release Type filters artist-only searches.')) {
   throw new Error('HelpDataSourcesScreen does not explain release type search scope')
 }
-if (!helpDataSourcesScreenSource.includes('release-group information')) {
+if (
+  !helpDataSourcesScreenSource.includes('release-group search') ||
+  !helpDataSourcesScreenSource.includes('selected releases')
+) {
   throw new Error('HelpDataSourcesScreen does not disclose real release-group enrichment scope')
 }
-if (!helpDataSourcesScreenSource.includes('optional cover art and artwork gallery images')) {
+if (
+  !helpDataSourcesScreenSource.includes('album art, booklet pages, media images, tray images, back covers') ||
+  !helpDataSourcesScreenSource.includes('Cover Art Archive')
+) {
   throw new Error('HelpDataSourcesScreen does not disclose optional cover art gallery scope')
 }
-if (!helpDataSourcesScreenSource.includes('producer traversal are not loaded yet')) {
+if (!helpDataSourcesScreenSource.includes('Producer Search remains separate and future-oriented')) {
   throw new Error('HelpDataSourcesScreen does not include no-producer-traversal copy')
 }
 for (const source of ['MusicBrainz', 'Cover Art Archive', 'Wikidata', 'Wikipedia']) {
@@ -344,6 +353,22 @@ for (const source of ['MusicBrainz', 'Cover Art Archive', 'Wikidata', 'Wikipedia
 }
 if (!helpDataSourcesScreenSource.includes('We do not invent credits.')) {
   throw new Error('HelpDataSourcesScreen does not include no-invented-credits trust rule')
+}
+if (
+  !helpDataSourcesScreenSource.includes('Wikidata is used only when MusicBrainz provides a Wikidata relation') ||
+  !helpDataSourcesScreenSource.includes('Wikipedia album article links are resolved from Wikidata sitelinks') ||
+  !helpDataSourcesScreenSource.includes('Wikipedia URLs are not guessed from artist or title') ||
+  !helpDataSourcesScreenSource.includes('Wikipedia summary text is not fetched')
+) {
+  throw new Error('HelpDataSourcesScreen does not explain source-backed Wikidata/Wikipedia behavior')
+}
+if (
+  !helpDataSourcesScreenSource.includes('Credits depend on what MusicBrainz contributors have entered') ||
+  !helpDataSourcesScreenSource.includes('sparse credits') ||
+  !helpDataSourcesScreenSource.includes('missing artwork') ||
+  !helpDataSourcesScreenSource.includes('regional or unusual official album entries')
+) {
+  throw new Error('HelpDataSourcesScreen does not explain current source data limitations')
 }
 if (
   !helpDataSourcesScreenSource.includes('unavailable') ||
