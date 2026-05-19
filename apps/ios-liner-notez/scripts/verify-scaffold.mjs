@@ -778,6 +778,14 @@ if (!musicBrainzAlbumDetailSource.includes("role: instrument || 'Performer'")) {
   throw new Error('iOS MusicBrainz album detail service does not map recording artist-credit performer roles')
 }
 if (
+  !musicBrainzAlbumDetailSource.includes('Array.isArray(relation.attributes)') ||
+  !musicBrainzAlbumDetailSource.includes("role === 'instrument' && attributes.length > 0") ||
+  !musicBrainzAlbumDetailSource.includes('for (const instrument of attributes)') ||
+  !musicBrainzAlbumDetailSource.includes('role: instrument')
+) {
+  throw new Error('iOS MusicBrainz album detail service does not map recording instrument relation attributes')
+}
+if (
   !musicBrainzAlbumDetailSource.includes("lowerRole.includes('writer')") ||
   !musicBrainzAlbumDetailSource.includes("lowerRole.includes('composer')") ||
   !musicBrainzAlbumDetailSource.includes("lowerRole.includes('lyricist')")

@@ -104,6 +104,19 @@ function extractTrackCredits(recording) {
       continue
     }
 
+    const attributes = Array.isArray(relation.attributes) ? relation.attributes.filter(Boolean) : []
+    if (role === 'instrument' && attributes.length > 0) {
+      for (const instrument of attributes) {
+        credits.push({
+          personName,
+          role: instrument,
+          instrument: null,
+          notes: null
+        })
+      }
+      continue
+    }
+
     credits.push({
       personName,
       role,
