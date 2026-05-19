@@ -470,9 +470,12 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                 backgroundColor: '#181a1f'
               }}
             >
-              <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Artwork</Text>
+              <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Album Art & Liner Images</Text>
               <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>
-                Cover Art Archive images for this release group.
+                Browse cover, booklet, media, and other release images.
+              </Text>
+              <Text style={{ color: '#6b7280', marginTop: 4, fontSize: 13 }}>
+                {artworkImages.length} {artworkImages.length === 1 ? 'image' : 'images'} · Tap any image to view full screen.
               </Text>
               <ScrollView
                 horizontal

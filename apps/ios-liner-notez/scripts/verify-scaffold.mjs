@@ -433,7 +433,9 @@ if (
 }
 if (
   !albumDetailScreenSource.includes('Modal') ||
-  !albumDetailScreenSource.includes('Artwork') ||
+  !albumDetailScreenSource.includes('Album Art & Liner Images') ||
+  !albumDetailScreenSource.includes('Browse cover, booklet, media, and other release images.') ||
+  !albumDetailScreenSource.includes('Tap any image to view full screen.') ||
   !albumDetailScreenSource.includes('artworkImages.map') ||
   !albumDetailScreenSource.includes('openArtworkViewer') ||
   !albumDetailScreenSource.includes('pagingEnabled') ||

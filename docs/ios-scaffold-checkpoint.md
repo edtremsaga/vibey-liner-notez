@@ -136,8 +136,8 @@
 - iOS prefers selected-release cover art when available and falls back to release-group cover art.
 - Missing or failing cover art preserves the current no-art Album Detail layout silently.
 - Artwork gallery images use Cover Art Archive release-group JSON, are limited to 20 images, and are optional/non-blocking.
-- Album Detail shows Artwork thumbnails when gallery images are available.
-- Tapping primary cover art or an Artwork thumbnail opens a full-screen viewer with close, swipe paging, image count, type labels, and iOS ScrollView pinch zoom/pan.
+- Album Detail shows `Album Art & Liner Images` thumbnails with product-facing copy and an image-count/full-screen cue when gallery images are available.
+- Tapping primary cover art or an Album Art & Liner Images thumbnail opens a full-screen viewer with close, swipe paging, image count, type labels, and iOS ScrollView pinch zoom/pan.
 - Gallery data is iOS-local for now; the shared album schema still only defines `coverArtUrl`.
 - Selected edition metadata uses the already-fetched selected-release response and adds label, catalog number, barcode, format, and packaging when available.
 - No additional MusicBrainz request is used for selected edition metadata.
