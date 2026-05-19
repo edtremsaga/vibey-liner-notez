@@ -31,15 +31,21 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Current app scope</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Search and Results use read-only MusicBrainz artist-first album search. Artist name is required, Album title can narrow results, and Release Type filters artist-only searches. The album workflow is the main polished path; Producer Search remains separate and future-oriented.
+        Search and Results use read-only MusicBrainz artist-first album search. Artist name is required, and Album title can narrow results.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Search resolves confident MusicBrainz artist identities, can filter Studio Albums, can sort loaded Results by Oldest first or Newest first, and keeps Search fields editable during the current app session.
+        Release Type filters artist-only searches. Search can filter Studio Albums, sort loaded Results by Oldest first or Newest first, and keep Search fields editable during the current app session.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        The album workflow is the main polished path. Producer Search remains separate and future-oriented.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>MusicBrainz</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         MusicBrainz provides artist and release-group search, selected releases, tracklists, relationships, album and track credits, songwriting, instruments, publishing, edition details, and source links.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Search uses confident MusicBrainz artist matches when it can, then loads album results from MusicBrainz release groups.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Cover Art Archive</Text>
@@ -49,12 +55,18 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Wikidata and Wikipedia</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Wikidata is used only when MusicBrainz provides a Wikidata relation for the album release group. Wikipedia album article links are resolved from Wikidata sitelinks. Wikipedia URLs are not guessed from artist or title, and Wikipedia summary text is not fetched.
+        Wikidata is used only when MusicBrainz provides a Wikidata relation for the album release group.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Wikipedia album article links are resolved from Wikidata sitelinks. Wikipedia URLs are not guessed from artist or title, and Wikipedia summary text is not fetched.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Data limitations</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Credits depend on what MusicBrainz contributors have entered. Some albums may have sparse credits, missing artwork, or no Wikipedia link. MusicBrainz release groups can include regional or unusual official album entries, so missing or surprising data should be expected sometimes.
+        Credits depend on what MusicBrainz contributors have entered. Some albums may have sparse credits, missing artwork, or no Wikipedia link.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        MusicBrainz release groups can include regional or unusual official album entries, so missing or surprising data should be expected sometimes.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Trust rule</Text>
