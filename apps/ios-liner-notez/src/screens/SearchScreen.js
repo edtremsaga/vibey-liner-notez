@@ -65,7 +65,7 @@ export function SearchScreen({
       </Text>
 
       <Text style={{ color: '#d1d5db', marginTop: 16, marginBottom: 6 }}>Artist name</Text>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <View style={{ position: 'relative' }}>
         <TextInput
           accessibilityLabel="Artist search input"
           autoCapitalize="words"
@@ -83,8 +83,9 @@ export function SearchScreen({
             borderRadius: 8,
             paddingVertical: 10,
             paddingHorizontal: 12,
+            paddingRight: 44,
             color: '#f3f4f6',
-            flex: 1
+            width: '100%'
           }}
           value={artistInput}
         />
@@ -94,11 +95,11 @@ export function SearchScreen({
             accessibilityRole="button"
             onPress={handleClearArtist}
             style={{
-              borderWidth: 1,
-              borderColor: '#374151',
-              borderRadius: 8,
-              minHeight: 42,
-              minWidth: 42,
+              position: 'absolute',
+              right: 4,
+              top: 4,
+              bottom: 4,
+              width: 34,
               alignItems: 'center',
               justifyContent: 'center'
             }}
@@ -109,7 +110,7 @@ export function SearchScreen({
       </View>
 
       <Text style={{ color: '#d1d5db', marginTop: 12, marginBottom: 6 }}>Album title (optional)</Text>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <View style={{ position: 'relative' }}>
         <TextInput
           accessibilityLabel="Album search input"
           autoCapitalize="words"
@@ -130,8 +131,9 @@ export function SearchScreen({
             borderRadius: 8,
             paddingVertical: 10,
             paddingHorizontal: 12,
+            paddingRight: 44,
             color: '#f3f4f6',
-            flex: 1
+            width: '100%'
           }}
           value={albumInput}
         />
@@ -141,11 +143,11 @@ export function SearchScreen({
             accessibilityRole="button"
             onPress={handleClearAlbum}
             style={{
-              borderWidth: 1,
-              borderColor: '#374151',
-              borderRadius: 8,
-              minHeight: 42,
-              minWidth: 42,
+              position: 'absolute',
+              right: 4,
+              top: 4,
+              bottom: 4,
+              width: 34,
               alignItems: 'center',
               justifyContent: 'center'
             }}

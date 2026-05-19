@@ -131,6 +131,13 @@ if (
 ) {
   throw new Error('SearchScreen does not include per-field accessible clear controls')
 }
+if (
+  !searchScreenSource.includes("position: 'relative'") ||
+  !searchScreenSource.includes("position: 'absolute'") ||
+  !searchScreenSource.includes('paddingRight: 44')
+) {
+  throw new Error('SearchScreen clear controls are not presented as in-field trailing controls')
+}
 if (!searchScreenSource.includes('Explore Album Liner Notes') || !searchScreenSource.includes('Find Albums')) {
   throw new Error('SearchScreen does not include polished album search heading/action')
 }
