@@ -53,6 +53,7 @@
 - Album Detail supports optional primary cover art and release-group artwork gallery images from Cover Art Archive.
 - Album Detail can show a source-backed Wikipedia album article link resolved from MusicBrainz release-group Wikidata relations.
 - Album Detail promotes the Wikipedia album article as a user-facing action below the album card while preserving source and technical link traceability in Editions & Sources.
+- Real Album Detail suppresses the generic route-style heading so the album hero card is the first major content element after back/loading/error states.
 - Album Detail Editions & Sources now prioritizes human-readable selected-edition and source labels while keeping technical identifiers and links available for traceability.
 - Album Detail Editions & Sources defaults collapsed so the first detail view stays focused on the album, tracklist, and credit overview.
 - Album Detail Editions & Sources keeps Release-group editions and Technical links collapsed by default so the selected-edition view stays compact.

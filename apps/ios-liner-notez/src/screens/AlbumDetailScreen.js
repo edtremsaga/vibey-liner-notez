@@ -331,16 +331,16 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
         <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>{backLabel}</Text>
       </TouchableOpacity>
 
-      <Text style={{ color: '#e5e7eb', fontSize: 30, fontWeight: '500' }}>Album Detail</Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        {isRealMusicBrainzDetail
-          ? hasTrackCreditDetails
-            ? 'Album details, credits, editions, and sources.'
-            : hasTracks
-              ? 'Album details and tracklist. Credits are not documented for this selected release yet.'
-              : 'Album details are loading.'
-          : 'Album detail.'}
-      </Text>
+      {!isRealMusicBrainzDetail && (
+        <>
+          <Text style={{ color: '#e5e7eb', fontSize: 30, fontWeight: '500' }}>Album Detail</Text>
+          <Text style={{ color: '#9ca3af', marginTop: 8 }}>Album detail.</Text>
+        </>
+      )}
+
+      {isRealMusicBrainzDetail && !hasAlbum && (
+        <Text style={{ color: '#9ca3af', marginTop: 8 }}>Album details are loading.</Text>
+      )}
 
       {!isRealMusicBrainzDetail && (
         <TouchableOpacity

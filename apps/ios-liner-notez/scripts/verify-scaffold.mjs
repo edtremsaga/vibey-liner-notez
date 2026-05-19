@@ -399,11 +399,14 @@ if (!albumDetailScreenSource.includes('Loading album detail...')) {
 if (!albumDetailScreenSource.includes('Album details are loading.')) {
   throw new Error('AlbumDetailScreen does not include user-facing loading-scope copy')
 }
-if (!albumDetailScreenSource.includes('Album details, credits, editions, and sources.')) {
-  throw new Error('AlbumDetailScreen does not include user-facing album detail scope copy')
+if (albumDetailScreenSource.includes('Album details, credits, editions, and sources.')) {
+  throw new Error('AlbumDetailScreen still shows generic real Album Detail helper copy')
 }
-if (!albumDetailScreenSource.includes('Album details and tracklist. Credits are not documented for this selected release yet.')) {
-  throw new Error('AlbumDetailScreen does not include user-facing tracklist scope copy')
+if (
+  !albumDetailScreenSource.includes('!isRealMusicBrainzDetail && (') ||
+  !albumDetailScreenSource.includes('isRealMusicBrainzDetail && !hasAlbum')
+) {
+  throw new Error('AlbumDetailScreen does not suppress the generic Album Detail heading for real album details')
 }
 if (albumDetailScreenSource.includes('Real MusicBrainz album header') || albumDetailScreenSource.includes('Release-group MBID')) {
   throw new Error('AlbumDetailScreen still uses developer-facing hero copy')
