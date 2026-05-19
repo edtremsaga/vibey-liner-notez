@@ -445,6 +445,16 @@ if (!albumDetailScreenSource.includes('showEditionsSources, setShowEditionsSourc
   throw new Error('AlbumDetailScreen no longer keeps Editions & Sources collapsed by default')
 }
 if (
+  !albumDetailScreenSource.includes('tracklistSummary') ||
+  !albumDetailScreenSource.includes("album.tracks.length === 1 ? 'track' : 'tracks'") ||
+  !albumDetailScreenSource.includes('creditsSummary') ||
+  !albumDetailScreenSource.includes('Credit highlights available') ||
+  !albumDetailScreenSource.includes('editionsSourcesSummary') ||
+  !albumDetailScreenSource.includes('Selected edition and sources')
+) {
+  throw new Error('AlbumDetailScreen does not include compact disclosure summary labels')
+}
+if (
   !albumDetailScreenSource.includes('credit.personName') ||
   !albumDetailScreenSource.includes('credit.role')
 ) {

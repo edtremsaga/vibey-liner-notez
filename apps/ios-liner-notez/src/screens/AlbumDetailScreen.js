@@ -259,6 +259,25 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
       )
     : []
   const hasCreditHighlights = creditHighlights.length > 0
+  const tracklistSummary = hasTracks
+    ? `${album.tracks.length} ${album.tracks.length === 1 ? 'track' : 'tracks'}`
+    : null
+  const creditsSummary = hasCreditHighlights
+    ? 'Credit highlights available'
+    : hasAlbumCredits && hasTrackCreditDetails
+      ? 'Album and track credits'
+      : hasAlbumCredits
+        ? 'Album credits available'
+        : hasTrackCreditDetails
+          ? `${tracksWithCreditDetails.length} ${tracksWithCreditDetails.length === 1 ? 'track' : 'tracks'} with credits`
+          : null
+  const editionsSourcesSummary = selectedEdition && hasSources
+    ? 'Selected edition and sources'
+    : hasEditions
+      ? `${album.editions.length} ${album.editions.length === 1 ? 'edition' : 'editions'}`
+      : hasSources
+        ? 'Sources available'
+        : null
   const shouldShowCoverArt = hasAlbum && !!album.coverArtUrl && !failedCoverArtUrls[album.coverArtUrl]
   const artworkImages = hasAlbum && Array.isArray(album.artworkImages) ? album.artworkImages : []
   const hasArtworkGallery = artworkImages.length > 0
@@ -539,9 +558,14 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
               accessibilityRole="button"
               accessibilityLabel={`${showTracklist ? 'Hide' : 'Show'} tracklist`}
               onPress={() => setShowTracklist((current) => !current)}
-              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
             >
-              <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Tracklist</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Tracklist</Text>
+                {!!tracklistSummary && (
+                  <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>{tracklistSummary}</Text>
+                )}
+              </View>
               <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showTracklist ? '▾' : '▸'}</Text>
             </TouchableOpacity>
             {showTracklist ? (
@@ -584,9 +608,14 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
               accessibilityRole="button"
               accessibilityLabel={`${showCredits ? 'Hide' : 'Show'} credits`}
               onPress={() => setShowCredits((current) => !current)}
-              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
             >
-              <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Credits</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Credits</Text>
+                {!!creditsSummary && (
+                  <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>{creditsSummary}</Text>
+                )}
+              </View>
               <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showCredits ? '▾' : '▸'}</Text>
             </TouchableOpacity>
             {showCredits ? (
@@ -781,11 +810,16 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
               accessibilityRole="button"
               accessibilityLabel={`${showEditionsSources ? 'Hide' : 'Show'} editions and sources`}
               onPress={() => setShowEditionsSources((current) => !current)}
-              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
             >
-              <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>
-                Editions & Sources
-              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>
+                  Editions & Sources
+                </Text>
+                {!!editionsSourcesSummary && (
+                  <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>{editionsSourcesSummary}</Text>
+                )}
+              </View>
               <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showEditionsSources ? '▾' : '▸'}</Text>
             </TouchableOpacity>
             {showEditionsSources ? (

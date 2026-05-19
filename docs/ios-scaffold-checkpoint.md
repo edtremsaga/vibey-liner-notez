@@ -49,6 +49,7 @@
 - Album Detail selected-release track credits are grouped by track, collapsed by default, and expandable with iOS-style disclosure chevrons.
 - Album Detail Credits now defaults collapsed to keep dense album pages calmer while preserving full credit detail behind disclosure.
 - Album Detail section-level disclosure controls use chevrons consistently for Tracklist, Credits, and Editions & Sources.
+- Album Detail disclosure headers show compact summaries for Tracklist, Credits, and Editions & Sources so collapsed sections remain scannable.
 - Album Detail supports optional primary cover art and release-group artwork gallery images from Cover Art Archive.
 - Album Detail Editions & Sources now prioritizes human-readable selected-edition and source labels while keeping technical identifiers and links available for traceability.
 - Album Detail Editions & Sources defaults collapsed so the first detail view stays focused on the album, tracklist, and credit overview.
