@@ -226,7 +226,7 @@ if (
 ) {
   throw new Error('ResultsScreen does not sort already-loaded results client-side')
 }
-if (!resultsScreenSource.includes('onBackToSearch') || !resultsScreenSource.includes('Back to Search')) {
+if (!resultsScreenSource.includes('onBackToSearch') || !resultsScreenSource.includes('Back to Album Search')) {
   throw new Error('ResultsScreen does not include contextual back-to-search action')
 }
 if (!resultsScreenSource.includes('onSelectAlbum(albumId, album)')) {
@@ -235,7 +235,7 @@ if (!resultsScreenSource.includes('onSelectAlbum(albumId, album)')) {
 if (!resultsScreenSource.includes('No albums found')) {
   throw new Error('ResultsScreen does not include empty state text')
 }
-if (!resultsScreenSource.includes('MusicBrainz search error')) {
+if (!resultsScreenSource.includes('Music data search error')) {
   throw new Error('ResultsScreen does not include MusicBrainz error state text')
 }
 if (!resultsScreenSource.includes('Searching MusicBrainz')) {
@@ -311,7 +311,7 @@ if (!producerSearchScreenSource.includes('Please enter a producer name to contin
 if (!producerSearchScreenSource.includes('Loading producer candidates...')) {
   throw new Error('ProducerSearchScreen does not include candidate loading state text')
 }
-if (!producerSearchScreenSource.includes('Producer lookup error')) {
+if (!producerSearchScreenSource.includes('Producer search error')) {
   throw new Error('ProducerSearchScreen does not include error state text')
 }
 if (!producerSearchScreenSource.includes('No producer candidates found')) {
@@ -341,7 +341,7 @@ if (
   !producerSearchScreenSource.includes('PRODUCER_RELEASE_LOOKUP_LIMIT = 10') ||
   !producerSearchScreenSource.includes('loadProducerReleaseLevelResults') ||
   !producerSearchScreenSource.includes('ActivityIndicator') ||
-  !producerSearchScreenSource.includes('Searching MusicBrainz producer credits')
+  !producerSearchScreenSource.includes('Searching producer credits')
 ) {
   throw new Error('ProducerSearchScreen does not run bounded release-level producer result lookup')
 }
@@ -364,7 +364,7 @@ if (
   !producerSearchScreenSource.includes('ProducerResultCard') ||
   !producerSearchScreenSource.includes('producerEvidence') ||
   !producerSearchScreenSource.includes('evidence.evidenceLabel') ||
-  !producerSearchScreenSource.includes('Relationship attributes:')
+  !producerSearchScreenSource.includes('Producer credit detail:')
 ) {
   throw new Error('ProducerSearchScreen does not render source-backed producer evidence cards')
 }
@@ -401,6 +401,9 @@ if (
   !producerSearchScreenSource.includes('latinCharacterCount / visibleCharacterCount >= 0.6')
 ) {
   throw new Error('ProducerSearchScreen candidate rows do not include enough disambiguation')
+}
+if (producerSearchScreenSource.includes('MusicBrainz score:')) {
+  throw new Error('ProducerSearchScreen still shows raw MusicBrainz candidate scores')
 }
 if (
   producerSearchScreenSource.includes('MOCK_PRODUCER_RESULTS') ||

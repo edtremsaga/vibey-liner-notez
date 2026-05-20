@@ -112,7 +112,7 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
           marginBottom: 14
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Search</Text>
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Album Search</Text>
       </TouchableOpacity>
 
       <Text style={{ color: '#f3f4f6', fontSize: 24, fontWeight: '700' }}>{resultsHeading}</Text>
@@ -187,7 +187,7 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
             backgroundColor: '#2a1215'
           }}
         >
-          <Text style={{ color: '#fecaca', fontWeight: '600' }}>MusicBrainz search error</Text>
+          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Music data search error</Text>
           <Text style={{ color: '#fca5a5', marginTop: 4 }}>
             {errorMessage}
           </Text>

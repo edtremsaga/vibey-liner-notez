@@ -79,9 +79,6 @@ function ProducerCandidateCard({ candidate, onSelectCandidate }) {
       {aliases ? (
         <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 12 }}>Aliases: {aliases}</Text>
       ) : null}
-      <Text style={{ color: '#6ee7b7', marginTop: 5, fontSize: 12 }}>
-        MusicBrainz score: {candidate.score}
-      </Text>
     </TouchableOpacity>
   )
 }
@@ -203,7 +200,7 @@ function ProducerResultCard({ onOpenAlbumDetail, result }) {
       </Text>
       {attributes ? (
         <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 12 }}>
-          Relationship attributes: {attributes}
+          Producer credit detail: {attributes}
         </Text>
       ) : null}
       <Text style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open album detail</Text>
@@ -601,7 +598,7 @@ export function ProducerSearchScreen({
             backgroundColor: '#2a1215'
           }}
         >
-          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Producer lookup error</Text>
+          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Producer search error</Text>
           <Text style={{ color: '#fca5a5', marginTop: 4 }}>{errorMessage}</Text>
         </View>
       ) : null}
@@ -666,7 +663,7 @@ export function ProducerSearchScreen({
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
             <ActivityIndicator color="#9ca3af" />
             <Text style={{ color: '#d1d5db', fontWeight: '600', marginLeft: 8 }}>
-              Searching MusicBrainz producer credits...
+              Searching producer credits...
             </Text>
           </View>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
@@ -686,7 +683,7 @@ export function ProducerSearchScreen({
             backgroundColor: '#2a1215'
           }}
         >
-          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Producer result lookup error</Text>
+          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Producer results unavailable</Text>
           <Text style={{ color: '#fca5a5', marginTop: 4 }}>{producerResultError}</Text>
         </View>
       ) : null}
