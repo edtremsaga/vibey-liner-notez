@@ -1,47 +1,131 @@
 import React, { useState } from 'react'
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { resolveMusicBrainzProducerCandidates } from '../services/musicbrainzProducerSearch'
 
-const MOCK_PRODUCER_RESULTS = [
-  {
-    albumId: '8b6b2628-7bd4-3fed-9d65-cf4e5dc45939',
-    title: "Life's Rich Pageant",
-    artist: 'R.E.M.',
-    year: '1986',
-    label: 'Producer match'
-  },
-  {
-    albumId: '8b6b2628-7bd4-3fed-9d65-cf4e5dc45939',
-    title: "Life's Rich Pageant",
-    artist: 'R.E.M.',
-    year: '1986',
-    label: 'Producer match (studio)'
-  },
-  {
-    albumId: '8b6b2628-7bd4-3fed-9d65-cf4e5dc45939',
-    title: "Life's Rich Pageant",
-    artist: 'R.E.M.',
-    year: '1986',
-    label: 'Producer match (credits)'
+function formatLifeSpan(lifeSpan) {
+  if (!lifeSpan?.begin && !lifeSpan?.end) {
+    return null
   }
-]
 
-export function ProducerSearchScreen({ onBackToSearch, onSelectAlbum }) {
+  return `${lifeSpan.begin ?? '?'}-${lifeSpan.end ?? ''}`
+}
+
+function formatCandidateDetails(candidate) {
+  return [
+    candidate.type,
+    candidate.disambiguation,
+    candidate.country,
+    formatLifeSpan(candidate.lifeSpan)
+  ].filter(Boolean).join(' · ')
+}
+
+function formatAliases(candidate) {
+  const aliases = Array.isArray(candidate?.aliases) ? candidate.aliases.map((alias) => alias.name).filter(Boolean) : []
+  return aliases.length > 0 ? aliases.join(', ') : null
+}
+
+function ProducerCandidateCard({ candidate, onSelectCandidate }) {
+  const details = formatCandidateDetails(candidate)
+  const aliases = formatAliases(candidate)
+
+  return (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={`Select producer candidate ${candidate.name}`}
+      onPress={() => onSelectCandidate(candidate)}
+      style={{
+        marginTop: 8,
+        borderWidth: 1,
+        borderColor: '#374151',
+        borderRadius: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 10,
+        backgroundColor: '#111827'
+      }}
+    >
+      <Text style={{ color: '#e5e7eb', fontWeight: '600', fontSize: 16 }}>{candidate.name}</Text>
+      {details ? (
+        <Text style={{ color: '#9ca3af', marginTop: 3 }}>{details}</Text>
+      ) : null}
+      {aliases ? (
+        <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 12 }}>Aliases: {aliases}</Text>
+      ) : null}
+      <Text style={{ color: '#6ee7b7', marginTop: 5, fontSize: 12 }}>
+        MusicBrainz score: {candidate.score}
+      </Text>
+    </TouchableOpacity>
+  )
+}
+
+function SelectedProducerPlaceholder({ producer }) {
+  return (
+    <View
+      style={{
+        marginTop: 12,
+        borderWidth: 1,
+        borderColor: '#256d4f',
+        borderRadius: 10,
+        padding: 12,
+        backgroundColor: '#10231d'
+      }}
+    >
+      <Text style={{ color: '#d1fae5', fontWeight: '700' }}>Selected producer: {producer.name}</Text>
+      <Text style={{ color: '#a7f3d0', marginTop: 6 }}>
+        Album results will use documented MusicBrainz release-level producer credits. This step comes next.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8, fontSize: 12 }}>
+        MusicBrainz artist MBID: {producer.id}
+      </Text>
+    </View>
+  )
+}
+
+export function ProducerSearchScreen({ onBackToSearch }) {
   const [producerName, setProducerName] = useState('')
   const [showValidation, setShowValidation] = useState(false)
-  const [mockState, setMockState] = useState('results')
+  const [isLoadingCandidates, setIsLoadingCandidates] = useState(false)
+  const [candidateResult, setCandidateResult] = useState(null)
+  const [selectedProducer, setSelectedProducer] = useState(null)
+  const [errorMessage, setErrorMessage] = useState('')
 
-  const showLoading = mockState === 'loading'
-  const showResults = mockState === 'results'
-  const showEmpty = mockState === 'empty'
-  const showError = mockState === 'error'
+  const candidates = candidateResult?.candidates ?? []
+  const showCandidateSelection = candidateResult?.status === 'select' && candidates.length > 0 && !selectedProducer
+  const showNoCandidates = candidateResult?.status === 'none' && !selectedProducer
 
-  function handleSearchMockProducers() {
-    if (!producerName.trim()) {
+  async function handleResolveProducerCandidates() {
+    const trimmedProducer = producerName.trim()
+
+    if (!trimmedProducer) {
       setShowValidation(true)
+      setCandidateResult(null)
+      setSelectedProducer(null)
+      setErrorMessage('')
       return
     }
+
     setShowValidation(false)
-    setMockState('results')
+    setCandidateResult(null)
+    setSelectedProducer(null)
+    setErrorMessage('')
+    setIsLoadingCandidates(true)
+
+    try {
+      const result = await resolveMusicBrainzProducerCandidates(trimmedProducer)
+      setCandidateResult(result)
+
+      if (result.status === 'auto' && result.selectedCandidate) {
+        setSelectedProducer(result.selectedCandidate)
+      }
+    } catch (error) {
+      setErrorMessage(error?.message || 'We could not load producer candidates from MusicBrainz.')
+    } finally {
+      setIsLoadingCandidates(false)
+    }
+  }
+
+  function handleSelectCandidate(candidate) {
+    setSelectedProducer(candidate)
+    setErrorMessage('')
   }
 
   return (
@@ -70,17 +154,21 @@ export function ProducerSearchScreen({ onBackToSearch, onSelectAlbum }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Producer Search</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Producer search is not connected to real data yet.
+        Find albums with producer credits documented in MusicBrainz.
       </Text>
 
       <Text style={{ color: '#d1d5db', marginTop: 12 }}>Producer</Text>
       <TextInput
         accessibilityLabel="Producer search input"
-        placeholder="e.g. Butch Vig"
+        placeholder="e.g. Quincy Jones"
         placeholderTextColor="#9ca3af"
         value={producerName}
+        editable={!isLoadingCandidates}
         onChangeText={(value) => {
           setProducerName(value)
+          setCandidateResult(null)
+          setSelectedProducer(null)
+          setErrorMessage('')
           if (showValidation && value.trim()) {
             setShowValidation(false)
           }
@@ -104,21 +192,25 @@ export function ProducerSearchScreen({ onBackToSearch, onSelectAlbum }) {
 
       <TouchableOpacity
         accessibilityRole="button"
-        onPress={handleSearchMockProducers}
+        onPress={handleResolveProducerCandidates}
+        disabled={isLoadingCandidates}
         style={{
           marginTop: 12,
           borderWidth: 1,
-          borderColor: '#4b5563',
+          borderColor: isLoadingCandidates ? '#374151' : '#4b5563',
           borderRadius: 8,
           paddingVertical: 10,
           paddingHorizontal: 12,
-          alignSelf: 'flex-start'
+          alignSelf: 'flex-start',
+          opacity: isLoadingCandidates ? 0.7 : 1
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Search Producers</Text>
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>
+          {isLoadingCandidates ? 'Checking MusicBrainz...' : 'Find Producer'}
+        </Text>
       </TouchableOpacity>
 
-      {showLoading ? (
+      {isLoadingCandidates ? (
         <View
           style={{
             marginTop: 12,
@@ -129,14 +221,14 @@ export function ProducerSearchScreen({ onBackToSearch, onSelectAlbum }) {
             backgroundColor: '#181a1f'
           }}
         >
-          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading producer results...</Text>
+          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading producer candidates...</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Producer search is using local sample data for now.
+            Searching MusicBrainz artist records.
           </Text>
         </View>
       ) : null}
 
-      {showError ? (
+      {errorMessage ? (
         <View
           style={{
             marginTop: 12,
@@ -147,14 +239,12 @@ export function ProducerSearchScreen({ onBackToSearch, onSelectAlbum }) {
             backgroundColor: '#2a1215'
           }}
         >
-          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Producer search error</Text>
-          <Text style={{ color: '#fca5a5', marginTop: 4 }}>
-            We could not load producer results. Please try again.
-          </Text>
+          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Producer lookup error</Text>
+          <Text style={{ color: '#fca5a5', marginTop: 4 }}>{errorMessage}</Text>
         </View>
       ) : null}
 
-      {showEmpty ? (
+      {showNoCandidates ? (
         <View
           style={{
             marginTop: 12,
@@ -166,15 +256,15 @@ export function ProducerSearchScreen({ onBackToSearch, onSelectAlbum }) {
           }}
         >
           <Text style={{ color: '#d1d5db', fontWeight: '600' }}>
-            No producer results found
+            No producer candidates found
           </Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Try another producer name.
+            Try another spelling or a fuller producer name.
           </Text>
         </View>
       ) : null}
 
-      {showResults ? (
+      {showCandidateSelection ? (
         <View
           style={{
             marginTop: 12,
@@ -185,92 +275,23 @@ export function ProducerSearchScreen({ onBackToSearch, onSelectAlbum }) {
             backgroundColor: '#181a1f'
           }}
         >
-          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Producer results</Text>
+          <Text style={{ color: '#d1d5db', fontWeight: '700' }}>Choose the MusicBrainz artist you mean.</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Producer Search is not connected to real data yet.
+            Album results come next.
           </Text>
-          {MOCK_PRODUCER_RESULTS.map((result, index) => (
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityLabel={`Open producer album result ${index + 1}`}
-              key={`${result.albumId}-${result.label}-${index}`}
-              onPress={() => onSelectAlbum?.(result.albumId)}
-              style={{
-                marginTop: 8,
-                borderWidth: 1,
-                borderColor: '#374151',
-                borderRadius: 8,
-                paddingVertical: 8,
-                paddingHorizontal: 10,
-                backgroundColor: '#111827'
-              }}
-            >
-              <Text style={{ color: '#e5e7eb', fontWeight: '600', fontSize: 16 }}>{result.title}</Text>
-              <Text style={{ color: '#9ca3af', marginTop: 1 }}>
-                {result.artist} · {result.year}
-              </Text>
-              <Text style={{ color: '#a7f3d0', marginTop: 4, fontSize: 12 }}>
-                Producer match: {result.label.replace('Producer match', '').trim() || 'album credits'}
-              </Text>
-            </TouchableOpacity>
+          {candidates.map((candidate) => (
+            <ProducerCandidateCard
+              candidate={candidate}
+              key={candidate.id}
+              onSelectCandidate={handleSelectCandidate}
+            />
           ))}
         </View>
       ) : null}
 
-      <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-        <TouchableOpacity
-          accessibilityRole="button"
-          onPress={() => setMockState('loading')}
-          style={{
-            borderWidth: 1,
-            borderColor: mockState === 'loading' ? '#f3f4f6' : '#4b5563',
-            borderRadius: 8,
-            paddingVertical: 8,
-            paddingHorizontal: 10
-          }}
-        >
-          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Loading</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          accessibilityRole="button"
-          onPress={() => setMockState('results')}
-          style={{
-            borderWidth: 1,
-            borderColor: mockState === 'results' ? '#f3f4f6' : '#4b5563',
-            borderRadius: 8,
-            paddingVertical: 8,
-            paddingHorizontal: 10
-          }}
-        >
-          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Results</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          accessibilityRole="button"
-          onPress={() => setMockState('empty')}
-          style={{
-            borderWidth: 1,
-            borderColor: mockState === 'empty' ? '#f3f4f6' : '#4b5563',
-            borderRadius: 8,
-            paddingVertical: 8,
-            paddingHorizontal: 10
-          }}
-        >
-          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Empty</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          accessibilityRole="button"
-          onPress={() => setMockState('error')}
-          style={{
-            borderWidth: 1,
-            borderColor: mockState === 'error' ? '#f3f4f6' : '#4b5563',
-            borderRadius: 8,
-            paddingVertical: 8,
-            paddingHorizontal: 10
-          }}
-        >
-          <Text style={{ color: '#f3f4f6', fontSize: 12 }}>Error</Text>
-        </TouchableOpacity>
-      </View>
+      {selectedProducer ? (
+        <SelectedProducerPlaceholder producer={selectedProducer} />
+      ) : null}
       </View>
     </ScrollView>
   )

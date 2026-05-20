@@ -11,6 +11,7 @@ const requiredFiles = [
   'src/App.js',
   'src/services/musicbrainzAlbumDetail.js',
   'src/services/musicbrainzAlbumSearch.js',
+  'src/services/musicbrainzProducerSearch.js',
   'src/screens/SearchScreen.js',
   'src/screens/ResultsScreen.js',
   'src/screens/AlbumDetailScreen.js',
@@ -270,7 +271,7 @@ const producerSearchScreenSource = readFileSync(
   'utf8'
 )
 if (!producerSearchScreenSource.includes('ScrollView') || !producerSearchScreenSource.includes('contentContainerStyle')) {
-  throw new Error('ProducerSearchScreen is not scrollable for mock producer content')
+  throw new Error('ProducerSearchScreen is not scrollable for producer candidate content')
 }
 if (!producerSearchScreenSource.includes('onBackToSearch') || !producerSearchScreenSource.includes('Back to Search')) {
   throw new Error('ProducerSearchScreen does not include contextual back-to-search action')
@@ -278,32 +279,72 @@ if (!producerSearchScreenSource.includes('onBackToSearch') || !producerSearchScr
 if (!producerSearchScreenSource.includes('Producer search input')) {
   throw new Error('ProducerSearchScreen does not include producer input')
 }
-if (!producerSearchScreenSource.includes('Search Producers')) {
-  throw new Error('ProducerSearchScreen does not include producer search action')
+if (
+  !producerSearchScreenSource.includes("import { resolveMusicBrainzProducerCandidates } from '../services/musicbrainzProducerSearch'") ||
+  !producerSearchScreenSource.includes('handleResolveProducerCandidates') ||
+  !producerSearchScreenSource.includes('resolveMusicBrainzProducerCandidates(trimmedProducer)')
+) {
+  throw new Error('ProducerSearchScreen does not use the MusicBrainz producer candidate service')
+}
+if (!producerSearchScreenSource.includes('Find Producer')) {
+  throw new Error('ProducerSearchScreen does not include producer candidate lookup action')
 }
 if (!producerSearchScreenSource.includes('Please enter a producer name to continue.')) {
   throw new Error('ProducerSearchScreen does not include required-field validation message')
 }
-if (!producerSearchScreenSource.includes('Loading producer results...')) {
-  throw new Error('ProducerSearchScreen does not include loading state text')
+if (!producerSearchScreenSource.includes('Loading producer candidates...')) {
+  throw new Error('ProducerSearchScreen does not include candidate loading state text')
 }
-if (!producerSearchScreenSource.includes('Producer search error')) {
+if (!producerSearchScreenSource.includes('Producer lookup error')) {
   throw new Error('ProducerSearchScreen does not include error state text')
 }
-if (!producerSearchScreenSource.includes('No producer results found')) {
-  throw new Error('ProducerSearchScreen does not include empty state text')
+if (!producerSearchScreenSource.includes('No producer candidates found')) {
+  throw new Error('ProducerSearchScreen does not include no-candidates state text')
 }
-if (!producerSearchScreenSource.includes('Producer Search is not connected to real data yet.')) {
-  throw new Error('ProducerSearchScreen does not include explicit not-connected copy')
+if (!producerSearchScreenSource.includes('Choose the MusicBrainz artist you mean.')) {
+  throw new Error('ProducerSearchScreen does not include candidate selection copy')
 }
-if (!producerSearchScreenSource.includes("Life's Rich Pageant")) {
-  throw new Error("ProducerSearchScreen is missing mock producer result row title: Life's Rich Pageant")
+if (!producerSearchScreenSource.includes('Selected producer:') || !producerSearchScreenSource.includes('Album results will use documented MusicBrainz release-level producer credits. This step comes next.')) {
+  throw new Error('ProducerSearchScreen does not include selected-producer placeholder copy')
 }
-if (!producerSearchScreenSource.includes('Producer match')) {
-  throw new Error('ProducerSearchScreen does not include producer match label in mock rows')
+if (!producerSearchScreenSource.includes('candidate.type') || !producerSearchScreenSource.includes('candidate.disambiguation') || !producerSearchScreenSource.includes('candidate.country') || !producerSearchScreenSource.includes('formatLifeSpan(candidate.lifeSpan)') || !producerSearchScreenSource.includes('Aliases:')) {
+  throw new Error('ProducerSearchScreen candidate rows do not include enough disambiguation')
 }
-if (!producerSearchScreenSource.includes('onSelectAlbum?.(result.albumId)')) {
-  throw new Error('ProducerSearchScreen mock rows are not wired to albumId selection')
+if (
+  producerSearchScreenSource.includes('MOCK_PRODUCER_RESULTS') ||
+  producerSearchScreenSource.includes("Life's Rich Pageant") ||
+  producerSearchScreenSource.includes('Producer match') ||
+  producerSearchScreenSource.includes('onSelectAlbum?.(result.albumId)')
+) {
+  throw new Error('ProducerSearchScreen still exposes mock producer album results')
+}
+
+const producerSearchServiceSource = readFileSync(
+  path.join(appRoot, 'src/services/musicbrainzProducerSearch.js'),
+  'utf8'
+)
+if (
+  !producerSearchServiceSource.includes('resolveMusicBrainzProducerCandidates') ||
+  !producerSearchServiceSource.includes("status: 'auto'") ||
+  !producerSearchServiceSource.includes("status: 'select'") ||
+  !producerSearchServiceSource.includes("status: 'none'")
+) {
+  throw new Error('musicbrainzProducerSearch service does not expose candidate resolution statuses')
+}
+if (
+  !producerSearchServiceSource.includes('/artist') ||
+  !producerSearchServiceSource.includes("inc: 'aliases'") ||
+  !producerSearchServiceSource.includes('HIGH_CONFIDENCE_SCORE') ||
+  !producerSearchServiceSource.includes('isExactNameOrAliasMatch')
+) {
+  throw new Error('musicbrainzProducerSearch service does not perform conservative MusicBrainz artist candidate lookup')
+}
+if (
+  producerSearchServiceSource.includes('release-rels') ||
+  producerSearchServiceSource.includes('/release/') ||
+  producerSearchServiceSource.includes('recording-rels')
+) {
+  throw new Error('musicbrainzProducerSearch service should not fetch producer album or recording data in the candidate slice')
 }
 
 const helpDataSourcesScreenSource = readFileSync(
