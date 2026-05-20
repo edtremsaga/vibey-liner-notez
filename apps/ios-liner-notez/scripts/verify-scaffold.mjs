@@ -318,7 +318,9 @@ if (!producerSearchScreenSource.includes('Choose the MusicBrainz artist you mean
 if (
   !producerSearchScreenSource.includes('ProducerResultsContext') ||
   !producerSearchScreenSource.includes('Producer: {producer.name}') ||
-  !producerSearchScreenSource.includes('Albums found from MusicBrainz producer credits.') ||
+  !producerSearchScreenSource.includes('resultCountLabel') ||
+  !producerSearchScreenSource.includes('Showing ${resultCount} ${resultCount === 1 ?') ||
+  !producerSearchScreenSource.includes('found from MusicBrainz producer credits.') ||
   producerSearchScreenSource.includes('Selected producer:') ||
   producerSearchScreenSource.includes('MusicBrainz artist MBID:') ||
   producerSearchScreenSource.includes('duplicate release groups skipped') ||
@@ -333,18 +335,21 @@ if (
   !producerSearchScreenSource.includes('searchMusicBrainzAlbumsByProducer') ||
   !producerSearchScreenSource.includes('PRODUCER_RELEASE_LOOKUP_LIMIT = 10') ||
   !producerSearchScreenSource.includes('loadProducerReleaseLevelResults') ||
-  !producerSearchScreenSource.includes('Checking documented producer credits in MusicBrainz')
+  !producerSearchScreenSource.includes('ActivityIndicator') ||
+  !producerSearchScreenSource.includes('Searching MusicBrainz producer credits')
 ) {
   throw new Error('ProducerSearchScreen does not run bounded release-level producer result lookup')
 }
 if (
   !producerSearchScreenSource.includes('handleLoadMoreProducerResults') ||
-  !producerSearchScreenSource.includes('canLoadMoreProducerResults') ||
+  !producerSearchScreenSource.includes('showLoadMoreButton') ||
   !producerSearchScreenSource.includes('offset: producerResult.nextOffset') ||
   !producerSearchScreenSource.includes('seenReleaseGroupIds: producerResult.seenReleaseGroupIds') ||
   !producerSearchScreenSource.includes('results: [...currentResults, ...nextResult.results]') ||
+  !producerSearchScreenSource.includes('Added ${nextResult.results.length} more') ||
   !producerSearchScreenSource.includes('Load more') ||
-  !producerSearchScreenSource.includes('Checking more MusicBrainz producer credits') ||
+  !producerSearchScreenSource.includes('disabled={isLoadingMoreProducerResults}') ||
+  !producerSearchScreenSource.includes('Checking more producer credits') ||
   !producerSearchScreenSource.includes('No new albums found in that batch.') ||
   !producerSearchScreenSource.includes('No more producer-credit results found in MusicBrainz.')
 ) {

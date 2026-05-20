@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import {
   resolveMusicBrainzProducerCandidates,
   searchMusicBrainzAlbumsByProducer
@@ -146,16 +146,20 @@ function ProducerResultCard({ onOpenAlbumDetail, result }) {
   )
 }
 
-function ProducerResultsContext({ producer }) {
+function ProducerResultsContext({ producer, resultCount = null }) {
   if (!producer) {
     return null
   }
+
+  const resultCountLabel = Number.isInteger(resultCount)
+    ? `Showing ${resultCount} ${resultCount === 1 ? 'album' : 'albums'} found from MusicBrainz producer credits.`
+    : 'Albums found from MusicBrainz producer credits.'
 
   return (
     <View style={{ marginTop: 8, marginBottom: 4 }}>
       <Text style={{ color: '#e5e7eb', fontWeight: '700', fontSize: 16 }}>Producer: {producer.name}</Text>
       <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-        Albums found from MusicBrainz producer credits.
+        {resultCountLabel}
       </Text>
     </View>
   )
@@ -186,7 +190,7 @@ export function ProducerSearchScreen({
   const showNoCandidates = candidateResult?.status === 'none' && !selectedProducer
   const producerResults = producerResult?.results ?? []
   const showNoProducerResults = selectedProducer && producerResult && producerResults.length === 0 && !isLoadingProducerResults
-  const canLoadMoreProducerResults = !!producerResult?.hasMore && !isLoadingProducerResults && !isLoadingMoreProducerResults
+  const showLoadMoreButton = !!producerResult?.hasMore && !isLoadingProducerResults
 
   useEffect(() => {
     onProducerSearchStateChange?.({
@@ -255,9 +259,6 @@ export function ProducerSearchScreen({
         return
       }
       setProducerResult(result)
-      if (!result.hasMore && result.results.length > 0) {
-        setProducerLoadMoreMessage('No more producer-credit results found in MusicBrainz.')
-      }
     } catch (error) {
       if (producerLookupRequestId.current !== requestId) {
         return
@@ -305,7 +306,9 @@ export function ProducerSearchScreen({
         }
       })
 
-      if (nextResult.results.length === 0 && nextResult.hasMore) {
+      if (nextResult.results.length > 0) {
+        setProducerLoadMoreMessage(`Added ${nextResult.results.length} more ${nextResult.results.length === 1 ? 'album' : 'albums'}.`)
+      } else if (nextResult.hasMore) {
         setProducerLoadMoreMessage('No new albums found in that batch.')
       } else if (!nextResult.hasMore) {
         setProducerLoadMoreMessage('No more producer-credit results found in MusicBrainz.')
@@ -594,9 +597,12 @@ export function ProducerSearchScreen({
           }}
         >
           <ProducerResultsContext producer={selectedProducer} />
-          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>
-            Checking documented producer credits in MusicBrainz...
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+            <ActivityIndicator color="#9ca3af" />
+            <Text style={{ color: '#d1d5db', fontWeight: '600', marginLeft: 8 }}>
+              Searching MusicBrainz producer credits...
+            </Text>
+          </View>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
             Looking up the first albums found for this producer.
           </Text>
@@ -651,7 +657,7 @@ export function ProducerSearchScreen({
             backgroundColor: '#181a1f'
           }}
         >
-          <ProducerResultsContext producer={selectedProducer} />
+          <ProducerResultsContext producer={selectedProducer} resultCount={producerResults.length} />
           {producerResults.map((result) => (
             <ProducerResultCard
               key={result.releaseGroupId}
@@ -660,9 +666,12 @@ export function ProducerSearchScreen({
             />
           ))}
           {isLoadingMoreProducerResults ? (
-            <Text style={{ color: '#9ca3af', marginTop: 12 }}>
-              Checking more MusicBrainz producer credits...
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
+              <ActivityIndicator color="#9ca3af" />
+              <Text style={{ color: '#9ca3af', marginLeft: 8 }}>
+                Checking more producer credits...
+              </Text>
+            </View>
           ) : null}
           {producerLoadMoreError ? (
             <Text style={{ color: '#fca5a5', marginTop: 12 }}>{producerLoadMoreError}</Text>
@@ -670,22 +679,26 @@ export function ProducerSearchScreen({
           {producerLoadMoreMessage ? (
             <Text style={{ color: '#9ca3af', marginTop: 12 }}>{producerLoadMoreMessage}</Text>
           ) : null}
-          {canLoadMoreProducerResults ? (
+          {showLoadMoreButton ? (
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityLabel="Load more producer album results"
+              disabled={isLoadingMoreProducerResults}
               onPress={handleLoadMoreProducerResults}
               style={{
                 marginTop: 12,
                 borderWidth: 1,
-                borderColor: '#4b5563',
+                borderColor: isLoadingMoreProducerResults ? '#374151' : '#4b5563',
                 borderRadius: 8,
                 paddingVertical: 10,
                 paddingHorizontal: 12,
-                alignSelf: 'flex-start'
+                alignSelf: 'flex-start',
+                opacity: isLoadingMoreProducerResults ? 0.7 : 1
               }}
             >
-              <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Load more</Text>
+              <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>
+                {isLoadingMoreProducerResults ? 'Loading more...' : 'Load more'}
+              </Text>
             </TouchableOpacity>
           ) : null}
         </View>
