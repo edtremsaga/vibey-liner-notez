@@ -335,6 +335,14 @@ if (
 ) {
   throw new Error('ProducerSearchScreen does not render source-backed producer evidence cards')
 }
+if (
+  !producerSearchScreenSource.includes('mapProducerResultToAlbumResult') ||
+  !producerSearchScreenSource.includes('Open album detail') ||
+  !producerSearchScreenSource.includes("onSelectAlbum?.(releaseGroupId, mapProducerResultToAlbumResult(result), 'Producer Search')") ||
+  !producerSearchScreenSource.includes("accessibilityLabel={`Open album detail for ${result.releaseGroupTitle}`}")
+) {
+  throw new Error('ProducerSearchScreen does not open producer results with the existing Album Detail flow')
+}
 if (!producerSearchScreenSource.includes('No documented release-level producer credits found for this MusicBrainz artist.')) {
   throw new Error('ProducerSearchScreen does not include release-level no-results state copy')
 }
@@ -800,8 +808,20 @@ if (!appSource.includes('getMockAlbumById')) {
 if (!appSource.includes('handleBackToAlbumSource') || !appSource.includes('setRoute(detailReturnRoute)')) {
   throw new Error('App router does not restore contextual source route from album detail')
 }
-if (!appSource.includes('return <ProducerSearchScreen onBackToSearch={onBackToSearch} onSelectAlbum={onSelectAlbum} />')) {
-  throw new Error('App router does not pass album-select handler to ProducerSearchScreen')
+if (
+  !appSource.includes('INITIAL_PRODUCER_SEARCH_STATE') ||
+  !appSource.includes('const [producerSearchState, setProducerSearchState]') ||
+  !appSource.includes('onProducerSearchStateChange={setProducerSearchState}') ||
+  !appSource.includes('producerSearchState={producerSearchState}')
+) {
+  throw new Error('App router does not preserve Producer Search state while Album Detail is open')
+}
+if (
+  !appSource.includes("function handleSelectAlbum(albumId, albumResult = null, sourceRoute = 'Results')") ||
+  !appSource.includes('setDetailReturnRoute(sourceRoute)') ||
+  !appSource.includes('onSelectAlbum={onSelectAlbum}')
+) {
+  throw new Error('App router does not pass album-select handler and source route to ProducerSearchScreen')
 }
 
 const musicBrainzAlbumSearchSource = readFileSync(

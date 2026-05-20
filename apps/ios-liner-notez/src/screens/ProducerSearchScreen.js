@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import {
   resolveMusicBrainzProducerCandidates,
@@ -75,13 +75,30 @@ function formatAttributes(attributes) {
   return entries.map(([key, value]) => value === true ? key : `${key}: ${value}`).join(', ')
 }
 
-function ProducerResultCard({ result }) {
+function mapProducerResultToAlbumResult(result) {
+  return {
+    id: result.releaseGroupId,
+    releaseGroupId: result.releaseGroupId,
+    title: result.releaseGroupTitle ?? result.title,
+    artistCredit: result.releaseGroupArtistCredit ?? result.artistCredit,
+    firstReleaseDate: result.firstReleaseDate,
+    releaseYear: result.releaseYear,
+    primaryType: result.primaryType,
+    secondaryTypes: result.secondaryTypes,
+    producerEvidence: result.producerEvidence
+  }
+}
+
+function ProducerResultCard({ onOpenAlbumDetail, result }) {
   const evidence = result.producerEvidence ?? {}
   const secondaryTypes = formatSecondaryTypes(result.secondaryTypes)
   const attributes = formatAttributes(evidence.relationshipAttributes)
 
   return (
-    <View
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={`Open album detail for ${result.releaseGroupTitle}`}
+      onPress={() => onOpenAlbumDetail(result)}
       style={{
         marginTop: 8,
         borderWidth: 1,
@@ -112,7 +129,8 @@ function ProducerResultCard({ result }) {
       <Text style={{ color: '#6b7280', marginTop: 5, fontSize: 11 }}>
         Source release MBID: {evidence.sourceReleaseId}
       </Text>
-    </View>
+      <Text style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open album detail</Text>
+    </TouchableOpacity>
   )
 }
 
@@ -152,16 +170,21 @@ function SelectedProducerContext({ producer }) {
   )
 }
 
-export function ProducerSearchScreen({ onBackToSearch }) {
-  const [producerName, setProducerName] = useState('')
-  const [showValidation, setShowValidation] = useState(false)
-  const [isLoadingCandidates, setIsLoadingCandidates] = useState(false)
-  const [isLoadingProducerResults, setIsLoadingProducerResults] = useState(false)
-  const [candidateResult, setCandidateResult] = useState(null)
-  const [selectedProducer, setSelectedProducer] = useState(null)
-  const [producerResult, setProducerResult] = useState(null)
-  const [producerResultError, setProducerResultError] = useState('')
-  const [errorMessage, setErrorMessage] = useState('')
+export function ProducerSearchScreen({
+  onBackToSearch,
+  onProducerSearchStateChange,
+  onSelectAlbum,
+  producerSearchState = {}
+}) {
+  const [producerName, setProducerName] = useState(producerSearchState.producerName ?? '')
+  const [showValidation, setShowValidation] = useState(producerSearchState.showValidation ?? false)
+  const [isLoadingCandidates, setIsLoadingCandidates] = useState(producerSearchState.isLoadingCandidates ?? false)
+  const [isLoadingProducerResults, setIsLoadingProducerResults] = useState(producerSearchState.isLoadingProducerResults ?? false)
+  const [candidateResult, setCandidateResult] = useState(producerSearchState.candidateResult ?? null)
+  const [selectedProducer, setSelectedProducer] = useState(producerSearchState.selectedProducer ?? null)
+  const [producerResult, setProducerResult] = useState(producerSearchState.producerResult ?? null)
+  const [producerResultError, setProducerResultError] = useState(producerSearchState.producerResultError ?? '')
+  const [errorMessage, setErrorMessage] = useState(producerSearchState.errorMessage ?? '')
   const producerLookupRequestId = useRef(0)
 
   const candidates = candidateResult?.candidates ?? []
@@ -169,6 +192,31 @@ export function ProducerSearchScreen({ onBackToSearch }) {
   const showNoCandidates = candidateResult?.status === 'none' && !selectedProducer
   const producerResults = producerResult?.results ?? []
   const showNoProducerResults = selectedProducer && producerResult && producerResults.length === 0 && !isLoadingProducerResults
+
+  useEffect(() => {
+    onProducerSearchStateChange?.({
+      producerName,
+      showValidation,
+      isLoadingCandidates,
+      isLoadingProducerResults,
+      candidateResult,
+      selectedProducer,
+      producerResult,
+      producerResultError,
+      errorMessage
+    })
+  }, [
+    candidateResult,
+    errorMessage,
+    isLoadingCandidates,
+    isLoadingProducerResults,
+    onProducerSearchStateChange,
+    producerName,
+    producerResult,
+    producerResultError,
+    selectedProducer,
+    showValidation
+  ])
 
   function resetProducerSearchState() {
     producerLookupRequestId.current += 1
@@ -264,6 +312,15 @@ export function ProducerSearchScreen({ onBackToSearch }) {
     setSelectedProducer(candidate)
     setErrorMessage('')
     await loadProducerReleaseLevelResults(candidate)
+  }
+
+  function handleOpenAlbumDetail(result) {
+    const releaseGroupId = result?.releaseGroupId ?? result?.id ?? null
+    if (!releaseGroupId) {
+      return
+    }
+
+    onSelectAlbum?.(releaseGroupId, mapProducerResultToAlbumResult(result), 'Producer Search')
   }
 
   return (
@@ -532,7 +589,11 @@ export function ProducerSearchScreen({ onBackToSearch }) {
           </Text>
           <ProducerResultsSummary producerResult={producerResult} />
           {producerResults.map((result) => (
-            <ProducerResultCard key={result.releaseGroupId} result={result} />
+            <ProducerResultCard
+              key={result.releaseGroupId}
+              onOpenAlbumDetail={handleOpenAlbumDetail}
+              result={result}
+            />
           ))}
         </View>
       ) : null}

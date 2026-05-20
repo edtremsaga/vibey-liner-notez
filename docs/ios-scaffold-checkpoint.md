@@ -44,6 +44,7 @@
 - Ambiguous Producer Search names show candidate selection instead of failing or silently choosing.
 - Selecting a Producer Search candidate runs release-level producer lookup for the selected MusicBrainz artist.
 - Producer Search result cards show source-backed evidence from documented MusicBrainz release-level producer relationships.
+- Producer Search result cards open the existing Album Detail flow and return with Producer Search state preserved.
 - Album Detail shows real selected-result header data for Search results, enriches release-group Editions & Sources from MusicBrainz, loads the selected-release tracklist, and displays selected-release album-level credits, track-level credits, songwriting, and publishing when documented.
 - Album Detail selected-release album-level credits are loaded from the existing selected-release response without adding another MusicBrainz request.
 - Album Detail album-level credits render as a collapsed `Album` disclosure row inside Credits.
@@ -73,7 +74,7 @@
 - Read-only MusicBrainz Search -> Results is active for artist-first album results with release-type filtering for artist-only searches.
 - Album Detail real-data scope now includes selected-result header data, release-group basic enrichment from MusicBrainz, source-backed Wikipedia album links, primary cover art and release-group artwork gallery images from Cover Art Archive, selected-release edition metadata, the selected-release tracklist, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing.
 - Album Detail opens immediately from selected Results row data, then fetches release-group basic info, optional Wikipedia article links, optional cover art/gallery images, selected-release edition metadata, selected-release tracklist data, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing in the background.
-- Producer Search has real MusicBrainz producer candidate resolution plus bounded release-level producer album results; recording-level fallback is not implemented.
+- Producer Search has real MusicBrainz producer candidate resolution plus bounded release-level producer album results that can open existing Album Detail; recording-level fallback is not implemented.
 - This does not mean the iOS app is production-ready; several real-data and polish areas remain deferred.
 
 ## Album Workflow Phase-Complete Checkpoint
@@ -248,7 +249,7 @@
 
 ## Mock-Only / Deferred Scope
 - Album Detail producer graph, all-editions metadata enrichment, canonical studio-albums cleanup, and rich liner-note sections are not loaded yet.
-- Producer Search load-more pagination, Album Detail opening from producer results, and recording-level fallback are not implemented yet.
+- Producer Search load-more pagination and recording-level fallback are not implemented yet.
 
 ## Known Deferred Work
 - Canonical studio albums cleanup as a later shared React+iOS search-semantics project.
@@ -257,7 +258,7 @@
 - Producer graph.
 - All-editions metadata enrichment.
 - Artwork gallery schema promotion beyond the current iOS-local image list.
-- Producer Search load-more pagination and Album Detail opening from producer results.
+- Producer Search load-more pagination.
 - Pagination or load more for larger result sets.
 - Richer result cards.
 

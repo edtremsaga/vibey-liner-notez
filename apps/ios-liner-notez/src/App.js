@@ -15,6 +15,18 @@ import {
 } from './services/musicbrainzAlbumDetail'
 import { searchMusicBrainzAlbumsByArtist } from './services/musicbrainzAlbumSearch'
 
+const INITIAL_PRODUCER_SEARCH_STATE = {
+  producerName: '',
+  showValidation: false,
+  isLoadingCandidates: false,
+  isLoadingProducerResults: false,
+  candidateResult: null,
+  selectedProducer: null,
+  producerResult: null,
+  producerResultError: '',
+  errorMessage: ''
+}
+
 function buildAlbumDetailFromResult(albumId, albumResult, enrichedDetail = null) {
   if (!albumResult) {
     return null
@@ -90,9 +102,11 @@ function ScreenRouter({
   onSearchFormAlbumTitleChange,
   onSearchFormArtistNameChange,
   onSearchFormReleaseTypeChange,
+  onProducerSearchStateChange,
   searchFormAlbumTitle,
   searchFormArtistName,
   searchFormReleaseType,
+  producerSearchState,
   detailReturnRoute
 }) {
   const selectedAlbum = selectedAlbumResult
@@ -126,7 +140,14 @@ function ScreenRouter({
         />
       )
     case 'Producer Search':
-      return <ProducerSearchScreen onBackToSearch={onBackToSearch} onSelectAlbum={onSelectAlbum} />
+      return (
+        <ProducerSearchScreen
+          onBackToSearch={onBackToSearch}
+          onProducerSearchStateChange={onProducerSearchStateChange}
+          onSelectAlbum={onSelectAlbum}
+          producerSearchState={producerSearchState}
+        />
+      )
     case 'Help / Data Sources':
       return <HelpDataSourcesScreen onBackToSearch={onBackToSearch} />
     case 'Search':
@@ -164,6 +185,7 @@ export default function App() {
   const [albumDetailLoading, setAlbumDetailLoading] = useState(false)
   const [albumDetailError, setAlbumDetailError] = useState('')
   const [detailReturnRoute, setDetailReturnRoute] = useState('Results')
+  const [producerSearchState, setProducerSearchState] = useState(INITIAL_PRODUCER_SEARCH_STATE)
 
   useEffect(() => {
     if (!selectedAlbumResult || !selectedAlbumId) {
@@ -338,13 +360,13 @@ export default function App() {
     }
   }
 
-  function handleSelectAlbum(albumId, albumResult = null) {
+  function handleSelectAlbum(albumId, albumResult = null, sourceRoute = 'Results') {
     if (albumResult) {
       setSelectedAlbumId(albumId)
       setSelectedAlbumResult(albumResult)
       setSelectedAlbumDetail(null)
       setAlbumDetailError('')
-      setDetailReturnRoute('Results')
+      setDetailReturnRoute(sourceRoute)
       setRoute('Album Detail')
       return
     }
@@ -409,9 +431,11 @@ export default function App() {
           onSearchFormAlbumTitleChange={setSearchFormAlbumTitle}
           onSearchFormArtistNameChange={setSearchFormArtistName}
           onSearchFormReleaseTypeChange={setSearchFormReleaseType}
+          onProducerSearchStateChange={setProducerSearchState}
           searchFormAlbumTitle={searchFormAlbumTitle}
           searchFormArtistName={searchFormArtistName}
           searchFormReleaseType={searchFormReleaseType}
+          producerSearchState={producerSearchState}
           detailReturnRoute={detailReturnRoute}
         />
       </View>
