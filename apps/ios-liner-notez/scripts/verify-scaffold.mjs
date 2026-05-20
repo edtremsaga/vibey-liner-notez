@@ -364,6 +364,18 @@ if (
   throw new Error('ProducerSearchScreen does not render source-backed producer evidence cards')
 }
 if (
+  !producerSearchScreenSource.includes('rankProducerResults') ||
+  !producerSearchScreenSource.includes('getProducerResultSortBucket') ||
+  !producerSearchScreenSource.includes('getProducerEvidenceRank') ||
+  !producerSearchScreenSource.includes('DEEMPHASIZED_SECONDARY_TYPES') ||
+  !producerSearchScreenSource.includes('rankedProducerResults = rankProducerResults(producerResults)') ||
+  !producerSearchScreenSource.includes('Sorted to show album results first.') ||
+  !producerSearchScreenSource.includes('return left.index - right.index') ||
+  !producerSearchScreenSource.includes('rankedProducerResults.map((result)')
+) {
+  throw new Error('ProducerSearchScreen does not apply presentation-only producer result ranking')
+}
+if (
   !producerSearchScreenSource.includes('mapProducerResultToAlbumResult') ||
   !producerSearchScreenSource.includes('Open album detail') ||
   !producerSearchScreenSource.includes("onSelectAlbum?.(releaseGroupId, mapProducerResultToAlbumResult(result), 'Producer Search')") ||

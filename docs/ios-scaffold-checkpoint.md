@@ -45,6 +45,7 @@
 - Selecting a Producer Search candidate runs release-level producer lookup for the selected MusicBrainz artist.
 - Producer Search can load more fixed-size MusicBrainz producer-credit batches and append newly found albums without duplicating already shown release groups.
 - Producer Search shows visible loading indicators, visible album counts, and concise append feedback for producer results.
+- Producer Search applies light presentation-only ranking so album results display before singles/EPs/secondary-release types when loaded.
 - Producer Search result cards show source-backed evidence from documented MusicBrainz release-level producer relationships.
 - Producer Search result cards open the existing Album Detail flow and return with Producer Search state preserved.
 - Producer Search results use compact user-facing selected-producer context, filtered alias display, and no visible raw release IDs in normal result cards.

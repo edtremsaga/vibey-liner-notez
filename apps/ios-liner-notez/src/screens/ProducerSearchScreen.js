@@ -7,6 +7,14 @@ import {
 
 const PRODUCER_RELEASE_LOOKUP_LIMIT = 10
 const MAX_VISIBLE_ALIASES = 3
+const DEEMPHASIZED_SECONDARY_TYPES = new Set([
+  'compilation',
+  'live',
+  'soundtrack',
+  'remix',
+  'interview',
+  'spokenword'
+])
 
 function formatLifeSpan(lifeSpan) {
   if (!lifeSpan?.begin && !lifeSpan?.end) {
@@ -104,6 +112,62 @@ function mapProducerResultToAlbumResult(result) {
   }
 }
 
+function hasDeemphasizedSecondaryType(result) {
+  const secondaryTypes = Array.isArray(result?.secondaryTypes) ? result.secondaryTypes : []
+  return secondaryTypes.some((type) => DEEMPHASIZED_SECONDARY_TYPES.has(String(type).toLowerCase()))
+}
+
+function getProducerResultSortBucket(result) {
+  const primaryType = String(result?.primaryType ?? '').toLowerCase()
+
+  if (primaryType === 'album') {
+    return hasDeemphasizedSecondaryType(result) ? 1 : 0
+  }
+
+  if (primaryType === 'ep' || primaryType === 'single') {
+    return 2
+  }
+
+  return 3
+}
+
+function getProducerEvidenceRank(result) {
+  const attributes = result?.producerEvidence?.relationshipAttributes ?? {}
+
+  if (attributes.assistant) {
+    return 4
+  }
+
+  if (attributes.additional || attributes.associate) {
+    return 3
+  }
+
+  if (attributes.executive) {
+    return 2
+  }
+
+  return 1
+}
+
+function rankProducerResults(results) {
+  return results
+    .map((result, index) => ({ result, index }))
+    .sort((left, right) => {
+      const bucketDifference = getProducerResultSortBucket(left.result) - getProducerResultSortBucket(right.result)
+      if (bucketDifference !== 0) {
+        return bucketDifference
+      }
+
+      const evidenceDifference = getProducerEvidenceRank(left.result) - getProducerEvidenceRank(right.result)
+      if (evidenceDifference !== 0) {
+        return evidenceDifference
+      }
+
+      return left.index - right.index
+    })
+    .map(({ result }) => result)
+}
+
 function ProducerResultCard({ onOpenAlbumDetail, result }) {
   const evidence = result.producerEvidence ?? {}
   const secondaryTypes = formatSecondaryTypes(result.secondaryTypes)
@@ -189,6 +253,7 @@ export function ProducerSearchScreen({
   const showCandidateSelection = candidateResult?.status === 'select' && candidates.length > 0 && !selectedProducer
   const showNoCandidates = candidateResult?.status === 'none' && !selectedProducer
   const producerResults = producerResult?.results ?? []
+  const rankedProducerResults = rankProducerResults(producerResults)
   const showNoProducerResults = selectedProducer && producerResult && producerResults.length === 0 && !isLoadingProducerResults
   const showLoadMoreButton = !!producerResult?.hasMore && !isLoadingProducerResults
 
@@ -658,7 +723,10 @@ export function ProducerSearchScreen({
           }}
         >
           <ProducerResultsContext producer={selectedProducer} resultCount={producerResults.length} />
-          {producerResults.map((result) => (
+          <Text style={{ color: '#6b7280', marginTop: 4, fontSize: 12 }}>
+            Sorted to show album results first.
+          </Text>
+          {rankedProducerResults.map((result) => (
             <ProducerResultCard
               key={result.releaseGroupId}
               onOpenAlbumDetail={handleOpenAlbumDetail}
