@@ -14,6 +14,7 @@ import {
   fetchWikipediaArticleFromWikidataUrl
 } from './services/musicbrainzAlbumDetail'
 import { searchMusicBrainzAlbumsByArtist } from './services/musicbrainzAlbumSearch'
+import { formatMusicDataError } from './services/musicDataErrors'
 
 const INITIAL_PRODUCER_SEARCH_STATE = {
   producerName: '',
@@ -321,13 +322,13 @@ export default function App() {
           }
         } catch (error) {
           if (isCurrent) {
-            setAlbumDetailError(error?.message || 'We could not load the MusicBrainz selected release tracklist.')
+            setAlbumDetailError(formatMusicDataError(error))
           }
         }
       })
       .catch((error) => {
         if (isCurrent) {
-          setAlbumDetailError(error?.message || 'We could not load MusicBrainz release-group details.')
+          setAlbumDetailError(formatMusicDataError(error))
         }
       })
       .finally(() => {
@@ -367,7 +368,7 @@ export default function App() {
       if (albumSearchRequestId.current !== requestId) {
         return
       }
-      setAlbumSearchError(error?.message || 'We could not load album results. Please try again.')
+      setAlbumSearchError(formatMusicDataError(error))
     } finally {
       if (albumSearchRequestId.current === requestId) {
         setAlbumSearchLoading(false)

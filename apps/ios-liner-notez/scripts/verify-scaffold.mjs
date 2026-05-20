@@ -11,6 +11,7 @@ const requiredFiles = [
   'src/App.js',
   'src/services/musicbrainzAlbumDetail.js',
   'src/services/musicbrainzAlbumSearch.js',
+  'src/services/musicDataErrors.js',
   'src/services/musicbrainzProducerSearch.js',
   'src/screens/SearchScreen.js',
   'src/screens/ResultsScreen.js',
@@ -27,6 +28,7 @@ for (const rel of requiredFiles) {
 }
 
 const appSource = readFileSync(path.join(appRoot, 'src/App.js'), 'utf8')
+const musicDataErrorsSource = readFileSync(path.join(appRoot, 'src/services/musicDataErrors.js'), 'utf8')
 const requiredRoutes = ['Search', 'Results', 'Album Detail', 'Producer Search', 'Help / Data Sources']
 for (const route of requiredRoutes) {
   if (!appSource.includes(route)) {
@@ -838,6 +840,16 @@ if (!albumDetailScreenSource.includes('Album unavailable')) {
 
 if (!appSource.includes('searchMusicBrainzAlbumsByArtist')) {
   throw new Error('App router does not import iOS MusicBrainz album search adapter')
+}
+if (
+  !musicDataErrorsSource.includes('formatMusicDataError') ||
+  !musicDataErrorsSource.includes('Couldn’t reach the music data service. Check your connection and try again.') ||
+  !musicDataErrorsSource.includes('MusicBrainz is temporarily unavailable or busy. Try again in a minute.') ||
+  !musicDataErrorsSource.includes('The music data service returned an unexpected response. Try again later.') ||
+  !appSource.includes('formatMusicDataError(error)') ||
+  !producerSearchScreenSource.includes('formatMusicDataError(error)')
+) {
+  throw new Error('iOS app does not normalize user-facing music data error messages')
 }
 if (!appSource.includes('handleSubmitArtistSearch') || !appSource.includes("setRoute('Results')")) {
   throw new Error('App router does not navigate from search to results via artist submit flow')

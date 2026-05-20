@@ -4,6 +4,7 @@ import {
   resolveMusicBrainzProducerCandidates,
   searchMusicBrainzAlbumsByProducer
 } from '../services/musicbrainzProducerSearch'
+import { formatMusicDataError } from '../services/musicDataErrors'
 
 const PRODUCER_RELEASE_LOOKUP_LIMIT = 10
 const MAX_VISIBLE_ALIASES = 3
@@ -328,7 +329,7 @@ export function ProducerSearchScreen({
       if (producerLookupRequestId.current !== requestId) {
         return
       }
-      setProducerResultError(error?.message || 'We could not load producer album results from MusicBrainz.')
+      setProducerResultError(formatMusicDataError(error))
     } finally {
       if (producerLookupRequestId.current === requestId) {
         setIsLoadingProducerResults(false)
@@ -382,7 +383,7 @@ export function ProducerSearchScreen({
       if (producerLookupRequestId.current !== requestId) {
         return
       }
-      setProducerLoadMoreError(error?.message || 'We could not load more producer album results from MusicBrainz.')
+      setProducerLoadMoreError(formatMusicDataError(error))
     } finally {
       if (producerLookupRequestId.current === requestId) {
         setIsLoadingMoreProducerResults(false)
@@ -436,7 +437,7 @@ export function ProducerSearchScreen({
       if (producerLookupRequestId.current !== requestId) {
         return
       }
-      setErrorMessage(error?.message || 'We could not load producer candidates from MusicBrainz.')
+      setErrorMessage(formatMusicDataError(error))
     } finally {
       if (producerLookupRequestId.current === requestId) {
         setIsLoadingCandidates(false)
