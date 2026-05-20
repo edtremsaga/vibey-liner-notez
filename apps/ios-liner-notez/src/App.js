@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SearchScreen } from './screens/SearchScreen'
 import { ResultsScreen } from './screens/ResultsScreen'
@@ -189,6 +189,7 @@ export default function App() {
   const [albumDetailError, setAlbumDetailError] = useState('')
   const [detailReturnRoute, setDetailReturnRoute] = useState('Results')
   const [producerSearchState, setProducerSearchState] = useState(INITIAL_PRODUCER_SEARCH_STATE)
+  const albumSearchRequestId = useRef(0)
 
   useEffect(() => {
     if (!selectedAlbumResult || !selectedAlbumId) {
@@ -341,6 +342,9 @@ export default function App() {
   }, [selectedAlbumId, selectedAlbumResult])
 
   async function handleSubmitArtistSearch({ artistName, albumTitle, releaseType }) {
+    const requestId = albumSearchRequestId.current + 1
+    albumSearchRequestId.current = requestId
+
     setSearchFormArtistName(artistName)
     setSearchFormAlbumTitle(albumTitle)
     setSearchFormReleaseType(releaseType)
@@ -355,11 +359,19 @@ export default function App() {
 
     try {
       const results = await searchMusicBrainzAlbumsByArtist({ artistName, albumTitle, releaseType })
+      if (albumSearchRequestId.current !== requestId) {
+        return
+      }
       setAlbumSearchResults(results)
     } catch (error) {
+      if (albumSearchRequestId.current !== requestId) {
+        return
+      }
       setAlbumSearchError(error?.message || 'We could not load album results. Please try again.')
     } finally {
-      setAlbumSearchLoading(false)
+      if (albumSearchRequestId.current === requestId) {
+        setAlbumSearchLoading(false)
+      }
     }
   }
 

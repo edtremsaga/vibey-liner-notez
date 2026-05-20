@@ -826,6 +826,13 @@ if (!appSource.includes('searchMusicBrainzAlbumsByArtist')) {
 if (!appSource.includes('handleSubmitArtistSearch') || !appSource.includes("setRoute('Results')")) {
   throw new Error('App router does not navigate from search to results via artist submit flow')
 }
+if (
+  !appSource.includes('albumSearchRequestId') ||
+  !appSource.includes('albumSearchRequestId.current !== requestId') ||
+  !appSource.includes('albumSearchRequestId.current === requestId')
+) {
+  throw new Error('App router does not guard stale Album Search request updates')
+}
 if (!appSource.includes('handleSelectAlbum') || !appSource.includes("setRoute('Album Detail')")) {
   throw new Error('App router does not navigate from results to album detail')
 }
