@@ -273,7 +273,7 @@ const producerSearchScreenSource = readFileSync(
 if (!producerSearchScreenSource.includes('ScrollView') || !producerSearchScreenSource.includes('contentContainerStyle')) {
   throw new Error('ProducerSearchScreen is not scrollable for producer candidate content')
 }
-if (!producerSearchScreenSource.includes('onBackToSearch') || !producerSearchScreenSource.includes('Back to Search')) {
+if (!producerSearchScreenSource.includes('onBackToSearch') || !producerSearchScreenSource.includes('Back to Album Search')) {
   throw new Error('ProducerSearchScreen does not include contextual back-to-search action')
 }
 if (!producerSearchScreenSource.includes('Producer search input')) {
@@ -369,7 +369,7 @@ if (
   !producerSearchScreenSource.includes('getProducerEvidenceRank') ||
   !producerSearchScreenSource.includes('DEEMPHASIZED_SECONDARY_TYPES') ||
   !producerSearchScreenSource.includes('rankedProducerResults = rankProducerResults(producerResults)') ||
-  !producerSearchScreenSource.includes('Sorted to show album results first.') ||
+  !producerSearchScreenSource.includes('Album releases are shown first when available.') ||
   !producerSearchScreenSource.includes('return left.index - right.index') ||
   !producerSearchScreenSource.includes('rankedProducerResults.map((result)')
 ) {

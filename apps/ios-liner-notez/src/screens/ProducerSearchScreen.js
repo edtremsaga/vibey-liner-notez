@@ -480,7 +480,7 @@ export function ProducerSearchScreen({
           marginBottom: 14
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Search</Text>
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Album Search</Text>
       </TouchableOpacity>
 
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Producer Search</Text>
@@ -724,7 +724,7 @@ export function ProducerSearchScreen({
         >
           <ProducerResultsContext producer={selectedProducer} resultCount={producerResults.length} />
           <Text style={{ color: '#6b7280', marginTop: 4, fontSize: 12 }}>
-            Sorted to show album results first.
+            Album releases are shown first when available.
           </Text>
           {rankedProducerResults.map((result) => (
             <ProducerResultCard
