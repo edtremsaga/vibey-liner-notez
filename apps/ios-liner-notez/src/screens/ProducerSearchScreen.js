@@ -134,37 +134,16 @@ function ProducerResultCard({ onOpenAlbumDetail, result }) {
   )
 }
 
-function ProducerResultsSummary({ producerResult }) {
-  const metrics = producerResult?.metrics
-  if (!metrics) {
+function ProducerResultsContext({ producer }) {
+  if (!producer) {
     return null
   }
 
   return (
-    <Text style={{ color: '#9ca3af', marginTop: 8, fontSize: 12 }}>
-      Checked {metrics.releaseLookupsAttempted} documented release-level producer credits. {metrics.duplicateReleaseGroupsSkipped} duplicate release groups skipped.
-    </Text>
-  )
-}
-
-function SelectedProducerContext({ producer }) {
-  return (
-    <View
-      style={{
-        marginTop: 12,
-        borderWidth: 1,
-        borderColor: '#256d4f',
-        borderRadius: 10,
-        padding: 12,
-        backgroundColor: '#10231d'
-      }}
-    >
-      <Text style={{ color: '#d1fae5', fontWeight: '700' }}>Selected producer: {producer.name}</Text>
-      <Text style={{ color: '#a7f3d0', marginTop: 6 }}>
-        Album results use documented MusicBrainz release-level producer credits.
-      </Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8, fontSize: 12 }}>
-        MusicBrainz artist MBID: {producer.id}
+    <View style={{ marginTop: 8, marginBottom: 4 }}>
+      <Text style={{ color: '#e5e7eb', fontWeight: '700', fontSize: 16 }}>Producer: {producer.name}</Text>
+      <Text style={{ color: '#9ca3af', marginTop: 4 }}>
+        Showing the first albums found from MusicBrainz producer credits.
       </Text>
     </View>
   )
@@ -511,10 +490,6 @@ export function ProducerSearchScreen({
         </View>
       ) : null}
 
-      {selectedProducer ? (
-        <SelectedProducerContext producer={selectedProducer} />
-      ) : null}
-
       {isLoadingProducerResults ? (
         <View
           style={{
@@ -526,11 +501,12 @@ export function ProducerSearchScreen({
             backgroundColor: '#181a1f'
           }}
         >
+          <ProducerResultsContext producer={selectedProducer} />
           <Text style={{ color: '#d1d5db', fontWeight: '600' }}>
-            Checking documented release-level producer credits in MusicBrainz...
+            Checking documented producer credits in MusicBrainz...
           </Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Looking up the first {PRODUCER_RELEASE_LOOKUP_LIMIT} documented release credits for this producer.
+            Looking up the first albums found for this producer.
           </Text>
         </View>
       ) : null}
@@ -562,13 +538,13 @@ export function ProducerSearchScreen({
             backgroundColor: '#181a1f'
           }}
         >
+          <ProducerResultsContext producer={selectedProducer} />
           <Text style={{ color: '#d1d5db', fontWeight: '600' }}>
-            No documented release-level producer credits found for this MusicBrainz artist.
+            No documented MusicBrainz producer credits found for this artist.
           </Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            MusicBrainz data may be incomplete, and track-level producer credits are not searched yet.
+            MusicBrainz data may be incomplete, so some producer connections may be missing.
           </Text>
-          <ProducerResultsSummary producerResult={producerResult} />
         </View>
       ) : null}
 
@@ -583,11 +559,11 @@ export function ProducerSearchScreen({
             backgroundColor: '#181a1f'
           }}
         >
+          <ProducerResultsContext producer={selectedProducer} />
           <Text style={{ color: '#d1d5db', fontWeight: '700' }}>Producer album results</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Bounded results from documented MusicBrainz release-level producer credits.
+            Results are based on documented MusicBrainz producer credits.
           </Text>
-          <ProducerResultsSummary producerResult={producerResult} />
           {producerResults.map((result) => (
             <ProducerResultCard
               key={result.releaseGroupId}

@@ -45,6 +45,7 @@
 - Selecting a Producer Search candidate runs release-level producer lookup for the selected MusicBrainz artist.
 - Producer Search result cards show source-backed evidence from documented MusicBrainz release-level producer relationships.
 - Producer Search result cards open the existing Album Detail flow and return with Producer Search state preserved.
+- Producer Search results use compact user-facing selected-producer context instead of diagnostic MBID/duplicate-count copy.
 - Album Detail shows real selected-result header data for Search results, enriches release-group Editions & Sources from MusicBrainz, loads the selected-release tracklist, and displays selected-release album-level credits, track-level credits, songwriting, and publishing when documented.
 - Album Detail selected-release album-level credits are loaded from the existing selected-release response without adding another MusicBrainz request.
 - Album Detail album-level credits render as a collapsed `Album` disclosure row inside Credits.

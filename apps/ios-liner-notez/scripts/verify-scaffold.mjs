@@ -315,14 +315,22 @@ if (!producerSearchScreenSource.includes('No producer candidates found')) {
 if (!producerSearchScreenSource.includes('Choose the MusicBrainz artist you mean.')) {
   throw new Error('ProducerSearchScreen does not include candidate selection copy')
 }
-if (!producerSearchScreenSource.includes('Selected producer:') || !producerSearchScreenSource.includes('Album results use documented MusicBrainz release-level producer credits.')) {
-  throw new Error('ProducerSearchScreen does not include selected-producer context copy')
+if (
+  !producerSearchScreenSource.includes('ProducerResultsContext') ||
+  !producerSearchScreenSource.includes('Producer: {producer.name}') ||
+  !producerSearchScreenSource.includes('Showing the first albums found from MusicBrainz producer credits.') ||
+  producerSearchScreenSource.includes('Selected producer:') ||
+  producerSearchScreenSource.includes('MusicBrainz artist MBID:') ||
+  producerSearchScreenSource.includes('duplicate release groups skipped') ||
+  producerSearchScreenSource.includes('Bounded results from documented')
+) {
+  throw new Error('ProducerSearchScreen does not include compact user-facing selected-producer results context')
 }
 if (
   !producerSearchScreenSource.includes('searchMusicBrainzAlbumsByProducer') ||
   !producerSearchScreenSource.includes('PRODUCER_RELEASE_LOOKUP_LIMIT = 10') ||
   !producerSearchScreenSource.includes('loadProducerReleaseLevelResults') ||
-  !producerSearchScreenSource.includes('Checking documented release-level producer credits in MusicBrainz') ||
+  !producerSearchScreenSource.includes('Checking documented producer credits in MusicBrainz') ||
   !producerSearchScreenSource.includes('Producer album results')
 ) {
   throw new Error('ProducerSearchScreen does not run bounded release-level producer result lookup')
@@ -343,8 +351,8 @@ if (
 ) {
   throw new Error('ProducerSearchScreen does not open producer results with the existing Album Detail flow')
 }
-if (!producerSearchScreenSource.includes('No documented release-level producer credits found for this MusicBrainz artist.')) {
-  throw new Error('ProducerSearchScreen does not include release-level no-results state copy')
+if (!producerSearchScreenSource.includes('No documented MusicBrainz producer credits found for this artist.')) {
+  throw new Error('ProducerSearchScreen does not include concise no-results state copy')
 }
 if (!producerSearchScreenSource.includes('candidate.type') || !producerSearchScreenSource.includes('candidate.disambiguation') || !producerSearchScreenSource.includes('candidate.country') || !producerSearchScreenSource.includes('formatLifeSpan(candidate.lifeSpan)') || !producerSearchScreenSource.includes('Aliases:')) {
   throw new Error('ProducerSearchScreen candidate rows do not include enough disambiguation')
