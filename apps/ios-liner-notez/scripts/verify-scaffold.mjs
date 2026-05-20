@@ -280,6 +280,16 @@ if (!producerSearchScreenSource.includes('Producer search input')) {
   throw new Error('ProducerSearchScreen does not include producer input')
 }
 if (
+  !producerSearchScreenSource.includes('resetProducerSearchState') ||
+  !producerSearchScreenSource.includes('Clear producer name') ||
+  !producerSearchScreenSource.includes('paddingRight: 44') ||
+  !producerSearchScreenSource.includes("position: 'absolute'") ||
+  !producerSearchScreenSource.includes("width: 34") ||
+  !producerSearchScreenSource.includes('setIsLoadingProducerResults(false)')
+) {
+  throw new Error('ProducerSearchScreen does not include an in-field producer clear control that resets search state')
+}
+if (
   !producerSearchScreenSource.includes("from '../services/musicbrainzProducerSearch'") ||
   !producerSearchScreenSource.includes('resolveMusicBrainzProducerCandidates') ||
   !producerSearchScreenSource.includes('handleResolveProducerCandidates') ||

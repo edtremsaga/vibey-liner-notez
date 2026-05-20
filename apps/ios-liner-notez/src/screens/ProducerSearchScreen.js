@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import {
   resolveMusicBrainzProducerCandidates,
@@ -162,6 +162,7 @@ export function ProducerSearchScreen({ onBackToSearch }) {
   const [producerResult, setProducerResult] = useState(null)
   const [producerResultError, setProducerResultError] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const producerLookupRequestId = useRef(0)
 
   const candidates = candidateResult?.candidates ?? []
   const showCandidateSelection = candidateResult?.status === 'select' && candidates.length > 0 && !selectedProducer
@@ -169,7 +170,22 @@ export function ProducerSearchScreen({ onBackToSearch }) {
   const producerResults = producerResult?.results ?? []
   const showNoProducerResults = selectedProducer && producerResult && producerResults.length === 0 && !isLoadingProducerResults
 
+  function resetProducerSearchState() {
+    producerLookupRequestId.current += 1
+    setProducerName('')
+    setShowValidation(false)
+    setIsLoadingCandidates(false)
+    setIsLoadingProducerResults(false)
+    setCandidateResult(null)
+    setSelectedProducer(null)
+    setProducerResult(null)
+    setProducerResultError('')
+    setErrorMessage('')
+  }
+
   async function loadProducerReleaseLevelResults(candidate) {
+    const requestId = producerLookupRequestId.current + 1
+    producerLookupRequestId.current = requestId
     setProducerResult(null)
     setProducerResultError('')
     setIsLoadingProducerResults(true)
@@ -180,18 +196,28 @@ export function ProducerSearchScreen({ onBackToSearch }) {
         producerName: candidate.name,
         limit: PRODUCER_RELEASE_LOOKUP_LIMIT
       })
+      if (producerLookupRequestId.current !== requestId) {
+        return
+      }
       setProducerResult(result)
     } catch (error) {
+      if (producerLookupRequestId.current !== requestId) {
+        return
+      }
       setProducerResultError(error?.message || 'We could not load producer album results from MusicBrainz.')
     } finally {
-      setIsLoadingProducerResults(false)
+      if (producerLookupRequestId.current === requestId) {
+        setIsLoadingProducerResults(false)
+      }
     }
   }
 
   async function handleResolveProducerCandidates() {
     const trimmedProducer = producerName.trim()
+    const requestId = producerLookupRequestId.current + 1
 
     if (!trimmedProducer) {
+      producerLookupRequestId.current = requestId
       setShowValidation(true)
       setCandidateResult(null)
       setSelectedProducer(null)
@@ -208,9 +234,13 @@ export function ProducerSearchScreen({ onBackToSearch }) {
     setProducerResultError('')
     setErrorMessage('')
     setIsLoadingCandidates(true)
+    producerLookupRequestId.current = requestId
 
     try {
       const result = await resolveMusicBrainzProducerCandidates(trimmedProducer)
+      if (producerLookupRequestId.current !== requestId) {
+        return
+      }
       setCandidateResult(result)
 
       if (result.status === 'auto' && result.selectedCandidate) {
@@ -219,9 +249,14 @@ export function ProducerSearchScreen({ onBackToSearch }) {
         await loadProducerReleaseLevelResults(result.selectedCandidate)
       }
     } catch (error) {
+      if (producerLookupRequestId.current !== requestId) {
+        return
+      }
       setErrorMessage(error?.message || 'We could not load producer candidates from MusicBrainz.')
     } finally {
-      setIsLoadingCandidates(false)
+      if (producerLookupRequestId.current === requestId) {
+        setIsLoadingCandidates(false)
+      }
     }
   }
 
@@ -261,33 +296,58 @@ export function ProducerSearchScreen({ onBackToSearch }) {
       </Text>
 
       <Text style={{ color: '#d1d5db', marginTop: 12 }}>Producer</Text>
-      <TextInput
-        accessibilityLabel="Producer search input"
-        placeholder="e.g. Quincy Jones"
-        placeholderTextColor="#9ca3af"
-        value={producerName}
-        editable={!isLoadingCandidates}
-        onChangeText={(value) => {
-          setProducerName(value)
-          setCandidateResult(null)
-          setSelectedProducer(null)
-          setProducerResult(null)
-          setProducerResultError('')
-          setErrorMessage('')
-          if (showValidation && value.trim()) {
-            setShowValidation(false)
-          }
-        }}
-        style={{
-          marginTop: 8,
-          borderWidth: 1,
-          borderColor: '#4b5563',
-          borderRadius: 10,
-          paddingVertical: 10,
-          paddingHorizontal: 12,
-          color: '#f3f4f6'
-        }}
-      />
+      <View style={{ position: 'relative', marginTop: 8 }}>
+        <TextInput
+          accessibilityLabel="Producer search input"
+          autoCapitalize="words"
+          placeholder="e.g. Quincy Jones"
+          placeholderTextColor="#9ca3af"
+          value={producerName}
+          editable={!isLoadingCandidates}
+          onChangeText={(value) => {
+            producerLookupRequestId.current += 1
+            setProducerName(value)
+            setIsLoadingCandidates(false)
+            setIsLoadingProducerResults(false)
+            setCandidateResult(null)
+            setSelectedProducer(null)
+            setProducerResult(null)
+            setProducerResultError('')
+            setErrorMessage('')
+            if (showValidation && value.trim()) {
+              setShowValidation(false)
+            }
+          }}
+          style={{
+            borderWidth: 1,
+            borderColor: '#4b5563',
+            borderRadius: 10,
+            paddingVertical: 10,
+            paddingHorizontal: 12,
+            paddingRight: 44,
+            color: '#f3f4f6',
+            width: '100%'
+          }}
+        />
+        {!!producerName && (
+          <TouchableOpacity
+            accessibilityLabel="Clear producer name"
+            accessibilityRole="button"
+            onPress={resetProducerSearchState}
+            style={{
+              position: 'absolute',
+              right: 4,
+              top: 4,
+              bottom: 4,
+              width: 34,
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <Text style={{ color: '#9ca3af', fontSize: 18, fontWeight: '700' }}>×</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       {showValidation ? (
         <Text style={{ color: '#fca5a5', marginTop: 8 }}>

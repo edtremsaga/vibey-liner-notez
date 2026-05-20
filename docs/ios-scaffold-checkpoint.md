@@ -40,6 +40,7 @@
 - Non-root screens keep primary back navigation near the top so Results, Album Detail, Producer Search, and Help / Data Sources do not require scrolling to navigate back.
 - Producer Search resolves real MusicBrainz producer artist candidates and loads a bounded first batch of release-level producer album results.
 - Producer input works.
+- Producer input includes the same in-field clear control pattern used by the main album search fields.
 - Ambiguous Producer Search names show candidate selection instead of failing or silently choosing.
 - Selecting a Producer Search candidate runs release-level producer lookup for the selected MusicBrainz artist.
 - Producer Search result cards show source-backed evidence from documented MusicBrainz release-level producer relationships.
