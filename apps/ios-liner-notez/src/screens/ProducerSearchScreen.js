@@ -175,6 +175,9 @@ export function ProducerSearchScreen({
   const [selectedProducer, setSelectedProducer] = useState(producerSearchState.selectedProducer ?? null)
   const [producerResult, setProducerResult] = useState(producerSearchState.producerResult ?? null)
   const [producerResultError, setProducerResultError] = useState(producerSearchState.producerResultError ?? '')
+  const [isLoadingMoreProducerResults, setIsLoadingMoreProducerResults] = useState(producerSearchState.isLoadingMoreProducerResults ?? false)
+  const [producerLoadMoreMessage, setProducerLoadMoreMessage] = useState(producerSearchState.producerLoadMoreMessage ?? '')
+  const [producerLoadMoreError, setProducerLoadMoreError] = useState(producerSearchState.producerLoadMoreError ?? '')
   const [errorMessage, setErrorMessage] = useState(producerSearchState.errorMessage ?? '')
   const producerLookupRequestId = useRef(0)
 
@@ -183,6 +186,7 @@ export function ProducerSearchScreen({
   const showNoCandidates = candidateResult?.status === 'none' && !selectedProducer
   const producerResults = producerResult?.results ?? []
   const showNoProducerResults = selectedProducer && producerResult && producerResults.length === 0 && !isLoadingProducerResults
+  const canLoadMoreProducerResults = !!producerResult?.hasMore && !isLoadingProducerResults && !isLoadingMoreProducerResults
 
   useEffect(() => {
     onProducerSearchStateChange?.({
@@ -194,15 +198,21 @@ export function ProducerSearchScreen({
       selectedProducer,
       producerResult,
       producerResultError,
+      isLoadingMoreProducerResults,
+      producerLoadMoreMessage,
+      producerLoadMoreError,
       errorMessage
     })
   }, [
     candidateResult,
     errorMessage,
     isLoadingCandidates,
+    isLoadingMoreProducerResults,
     isLoadingProducerResults,
     onProducerSearchStateChange,
     producerName,
+    producerLoadMoreError,
+    producerLoadMoreMessage,
     producerResult,
     producerResultError,
     selectedProducer,
@@ -219,6 +229,9 @@ export function ProducerSearchScreen({
     setSelectedProducer(null)
     setProducerResult(null)
     setProducerResultError('')
+    setIsLoadingMoreProducerResults(false)
+    setProducerLoadMoreMessage('')
+    setProducerLoadMoreError('')
     setErrorMessage('')
   }
 
@@ -227,6 +240,9 @@ export function ProducerSearchScreen({
     producerLookupRequestId.current = requestId
     setProducerResult(null)
     setProducerResultError('')
+    setIsLoadingMoreProducerResults(false)
+    setProducerLoadMoreMessage('')
+    setProducerLoadMoreError('')
     setIsLoadingProducerResults(true)
 
     try {
@@ -239,6 +255,9 @@ export function ProducerSearchScreen({
         return
       }
       setProducerResult(result)
+      if (!result.hasMore && result.results.length > 0) {
+        setProducerLoadMoreMessage('No more producer-credit results found in MusicBrainz.')
+      }
     } catch (error) {
       if (producerLookupRequestId.current !== requestId) {
         return
@@ -247,6 +266,58 @@ export function ProducerSearchScreen({
     } finally {
       if (producerLookupRequestId.current === requestId) {
         setIsLoadingProducerResults(false)
+      }
+    }
+  }
+
+  async function handleLoadMoreProducerResults() {
+    if (!selectedProducer || !producerResult?.hasMore || isLoadingMoreProducerResults) {
+      return
+    }
+
+    const requestId = producerLookupRequestId.current + 1
+    producerLookupRequestId.current = requestId
+    setIsLoadingMoreProducerResults(true)
+    setProducerLoadMoreMessage('')
+    setProducerLoadMoreError('')
+
+    try {
+      const nextResult = await searchMusicBrainzAlbumsByProducer({
+        producerMbid: selectedProducer.id,
+        producerName: selectedProducer.name,
+        offset: producerResult.nextOffset,
+        limit: PRODUCER_RELEASE_LOOKUP_LIMIT,
+        seenReleaseGroupIds: producerResult.seenReleaseGroupIds
+      })
+      if (producerLookupRequestId.current !== requestId) {
+        return
+      }
+
+      setProducerResult((currentResult) => {
+        const currentResults = currentResult?.results ?? []
+        return {
+          ...(currentResult ?? nextResult),
+          results: [...currentResults, ...nextResult.results],
+          metrics: nextResult.metrics,
+          nextOffset: nextResult.nextOffset,
+          hasMore: nextResult.hasMore,
+          seenReleaseGroupIds: nextResult.seenReleaseGroupIds
+        }
+      })
+
+      if (nextResult.results.length === 0 && nextResult.hasMore) {
+        setProducerLoadMoreMessage('No new albums found in that batch.')
+      } else if (!nextResult.hasMore) {
+        setProducerLoadMoreMessage('No more producer-credit results found in MusicBrainz.')
+      }
+    } catch (error) {
+      if (producerLookupRequestId.current !== requestId) {
+        return
+      }
+      setProducerLoadMoreError(error?.message || 'We could not load more producer album results from MusicBrainz.')
+    } finally {
+      if (producerLookupRequestId.current === requestId) {
+        setIsLoadingMoreProducerResults(false)
       }
     }
   }
@@ -262,6 +333,9 @@ export function ProducerSearchScreen({
       setSelectedProducer(null)
       setProducerResult(null)
       setProducerResultError('')
+      setIsLoadingMoreProducerResults(false)
+      setProducerLoadMoreMessage('')
+      setProducerLoadMoreError('')
       setErrorMessage('')
       return
     }
@@ -271,6 +345,9 @@ export function ProducerSearchScreen({
     setSelectedProducer(null)
     setProducerResult(null)
     setProducerResultError('')
+    setIsLoadingMoreProducerResults(false)
+    setProducerLoadMoreMessage('')
+    setProducerLoadMoreError('')
     setErrorMessage('')
     setIsLoadingCandidates(true)
     producerLookupRequestId.current = requestId
@@ -361,6 +438,9 @@ export function ProducerSearchScreen({
             setSelectedProducer(null)
             setProducerResult(null)
             setProducerResultError('')
+            setIsLoadingMoreProducerResults(false)
+            setProducerLoadMoreMessage('')
+            setProducerLoadMoreError('')
             setErrorMessage('')
             if (showValidation && value.trim()) {
               setShowValidation(false)
@@ -579,6 +659,35 @@ export function ProducerSearchScreen({
               result={result}
             />
           ))}
+          {isLoadingMoreProducerResults ? (
+            <Text style={{ color: '#9ca3af', marginTop: 12 }}>
+              Checking more MusicBrainz producer credits...
+            </Text>
+          ) : null}
+          {producerLoadMoreError ? (
+            <Text style={{ color: '#fca5a5', marginTop: 12 }}>{producerLoadMoreError}</Text>
+          ) : null}
+          {producerLoadMoreMessage ? (
+            <Text style={{ color: '#9ca3af', marginTop: 12 }}>{producerLoadMoreMessage}</Text>
+          ) : null}
+          {canLoadMoreProducerResults ? (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Load more producer album results"
+              onPress={handleLoadMoreProducerResults}
+              style={{
+                marginTop: 12,
+                borderWidth: 1,
+                borderColor: '#4b5563',
+                borderRadius: 8,
+                paddingVertical: 10,
+                paddingHorizontal: 12,
+                alignSelf: 'flex-start'
+              }}
+            >
+              <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Load more</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       ) : null}
       </View>

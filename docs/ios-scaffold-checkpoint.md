@@ -43,6 +43,7 @@
 - Producer input includes the same in-field clear control pattern used by the main album search fields.
 - Ambiguous Producer Search names show candidate selection instead of failing or silently choosing.
 - Selecting a Producer Search candidate runs release-level producer lookup for the selected MusicBrainz artist.
+- Producer Search can load more fixed-size MusicBrainz producer-credit batches and append newly found albums without duplicating already shown release groups.
 - Producer Search result cards show source-backed evidence from documented MusicBrainz release-level producer relationships.
 - Producer Search result cards open the existing Album Detail flow and return with Producer Search state preserved.
 - Producer Search results use compact user-facing selected-producer context, filtered alias display, and no visible raw release IDs in normal result cards.
@@ -97,7 +98,7 @@
   - Expand Editions & Sources and confirm source labels plus technical links remain available.
   - Navigate Album Detail -> Results -> Search and confirm retained Search fields can be edited or cleared.
 - Known deferred items:
-  - Producer Search load-more pagination and recording-level fallback.
+  - Producer Search recording-level fallback.
   - React/shared search parity for the iOS artist-MBID and Studio Albums quality improvements.
   - Canonical studio-discography semantics beyond current MusicBrainz filtering.
   - Per-work/per-recording fallback requests.
@@ -250,7 +251,7 @@
 
 ## Mock-Only / Deferred Scope
 - Album Detail producer graph, all-editions metadata enrichment, canonical studio-albums cleanup, and rich liner-note sections are not loaded yet.
-- Producer Search load-more pagination and recording-level fallback are not implemented yet.
+- Producer Search recording-level fallback is not implemented yet.
 
 ## Known Deferred Work
 - Canonical studio albums cleanup as a later shared React+iOS search-semantics project.
@@ -259,7 +260,6 @@
 - Producer graph.
 - All-editions metadata enrichment.
 - Artwork gallery schema promotion beyond the current iOS-local image list.
-- Producer Search load-more pagination.
 - Pagination or load more for larger result sets.
 - Richer result cards.
 

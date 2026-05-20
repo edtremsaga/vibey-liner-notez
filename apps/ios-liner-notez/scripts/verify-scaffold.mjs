@@ -338,6 +338,19 @@ if (
   throw new Error('ProducerSearchScreen does not run bounded release-level producer result lookup')
 }
 if (
+  !producerSearchScreenSource.includes('handleLoadMoreProducerResults') ||
+  !producerSearchScreenSource.includes('canLoadMoreProducerResults') ||
+  !producerSearchScreenSource.includes('offset: producerResult.nextOffset') ||
+  !producerSearchScreenSource.includes('seenReleaseGroupIds: producerResult.seenReleaseGroupIds') ||
+  !producerSearchScreenSource.includes('results: [...currentResults, ...nextResult.results]') ||
+  !producerSearchScreenSource.includes('Load more') ||
+  !producerSearchScreenSource.includes('Checking more MusicBrainz producer credits') ||
+  !producerSearchScreenSource.includes('No new albums found in that batch.') ||
+  !producerSearchScreenSource.includes('No more producer-credit results found in MusicBrainz.')
+) {
+  throw new Error('ProducerSearchScreen does not implement bounded button-based producer Load More')
+}
+if (
   !producerSearchScreenSource.includes('ProducerResultCard') ||
   !producerSearchScreenSource.includes('producerEvidence') ||
   !producerSearchScreenSource.includes('evidence.evidenceLabel') ||
@@ -829,6 +842,9 @@ if (!appSource.includes('handleBackToAlbumSource') || !appSource.includes('setRo
 if (
   !appSource.includes('INITIAL_PRODUCER_SEARCH_STATE') ||
   !appSource.includes('const [producerSearchState, setProducerSearchState]') ||
+  !appSource.includes('isLoadingMoreProducerResults: false') ||
+  !appSource.includes("producerLoadMoreMessage: ''") ||
+  !appSource.includes("producerLoadMoreError: ''") ||
   !appSource.includes('onProducerSearchStateChange={setProducerSearchState}') ||
   !appSource.includes('producerSearchState={producerSearchState}')
 ) {

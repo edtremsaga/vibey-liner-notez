@@ -24,6 +24,9 @@ const INITIAL_PRODUCER_SEARCH_STATE = {
   selectedProducer: null,
   producerResult: null,
   producerResultError: '',
+  isLoadingMoreProducerResults: false,
+  producerLoadMoreMessage: '',
+  producerLoadMoreError: '',
   errorMessage: ''
 }
 
