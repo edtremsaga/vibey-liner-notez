@@ -484,8 +484,14 @@ if (
 ) {
   throw new Error('HelpDataSourcesScreen does not disclose optional cover art gallery scope')
 }
-if (!helpDataSourcesScreenSource.includes('Producer Search remains separate and future-oriented')) {
-  throw new Error('HelpDataSourcesScreen does not include no-producer-traversal copy')
+if (
+  !helpDataSourcesScreenSource.includes('Producer Search is available as a bounded, source-backed tool') ||
+  !helpDataSourcesScreenSource.includes('documented MusicBrainz release-level producer credits') ||
+  !helpDataSourcesScreenSource.includes('Ambiguous producer names may ask you to choose') ||
+  !helpDataSourcesScreenSource.includes('does not promise a complete producer discography') ||
+  !helpDataSourcesScreenSource.includes('Recording-level producer fallback is not implemented')
+) {
+  throw new Error('HelpDataSourcesScreen does not explain current Producer Search scope and limits')
 }
 for (const source of ['MusicBrainz', 'Cover Art Archive', 'Wikidata', 'Wikipedia']) {
   if (!helpDataSourcesScreenSource.includes(source)) {
@@ -504,12 +510,22 @@ if (
   throw new Error('HelpDataSourcesScreen does not explain source-backed Wikidata/Wikipedia behavior')
 }
 if (
-  !helpDataSourcesScreenSource.includes('Credits depend on what MusicBrainz contributors have entered') ||
+  !helpDataSourcesScreenSource.includes('Credits and producer results depend on what MusicBrainz contributors have entered') ||
   !helpDataSourcesScreenSource.includes('sparse credits') ||
+  !helpDataSourcesScreenSource.includes('missing producer relationships') ||
   !helpDataSourcesScreenSource.includes('missing artwork') ||
   !helpDataSourcesScreenSource.includes('regional or unusual official album entries')
 ) {
   throw new Error('HelpDataSourcesScreen does not explain current source data limitations')
+}
+if (
+  !helpDataSourcesScreenSource.includes('vibeycraft@gmail.com') ||
+  !helpDataSourcesScreenSource.includes('does not require an account') ||
+  !helpDataSourcesScreenSource.includes('does not intentionally collect personal information') ||
+  !helpDataSourcesScreenSource.includes('Searches and album lookups are sent to public metadata services') ||
+  !helpDataSourcesScreenSource.includes('not affiliated with MusicBrainz')
+) {
+  throw new Error('HelpDataSourcesScreen does not include support, privacy, and source disclaimer copy')
 }
 if (
   !helpDataSourcesScreenSource.includes('unavailable') ||

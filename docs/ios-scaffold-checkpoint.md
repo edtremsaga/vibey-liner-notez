@@ -68,7 +68,7 @@
 - Visible iOS app copy has been softened so the title reads `Liner Notez`, Album Detail uses user-facing helper text, and the main album card no longer shows the release-group MBID.
 - Search, Results, Album Detail, Producer Search, and Help / Data Sources have screen-owned vertical scrolling for smaller iPhones.
 - Album Detail scrolling works reliably after simulator restart.
-- Help / Data Sources reflects the current album workflow, source roles, Wikidata/Wikipedia behavior, data limitations, Producer Search scope, and trust rules.
+- Help / Data Sources reflects the current album workflow, real bounded Producer Search, source roles, Wikidata/Wikipedia behavior, data limitations, support contact, concise privacy/network data notes, source affiliation disclaimers, and trust rules.
 - Internal marker strings are removed from visible UI.
 - Outdated “Placeholder screen for album search flow” copy is removed.
 - `apps/ios-liner-notez/.expo/` is ignored as generated local Expo state.
@@ -101,14 +101,18 @@
   - Navigate Album Detail -> Results -> Search and confirm retained Search fields can be edited or cleared.
 - Known deferred items:
   - Producer Search recording-level fallback.
+  - Complete canonical producer discography claims.
   - React/shared search parity for the iOS artist-MBID and Studio Albums quality improvements.
+  - Deeper network error normalization.
+  - App Store submission/build work.
   - Canonical studio-discography semantics beyond current MusicBrainz filtering.
   - Per-work/per-recording fallback requests.
   - Recording places/studios.
   - Advanced credit compaction/dedupe.
   - Wikipedia summary text.
   - Persistent/recent searches.
-- Next planned lane: diagnose and implement real Producer Search in small, bounded slices.
+- Current final-hardening lane: keep v1 copy, network failure messages, manual smoke testing, and App Store readiness notes aligned with the implemented iOS scope.
+- Producer Search v1 is implemented with candidate lookup, candidate selection, bounded release-level producer results, Load More, presentation ranking, evidence lines, Album Detail opening, and state preservation.
 - Later, not now: port the iOS album-search quality improvements back into shared/web search behavior.
 
 ## Search Behavior Contract
