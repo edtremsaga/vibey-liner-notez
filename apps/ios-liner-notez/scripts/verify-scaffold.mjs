@@ -318,11 +318,14 @@ if (!producerSearchScreenSource.includes('Choose the MusicBrainz artist you mean
 if (
   !producerSearchScreenSource.includes('ProducerResultsContext') ||
   !producerSearchScreenSource.includes('Producer: {producer.name}') ||
-  !producerSearchScreenSource.includes('Showing the first albums found from MusicBrainz producer credits.') ||
+  !producerSearchScreenSource.includes('Albums found from MusicBrainz producer credits.') ||
   producerSearchScreenSource.includes('Selected producer:') ||
   producerSearchScreenSource.includes('MusicBrainz artist MBID:') ||
   producerSearchScreenSource.includes('duplicate release groups skipped') ||
-  producerSearchScreenSource.includes('Bounded results from documented')
+  producerSearchScreenSource.includes('Bounded results from documented') ||
+  producerSearchScreenSource.includes('Producer album results') ||
+  producerSearchScreenSource.includes('Results are based on documented MusicBrainz producer credits.') ||
+  producerSearchScreenSource.includes('Source release MBID:')
 ) {
   throw new Error('ProducerSearchScreen does not include compact user-facing selected-producer results context')
 }
@@ -330,8 +333,7 @@ if (
   !producerSearchScreenSource.includes('searchMusicBrainzAlbumsByProducer') ||
   !producerSearchScreenSource.includes('PRODUCER_RELEASE_LOOKUP_LIMIT = 10') ||
   !producerSearchScreenSource.includes('loadProducerReleaseLevelResults') ||
-  !producerSearchScreenSource.includes('Checking documented producer credits in MusicBrainz') ||
-  !producerSearchScreenSource.includes('Producer album results')
+  !producerSearchScreenSource.includes('Checking documented producer credits in MusicBrainz')
 ) {
   throw new Error('ProducerSearchScreen does not run bounded release-level producer result lookup')
 }
@@ -354,7 +356,15 @@ if (
 if (!producerSearchScreenSource.includes('No documented MusicBrainz producer credits found for this artist.')) {
   throw new Error('ProducerSearchScreen does not include concise no-results state copy')
 }
-if (!producerSearchScreenSource.includes('candidate.type') || !producerSearchScreenSource.includes('candidate.disambiguation') || !producerSearchScreenSource.includes('candidate.country') || !producerSearchScreenSource.includes('formatLifeSpan(candidate.lifeSpan)') || !producerSearchScreenSource.includes('Aliases:')) {
+if (
+  !producerSearchScreenSource.includes('candidate.type') ||
+  !producerSearchScreenSource.includes('candidate.disambiguation') ||
+  !producerSearchScreenSource.includes('candidate.country') ||
+  !producerSearchScreenSource.includes('formatLifeSpan(candidate.lifeSpan)') ||
+  !producerSearchScreenSource.includes('Aliases:') ||
+  !producerSearchScreenSource.includes('MAX_VISIBLE_ALIASES = 3') ||
+  !producerSearchScreenSource.includes('latinCharacterCount / visibleCharacterCount >= 0.6')
+) {
   throw new Error('ProducerSearchScreen candidate rows do not include enough disambiguation')
 }
 if (

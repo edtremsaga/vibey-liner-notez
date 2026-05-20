@@ -6,6 +6,7 @@ import {
 } from '../services/musicbrainzProducerSearch'
 
 const PRODUCER_RELEASE_LOOKUP_LIMIT = 10
+const MAX_VISIBLE_ALIASES = 3
 
 function formatLifeSpan(lifeSpan) {
   if (!lifeSpan?.begin && !lifeSpan?.end) {
@@ -25,7 +26,21 @@ function formatCandidateDetails(candidate) {
 }
 
 function formatAliases(candidate) {
-  const aliases = Array.isArray(candidate?.aliases) ? candidate.aliases.map((alias) => alias.name).filter(Boolean) : []
+  const aliases = Array.isArray(candidate?.aliases)
+    ? candidate.aliases
+      .map((alias) => alias.name)
+      .filter((name) => {
+        if (!name) {
+          return false
+        }
+
+        const latinCharacterCount = (name.match(/[A-Za-z]/g) ?? []).length
+        const visibleCharacterCount = (name.match(/[^\s\d.,'’"()\-]/g) ?? []).length
+
+        return visibleCharacterCount > 0 && latinCharacterCount / visibleCharacterCount >= 0.6
+      })
+      .slice(0, MAX_VISIBLE_ALIASES)
+    : []
   return aliases.length > 0 ? aliases.join(', ') : null
 }
 
@@ -126,9 +141,6 @@ function ProducerResultCard({ onOpenAlbumDetail, result }) {
           Relationship attributes: {attributes}
         </Text>
       ) : null}
-      <Text style={{ color: '#6b7280', marginTop: 5, fontSize: 11 }}>
-        Source release MBID: {evidence.sourceReleaseId}
-      </Text>
       <Text style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open album detail</Text>
     </TouchableOpacity>
   )
@@ -143,7 +155,7 @@ function ProducerResultsContext({ producer }) {
     <View style={{ marginTop: 8, marginBottom: 4 }}>
       <Text style={{ color: '#e5e7eb', fontWeight: '700', fontSize: 16 }}>Producer: {producer.name}</Text>
       <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-        Showing the first albums found from MusicBrainz producer credits.
+        Albums found from MusicBrainz producer credits.
       </Text>
     </View>
   )
@@ -560,10 +572,6 @@ export function ProducerSearchScreen({
           }}
         >
           <ProducerResultsContext producer={selectedProducer} />
-          <Text style={{ color: '#d1d5db', fontWeight: '700' }}>Producer album results</Text>
-          <Text style={{ color: '#9ca3af', marginTop: 4 }}>
-            Results are based on documented MusicBrainz producer credits.
-          </Text>
           {producerResults.map((result) => (
             <ProducerResultCard
               key={result.releaseGroupId}
