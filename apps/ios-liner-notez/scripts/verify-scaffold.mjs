@@ -29,6 +29,9 @@ for (const rel of requiredFiles) {
 
 const appSource = readFileSync(path.join(appRoot, 'src/App.js'), 'utf8')
 const musicDataErrorsSource = readFileSync(path.join(appRoot, 'src/services/musicDataErrors.js'), 'utf8')
+const formatMusicDataError = new Function(
+  `${musicDataErrorsSource.replace('export function formatMusicDataError', 'function formatMusicDataError')}\nreturn formatMusicDataError;`
+)()
 const requiredRoutes = ['Search', 'Results', 'Album Detail', 'Producer Search', 'Help / Data Sources']
 for (const route of requiredRoutes) {
   if (!appSource.includes(route)) {
@@ -841,15 +844,63 @@ if (!albumDetailScreenSource.includes('Album unavailable')) {
 if (!appSource.includes('searchMusicBrainzAlbumsByArtist')) {
   throw new Error('App router does not import iOS MusicBrainz album search adapter')
 }
+const normalizedErrorCases = [
+  [
+    new TypeError('Network request failed'),
+    'Couldn’t reach the music data service. Check your connection and try again.'
+  ],
+  [
+    new Error('MusicBrainz request failed: 429 Too Many Requests'),
+    'MusicBrainz is temporarily unavailable or busy. Try again in a minute.'
+  ],
+  [
+    new Error('MusicBrainz request failed: 503 Service Unavailable'),
+    'MusicBrainz is temporarily unavailable or busy. Try again in a minute.'
+  ],
+  [
+    new Error('MusicBrainz request failed: 500 Internal Server Error'),
+    'The music data service is having trouble right now. Try again later.'
+  ],
+  [
+    new SyntaxError('Unexpected token < in JSON at position 0'),
+    'The music data service returned an unexpected response. Try again later.'
+  ],
+  [
+    new Error('Unknown music data issue'),
+    'Something went wrong while loading music data. Try again.'
+  ]
+]
+for (const [error, expectedMessage] of normalizedErrorCases) {
+  const actualMessage = formatMusicDataError(error)
+  if (actualMessage !== expectedMessage) {
+    throw new Error(`Unexpected normalized music data error message: ${actualMessage}`)
+  }
+}
+const appErrorFormatterUses = appSource.match(/formatMusicDataError\(error\)/g) ?? []
+const producerErrorFormatterUses = producerSearchScreenSource.match(/formatMusicDataError\(error\)/g) ?? []
 if (
   !musicDataErrorsSource.includes('formatMusicDataError') ||
   !musicDataErrorsSource.includes('Couldn’t reach the music data service. Check your connection and try again.') ||
   !musicDataErrorsSource.includes('MusicBrainz is temporarily unavailable or busy. Try again in a minute.') ||
   !musicDataErrorsSource.includes('The music data service returned an unexpected response. Try again later.') ||
-  !appSource.includes('formatMusicDataError(error)') ||
-  !producerSearchScreenSource.includes('formatMusicDataError(error)')
+  appErrorFormatterUses.length < 3 ||
+  producerErrorFormatterUses.length < 3
 ) {
   throw new Error('iOS app does not normalize user-facing music data error messages')
+}
+for (const rawErrorCopy of [
+  'MusicBrainz request failed: 503',
+  'TypeError: Failed to fetch',
+  'Network request failed\\n',
+  'Error: MusicBrainz request failed'
+]) {
+  if (
+    resultsScreenSource.includes(rawErrorCopy) ||
+    albumDetailScreenSource.includes(rawErrorCopy) ||
+    producerSearchScreenSource.includes(rawErrorCopy)
+  ) {
+    throw new Error(`User-facing screen includes raw network/API error copy: ${rawErrorCopy}`)
+  }
 }
 if (!appSource.includes('handleSubmitArtistSearch') || !appSource.includes("setRoute('Results')")) {
   throw new Error('App router does not navigate from search to results via artist submit flow')

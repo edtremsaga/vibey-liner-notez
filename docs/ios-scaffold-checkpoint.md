@@ -69,7 +69,7 @@
 - Search, Results, Album Detail, Producer Search, and Help / Data Sources have screen-owned vertical scrolling for smaller iPhones.
 - Album Detail scrolling works reliably after simulator restart.
 - Help / Data Sources reflects the current album workflow, real bounded Producer Search, source roles, Wikidata/Wikipedia behavior, data limitations, support contact, concise privacy/network data notes, source affiliation disclaimers, and trust rules.
-- Album Search, Album Detail enrichment, Producer Search, and Producer Search Load More normalize raw API/network failures into calmer user-facing music-data error messages.
+- Album Search, Album Detail enrichment, Producer Search, and Producer Search Load More normalize raw API/network failures into calmer user-facing music-data error messages, with lightweight scaffold verification for representative mappings and wiring coverage.
 - Internal marker strings are removed from visible UI.
 - Outdated “Placeholder screen for album search flow” copy is removed.
 - `apps/ios-liner-notez/.expo/` is ignored as generated local Expo state.
