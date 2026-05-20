@@ -1,6 +1,11 @@
 import React, { useState } from 'react'
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import { resolveMusicBrainzProducerCandidates } from '../services/musicbrainzProducerSearch'
+import {
+  resolveMusicBrainzProducerCandidates,
+  searchMusicBrainzAlbumsByProducer
+} from '../services/musicbrainzProducerSearch'
+
+const PRODUCER_RELEASE_LOOKUP_LIMIT = 10
 
 function formatLifeSpan(lifeSpan) {
   if (!lifeSpan?.begin && !lifeSpan?.end) {
@@ -57,7 +62,74 @@ function ProducerCandidateCard({ candidate, onSelectCandidate }) {
   )
 }
 
-function SelectedProducerPlaceholder({ producer }) {
+function formatSecondaryTypes(secondaryTypes) {
+  return Array.isArray(secondaryTypes) && secondaryTypes.length > 0 ? secondaryTypes.join(', ') : null
+}
+
+function formatAttributes(attributes) {
+  const entries = Object.entries(attributes ?? {})
+  if (entries.length === 0) {
+    return null
+  }
+
+  return entries.map(([key, value]) => value === true ? key : `${key}: ${value}`).join(', ')
+}
+
+function ProducerResultCard({ result }) {
+  const evidence = result.producerEvidence ?? {}
+  const secondaryTypes = formatSecondaryTypes(result.secondaryTypes)
+  const attributes = formatAttributes(evidence.relationshipAttributes)
+
+  return (
+    <View
+      style={{
+        marginTop: 8,
+        borderWidth: 1,
+        borderColor: '#374151',
+        borderRadius: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 10,
+        backgroundColor: '#111827'
+      }}
+    >
+      <Text style={{ color: '#e5e7eb', fontWeight: '700', fontSize: 16 }}>{result.releaseGroupTitle}</Text>
+      <Text style={{ color: '#9ca3af', marginTop: 2 }}>
+        {result.releaseGroupArtistCredit}{result.firstReleaseDate ? ` · ${result.firstReleaseDate}` : ''}
+      </Text>
+      {(result.primaryType || secondaryTypes) ? (
+        <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 12 }}>
+          {[result.primaryType, secondaryTypes].filter(Boolean).join(' · ')}
+        </Text>
+      ) : null}
+      <Text style={{ color: '#a7f3d0', marginTop: 6, fontSize: 13 }}>
+        {evidence.evidenceLabel}
+      </Text>
+      {attributes ? (
+        <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 12 }}>
+          Relationship attributes: {attributes}
+        </Text>
+      ) : null}
+      <Text style={{ color: '#6b7280', marginTop: 5, fontSize: 11 }}>
+        Source release MBID: {evidence.sourceReleaseId}
+      </Text>
+    </View>
+  )
+}
+
+function ProducerResultsSummary({ producerResult }) {
+  const metrics = producerResult?.metrics
+  if (!metrics) {
+    return null
+  }
+
+  return (
+    <Text style={{ color: '#9ca3af', marginTop: 8, fontSize: 12 }}>
+      Checked {metrics.releaseLookupsAttempted} documented release-level producer credits. {metrics.duplicateReleaseGroupsSkipped} duplicate release groups skipped.
+    </Text>
+  )
+}
+
+function SelectedProducerContext({ producer }) {
   return (
     <View
       style={{
@@ -71,7 +143,7 @@ function SelectedProducerPlaceholder({ producer }) {
     >
       <Text style={{ color: '#d1fae5', fontWeight: '700' }}>Selected producer: {producer.name}</Text>
       <Text style={{ color: '#a7f3d0', marginTop: 6 }}>
-        Album results will use documented MusicBrainz release-level producer credits. This step comes next.
+        Album results use documented MusicBrainz release-level producer credits.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8, fontSize: 12 }}>
         MusicBrainz artist MBID: {producer.id}
@@ -84,13 +156,37 @@ export function ProducerSearchScreen({ onBackToSearch }) {
   const [producerName, setProducerName] = useState('')
   const [showValidation, setShowValidation] = useState(false)
   const [isLoadingCandidates, setIsLoadingCandidates] = useState(false)
+  const [isLoadingProducerResults, setIsLoadingProducerResults] = useState(false)
   const [candidateResult, setCandidateResult] = useState(null)
   const [selectedProducer, setSelectedProducer] = useState(null)
+  const [producerResult, setProducerResult] = useState(null)
+  const [producerResultError, setProducerResultError] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
 
   const candidates = candidateResult?.candidates ?? []
   const showCandidateSelection = candidateResult?.status === 'select' && candidates.length > 0 && !selectedProducer
   const showNoCandidates = candidateResult?.status === 'none' && !selectedProducer
+  const producerResults = producerResult?.results ?? []
+  const showNoProducerResults = selectedProducer && producerResult && producerResults.length === 0 && !isLoadingProducerResults
+
+  async function loadProducerReleaseLevelResults(candidate) {
+    setProducerResult(null)
+    setProducerResultError('')
+    setIsLoadingProducerResults(true)
+
+    try {
+      const result = await searchMusicBrainzAlbumsByProducer({
+        producerMbid: candidate.id,
+        producerName: candidate.name,
+        limit: PRODUCER_RELEASE_LOOKUP_LIMIT
+      })
+      setProducerResult(result)
+    } catch (error) {
+      setProducerResultError(error?.message || 'We could not load producer album results from MusicBrainz.')
+    } finally {
+      setIsLoadingProducerResults(false)
+    }
+  }
 
   async function handleResolveProducerCandidates() {
     const trimmedProducer = producerName.trim()
@@ -99,6 +195,8 @@ export function ProducerSearchScreen({ onBackToSearch }) {
       setShowValidation(true)
       setCandidateResult(null)
       setSelectedProducer(null)
+      setProducerResult(null)
+      setProducerResultError('')
       setErrorMessage('')
       return
     }
@@ -106,6 +204,8 @@ export function ProducerSearchScreen({ onBackToSearch }) {
     setShowValidation(false)
     setCandidateResult(null)
     setSelectedProducer(null)
+    setProducerResult(null)
+    setProducerResultError('')
     setErrorMessage('')
     setIsLoadingCandidates(true)
 
@@ -115,6 +215,8 @@ export function ProducerSearchScreen({ onBackToSearch }) {
 
       if (result.status === 'auto' && result.selectedCandidate) {
         setSelectedProducer(result.selectedCandidate)
+        setIsLoadingCandidates(false)
+        await loadProducerReleaseLevelResults(result.selectedCandidate)
       }
     } catch (error) {
       setErrorMessage(error?.message || 'We could not load producer candidates from MusicBrainz.')
@@ -123,9 +225,10 @@ export function ProducerSearchScreen({ onBackToSearch }) {
     }
   }
 
-  function handleSelectCandidate(candidate) {
+  async function handleSelectCandidate(candidate) {
     setSelectedProducer(candidate)
     setErrorMessage('')
+    await loadProducerReleaseLevelResults(candidate)
   }
 
   return (
@@ -168,6 +271,8 @@ export function ProducerSearchScreen({ onBackToSearch }) {
           setProducerName(value)
           setCandidateResult(null)
           setSelectedProducer(null)
+          setProducerResult(null)
+          setProducerResultError('')
           setErrorMessage('')
           if (showValidation && value.trim()) {
             setShowValidation(false)
@@ -290,7 +395,86 @@ export function ProducerSearchScreen({ onBackToSearch }) {
       ) : null}
 
       {selectedProducer ? (
-        <SelectedProducerPlaceholder producer={selectedProducer} />
+        <SelectedProducerContext producer={selectedProducer} />
+      ) : null}
+
+      {isLoadingProducerResults ? (
+        <View
+          style={{
+            marginTop: 12,
+            borderWidth: 1,
+            borderColor: '#374151',
+            borderRadius: 10,
+            padding: 12,
+            backgroundColor: '#181a1f'
+          }}
+        >
+          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>
+            Checking documented release-level producer credits in MusicBrainz...
+          </Text>
+          <Text style={{ color: '#9ca3af', marginTop: 4 }}>
+            Looking up the first {PRODUCER_RELEASE_LOOKUP_LIMIT} documented release credits for this producer.
+          </Text>
+        </View>
+      ) : null}
+
+      {producerResultError ? (
+        <View
+          style={{
+            marginTop: 12,
+            borderWidth: 1,
+            borderColor: '#7f1d1d',
+            borderRadius: 10,
+            padding: 12,
+            backgroundColor: '#2a1215'
+          }}
+        >
+          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Producer result lookup error</Text>
+          <Text style={{ color: '#fca5a5', marginTop: 4 }}>{producerResultError}</Text>
+        </View>
+      ) : null}
+
+      {showNoProducerResults ? (
+        <View
+          style={{
+            marginTop: 12,
+            borderWidth: 1,
+            borderColor: '#374151',
+            borderRadius: 10,
+            padding: 12,
+            backgroundColor: '#181a1f'
+          }}
+        >
+          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>
+            No documented release-level producer credits found for this MusicBrainz artist.
+          </Text>
+          <Text style={{ color: '#9ca3af', marginTop: 4 }}>
+            MusicBrainz data may be incomplete, and track-level producer credits are not searched yet.
+          </Text>
+          <ProducerResultsSummary producerResult={producerResult} />
+        </View>
+      ) : null}
+
+      {producerResults.length > 0 ? (
+        <View
+          style={{
+            marginTop: 12,
+            borderWidth: 1,
+            borderColor: '#374151',
+            borderRadius: 10,
+            padding: 12,
+            backgroundColor: '#181a1f'
+          }}
+        >
+          <Text style={{ color: '#d1d5db', fontWeight: '700' }}>Producer album results</Text>
+          <Text style={{ color: '#9ca3af', marginTop: 4 }}>
+            Bounded results from documented MusicBrainz release-level producer credits.
+          </Text>
+          <ProducerResultsSummary producerResult={producerResult} />
+          {producerResults.map((result) => (
+            <ProducerResultCard key={result.releaseGroupId} result={result} />
+          ))}
+        </View>
       ) : null}
       </View>
     </ScrollView>

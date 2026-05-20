@@ -280,7 +280,8 @@ if (!producerSearchScreenSource.includes('Producer search input')) {
   throw new Error('ProducerSearchScreen does not include producer input')
 }
 if (
-  !producerSearchScreenSource.includes("import { resolveMusicBrainzProducerCandidates } from '../services/musicbrainzProducerSearch'") ||
+  !producerSearchScreenSource.includes("from '../services/musicbrainzProducerSearch'") ||
+  !producerSearchScreenSource.includes('resolveMusicBrainzProducerCandidates') ||
   !producerSearchScreenSource.includes('handleResolveProducerCandidates') ||
   !producerSearchScreenSource.includes('resolveMusicBrainzProducerCandidates(trimmedProducer)')
 ) {
@@ -304,8 +305,28 @@ if (!producerSearchScreenSource.includes('No producer candidates found')) {
 if (!producerSearchScreenSource.includes('Choose the MusicBrainz artist you mean.')) {
   throw new Error('ProducerSearchScreen does not include candidate selection copy')
 }
-if (!producerSearchScreenSource.includes('Selected producer:') || !producerSearchScreenSource.includes('Album results will use documented MusicBrainz release-level producer credits. This step comes next.')) {
-  throw new Error('ProducerSearchScreen does not include selected-producer placeholder copy')
+if (!producerSearchScreenSource.includes('Selected producer:') || !producerSearchScreenSource.includes('Album results use documented MusicBrainz release-level producer credits.')) {
+  throw new Error('ProducerSearchScreen does not include selected-producer context copy')
+}
+if (
+  !producerSearchScreenSource.includes('searchMusicBrainzAlbumsByProducer') ||
+  !producerSearchScreenSource.includes('PRODUCER_RELEASE_LOOKUP_LIMIT = 10') ||
+  !producerSearchScreenSource.includes('loadProducerReleaseLevelResults') ||
+  !producerSearchScreenSource.includes('Checking documented release-level producer credits in MusicBrainz') ||
+  !producerSearchScreenSource.includes('Producer album results')
+) {
+  throw new Error('ProducerSearchScreen does not run bounded release-level producer result lookup')
+}
+if (
+  !producerSearchScreenSource.includes('ProducerResultCard') ||
+  !producerSearchScreenSource.includes('producerEvidence') ||
+  !producerSearchScreenSource.includes('evidence.evidenceLabel') ||
+  !producerSearchScreenSource.includes('Relationship attributes:')
+) {
+  throw new Error('ProducerSearchScreen does not render source-backed producer evidence cards')
+}
+if (!producerSearchScreenSource.includes('No documented release-level producer credits found for this MusicBrainz artist.')) {
+  throw new Error('ProducerSearchScreen does not include release-level no-results state copy')
 }
 if (!producerSearchScreenSource.includes('candidate.type') || !producerSearchScreenSource.includes('candidate.disambiguation') || !producerSearchScreenSource.includes('candidate.country') || !producerSearchScreenSource.includes('formatLifeSpan(candidate.lifeSpan)') || !producerSearchScreenSource.includes('Aliases:')) {
   throw new Error('ProducerSearchScreen candidate rows do not include enough disambiguation')
@@ -325,11 +346,12 @@ const producerSearchServiceSource = readFileSync(
 )
 if (
   !producerSearchServiceSource.includes('resolveMusicBrainzProducerCandidates') ||
+  !producerSearchServiceSource.includes('searchMusicBrainzAlbumsByProducer') ||
   !producerSearchServiceSource.includes("status: 'auto'") ||
   !producerSearchServiceSource.includes("status: 'select'") ||
   !producerSearchServiceSource.includes("status: 'none'")
 ) {
-  throw new Error('musicbrainzProducerSearch service does not expose candidate resolution statuses')
+  throw new Error('musicbrainzProducerSearch service does not expose producer candidate/result APIs')
 }
 if (
   !producerSearchServiceSource.includes('/artist') ||
@@ -340,11 +362,23 @@ if (
   throw new Error('musicbrainzProducerSearch service does not perform conservative MusicBrainz artist candidate lookup')
 }
 if (
-  producerSearchServiceSource.includes('release-rels') ||
-  producerSearchServiceSource.includes('/release/') ||
-  producerSearchServiceSource.includes('recording-rels')
+  !producerSearchServiceSource.includes("inc: 'release-rels'") ||
+  !producerSearchServiceSource.includes("inc: 'release-groups+artist-credits'") ||
+  !producerSearchServiceSource.includes('DEFAULT_PRODUCER_RELEASE_LOOKUP_LIMIT = 10') ||
+  !producerSearchServiceSource.includes('isProducerReleaseRelation') ||
+  !producerSearchServiceSource.includes('seenReleaseGroupIds') ||
+  !producerSearchServiceSource.includes('producerEvidence') ||
+  !producerSearchServiceSource.includes('evidenceLabel') ||
+  !producerSearchServiceSource.includes('metrics')
 ) {
-  throw new Error('musicbrainzProducerSearch service should not fetch producer album or recording data in the candidate slice')
+  throw new Error('musicbrainzProducerSearch service does not implement bounded release-level producer results')
+}
+if (
+  producerSearchServiceSource.includes('recording-rels') ||
+  producerSearchServiceSource.includes('/recording/') ||
+  producerSearchServiceSource.includes('recording-level')
+) {
+  throw new Error('musicbrainzProducerSearch service should not fetch recording-level producer data in v1')
 }
 
 const helpDataSourcesScreenSource = readFileSync(
