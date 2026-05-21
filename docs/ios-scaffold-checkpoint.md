@@ -51,7 +51,7 @@
 - Producer Search results use compact user-facing selected-producer context, filtered alias display, and no visible raw release IDs in normal result cards.
 - Album Detail shows real selected-result header data for Search results, enriches release-group Editions & Sources from MusicBrainz, loads the selected-release tracklist, and displays selected-release album-level credits plus expandable per-track credits, songwriting, and publishing when documented.
 - Album Detail selected-release album-level credits are loaded from the existing selected-release response without adding another MusicBrainz request.
-- Album Detail album-level credits render as a collapsed `Album` disclosure row inside Album Credits.
+- Album Detail album-level credits render directly inside Album Credits without a nested `Album` disclosure row.
 - Album Detail Album Credits includes a collapsed album-level `Credit Highlights` row that derives scan-friendly producers, engineers/mixers/mastering, and performer summaries from already-loaded selected-release album credits.
 - Album Detail Tracklist rows can expand to show selected-release track credits, songwriting, and publishing with iOS-style disclosure controls.
 - Album Detail Album Credits is reserved for album/release-level credits and no longer repeats the full tracklist.
@@ -169,7 +169,7 @@
   - `notes`
 - iOS extracts selected-release album-level credits from release `relations` using the same compact credit shape.
 - Album-level credits use the already-fetched selected-release response; iOS does not probe alternate releases for album credits yet.
-- Album-level credits render as a collapsed `Album` disclosure row inside Album Credits and use the same credit grouping labels as track credits when expanded.
+- Album-level credits render directly inside Album Credits with user-facing group labels such as `Artwork, Design & Photography`, `Production & Technical`, `Performers & Instruments`, and `Additional Credits`.
 - Credit Highlights are derived in the iOS UI from already-loaded album-level credits only; they do not add MusicBrainz requests or schema fields.
 - Track-level credits, songwriting, and publishing now live inside expandable Tracklist rows instead of repeating the tracklist inside Album Credits.
 - iOS extracts selected-release songwriting from already-fetched recording relations and nested work-level relations:
@@ -246,7 +246,7 @@
 - Selected-release track credits loaded when documented.
 - Selected-release songwriting loaded when documented.
 - Selected-release publishing loaded when documented.
-- Album-level credits are shown as a collapsed `Album` row in Album Credits and expand with a chevron.
+- Album-level credits are shown directly after opening Album Credits, without a second nested disclosure.
 - Credit Highlights summarize loaded album-level contributors without changing the underlying credit data.
 - Songwriting appears in expanded Tracklist rows when writer/composer/lyricist data is documented.
 - Publishing appears in expanded Tracklist rows when publisher label data is documented.

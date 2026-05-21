@@ -740,12 +740,15 @@ if (albumDetailScreenSource.includes('key={`artwork-viewer-${selectedArtworkInde
   throw new Error('AlbumDetailScreen remounts the artwork pager when the selected artwork index changes')
 }
 if (
-  !albumDetailScreenSource.includes('showAlbumCredits') ||
   !albumDetailScreenSource.includes('groupedAlbumCredits') ||
-  !albumDetailScreenSource.includes("accessibilityLabel={`${showAlbumCredits ? 'Hide' : 'Show'} album credits`}") ||
-  !albumDetailScreenSource.includes("{showAlbumCredits ? '▾' : '▸'}")
+  !albumDetailScreenSource.includes('function groupAlbumCredits') ||
+  !albumDetailScreenSource.includes('Artwork, Design & Photography') ||
+  !albumDetailScreenSource.includes('Additional Credits')
 ) {
-  throw new Error('AlbumDetailScreen does not render album-level credits as a collapsed disclosure row')
+  throw new Error('AlbumDetailScreen does not render album-level credits as direct user-facing groups')
+}
+if (albumDetailScreenSource.includes('showAlbumCredits') || albumDetailScreenSource.includes('setShowAlbumCredits')) {
+  throw new Error('AlbumDetailScreen still uses a nested Album disclosure inside Album Credits')
 }
 if (
   !albumDetailScreenSource.includes('Credit Highlights') ||

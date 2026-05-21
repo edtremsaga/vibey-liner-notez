@@ -29,6 +29,20 @@ function isProductionCredit(credit) {
   return role.includes('producer') || role.includes('engineer') || role.includes('mix') || role.includes('mastering')
 }
 
+function isArtworkCredit(credit) {
+  const role = credit?.role?.toLowerCase() ?? ''
+  return (
+    role.includes('design') ||
+    role.includes('illustration') ||
+    role.includes('photography') ||
+    role.includes('photographer') ||
+    role.includes('artwork') ||
+    role.includes('art direction') ||
+    role.includes('cover art') ||
+    role.includes('sleeve')
+  )
+}
+
 function getCreditHighlightCategory(role) {
   const normalizedRole = role?.toLowerCase() ?? ''
 
@@ -60,6 +74,24 @@ function groupTrackCredits(credits) {
     ['Performers & Instruments', performers],
     ['Production & Technical', production],
     ['Other', other]
+  ].filter(([, groupedCredits]) => groupedCredits.length > 0)
+}
+
+function groupAlbumCredits(credits) {
+  const performers = credits.filter(isPerformerCredit)
+  const production = credits.filter(isProductionCredit)
+  const artwork = credits.filter(isArtworkCredit)
+  const additional = credits.filter((credit) =>
+    !isPerformerCredit(credit) &&
+    !isProductionCredit(credit) &&
+    !isArtworkCredit(credit)
+  )
+
+  return [
+    ['Production & Technical', production],
+    ['Performers & Instruments', performers],
+    ['Artwork, Design & Photography', artwork],
+    ['Additional Credits', additional]
   ].filter(([, groupedCredits]) => groupedCredits.length > 0)
 }
 
@@ -192,7 +224,6 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
   const [showReleaseGroupEditions, setShowReleaseGroupEditions] = useState(false)
   const [showTechnicalLinks, setShowTechnicalLinks] = useState(false)
   const [showCreditHighlights, setShowCreditHighlights] = useState(false)
-  const [showAlbumCredits, setShowAlbumCredits] = useState(false)
   const [expandedCreditTrackIds, setExpandedCreditTrackIds] = useState({})
   const [failedCoverArtUrls, setFailedCoverArtUrls] = useState({})
   const [failedArtworkUrls, setFailedArtworkUrls] = useState({})
@@ -244,7 +275,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
     ['Discogs', externalLinks.discogsUrl]
   ].filter(([, value]) => !!value)
   const trackCreditsByTrackId = hasAlbum && album.credits?.trackCredits ? album.credits.trackCredits : {}
-  const groupedAlbumCredits = hasAlbumCredits ? groupTrackCredits(album.credits.albumCredits) : []
+  const groupedAlbumCredits = hasAlbumCredits ? groupAlbumCredits(album.credits.albumCredits) : []
   const creditHighlights = hasAlbum
     ? buildCreditHighlights(
         hasAlbumCredits ? album.credits.albumCredits : [],
@@ -774,34 +805,23 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                 ) : null}
                 {hasAlbumCredits ? (
                   <View style={{ marginTop: 12 }}>
-                    <TouchableOpacity
-                      accessibilityRole="button"
-                      accessibilityLabel={`${showAlbumCredits ? 'Hide' : 'Show'} album credits`}
-                      onPress={() => setShowAlbumCredits((current) => !current)}
-                      style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
-                    >
-                      <Text style={{ color: '#d1d5db', flex: 1, fontWeight: '700', fontSize: 15 }}>Album</Text>
-                      <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showAlbumCredits ? '▾' : '▸'}</Text>
-                    </TouchableOpacity>
-                    {showAlbumCredits
-                      ? groupedAlbumCredits.map(([groupLabel, credits]) => (
-                          <View key={`album-${groupLabel}`} style={{ marginTop: 8 }}>
-                            <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
-                              {groupLabel}
-                            </Text>
-                            {credits.map((credit, index) => (
-                              <Text
-                                key={`album-${groupLabel}-${credit.personName}-${credit.role}-${index}`}
-                                style={{ color: '#d1d5db', marginTop: 2, fontSize: 14 }}
-                              >
-                                {credit.personName}
-                                {credit.role ? ` — ${credit.role}` : ''}
-                                {credit.instrument ? ` (${credit.instrument})` : ''}
-                              </Text>
-                            ))}
-                          </View>
-                        ))
-                      : null}
+                    {groupedAlbumCredits.map(([groupLabel, credits]) => (
+                      <View key={`album-${groupLabel}`} style={{ marginTop: 8 }}>
+                        <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
+                          {groupLabel}
+                        </Text>
+                        {credits.map((credit, index) => (
+                          <Text
+                            key={`album-${groupLabel}-${credit.personName}-${credit.role}-${index}`}
+                            style={{ color: '#d1d5db', marginTop: 2, fontSize: 14 }}
+                          >
+                            {credit.personName}
+                            {credit.role ? ` — ${credit.role}` : ''}
+                            {credit.instrument ? ` (${credit.instrument})` : ''}
+                          </Text>
+                        ))}
+                      </View>
+                    ))}
                   </View>
                 ) : null}
                 {!hasAlbumCredits ? (
