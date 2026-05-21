@@ -51,13 +51,13 @@
 - Producer Search results use compact user-facing selected-producer context, filtered alias display, and no visible raw release IDs in normal result cards.
 - Album Detail shows real selected-result header data for Search results, enriches release-group Editions & Sources from MusicBrainz, loads the selected-release tracklist, and displays selected-release album-level credits plus expandable per-track credits, songwriting, and publishing when documented.
 - Album Detail selected-release album-level credits are loaded from the existing selected-release response without adding another MusicBrainz request.
-- Album Detail album-level credits render as a collapsed `Album` disclosure row inside Credits.
-- Album Detail Credits includes a collapsed album-level `Credit Highlights` row that derives scan-friendly producers, engineers/mixers/mastering, and performer summaries from already-loaded selected-release album credits.
+- Album Detail album-level credits render as a collapsed `Album` disclosure row inside Album Credits.
+- Album Detail Album Credits includes a collapsed album-level `Credit Highlights` row that derives scan-friendly producers, engineers/mixers/mastering, and performer summaries from already-loaded selected-release album credits.
 - Album Detail Tracklist rows can expand to show selected-release track credits, songwriting, and publishing with iOS-style disclosure controls.
-- Album Detail Credits is reserved for album/release-level credits and no longer repeats the full tracklist.
-- Album Detail Credits now defaults collapsed to keep dense album pages calmer while preserving full credit detail behind disclosure.
-- Album Detail section-level disclosure controls use chevrons consistently for Tracklist, Credits, and Editions & Sources.
-- Album Detail disclosure headers show compact summaries for Tracklist, Credits, and Editions & Sources so collapsed sections remain scannable.
+- Album Detail Album Credits is reserved for album/release-level credits and no longer repeats the full tracklist.
+- Album Detail Album Credits now defaults collapsed to keep dense album pages calmer while preserving full credit detail behind disclosure.
+- Album Detail section-level disclosure controls use chevrons consistently for Tracklist, Album Credits, and Editions & Sources.
+- Album Detail disclosure headers show compact summaries for Tracklist, Album Credits, and Editions & Sources so collapsed sections remain scannable.
 - Album Detail supports optional primary cover art and release-group artwork gallery images from Cover Art Archive.
 - Album Detail can show a source-backed Wikipedia album article link resolved from MusicBrainz release-group Wikidata relations.
 - Album Detail promotes the Wikipedia album article as a user-facing action below the album card while preserving source and technical link traceability in Editions & Sources.
@@ -98,7 +98,7 @@
   - Search `Steely Dan` / `Aja` and confirm cover art, tracklist, selected edition metadata, and sources load.
   - Open Album Detail and confirm the Wikipedia link appears when resolved and opens the album article.
   - Open Album Art & Liner Images, swipe/zoom images, close the viewer, and confirm it stays closed.
-  - Expand Credits, confirm Credit Highlights, songwriting, publishing, and instrument-specific track credits render when documented.
+  - Expand Tracklist track credits and Album Credits, confirm Credit Highlights, songwriting, publishing, and instrument-specific track credits render when documented.
   - Expand Editions & Sources and confirm source labels plus technical links remain available.
   - Navigate Album Detail -> Results -> Search and confirm retained Search fields can be edited or cleared.
 - Known deferred items:
@@ -168,9 +168,9 @@
   - `notes`
 - iOS extracts selected-release album-level credits from release `relations` using the same compact credit shape.
 - Album-level credits use the already-fetched selected-release response; iOS does not probe alternate releases for album credits yet.
-- Album-level credits render as a collapsed `Album` disclosure row and use the same credit grouping labels as track credits when expanded.
+- Album-level credits render as a collapsed `Album` disclosure row inside Album Credits and use the same credit grouping labels as track credits when expanded.
 - Credit Highlights are derived in the iOS UI from already-loaded album-level credits only; they do not add MusicBrainz requests or schema fields.
-- Track-level credits, songwriting, and publishing now live inside expandable Tracklist rows instead of repeating the tracklist inside Credits.
+- Track-level credits, songwriting, and publishing now live inside expandable Tracklist rows instead of repeating the tracklist inside Album Credits.
 - iOS extracts selected-release songwriting from already-fetched recording relations and nested work-level relations:
   - `writers`
   - `composers`
@@ -245,14 +245,14 @@
 - Selected-release track credits loaded when documented.
 - Selected-release songwriting loaded when documented.
 - Selected-release publishing loaded when documented.
-- Album-level credits are shown as a collapsed `Album` row in Credits and expand with a chevron.
+- Album-level credits are shown as a collapsed `Album` row in Album Credits and expand with a chevron.
 - Credit Highlights summarize loaded album-level contributors without changing the underlying credit data.
 - Songwriting appears in expanded Tracklist rows when writer/composer/lyricist data is documented.
 - Publishing appears in expanded Tracklist rows when publisher label data is documented.
 - Track credits are readable, grouped, collapsed by default, and expandable from Tracklist rows.
-- Credits no longer repeats the full tracklist and remains focused on album/release-level credits.
-- Tracklist, Credits, and Editions & Sources use consistent chevron disclosure controls.
-- Album Detail scrolls fully, and Tracklist, Credits, Editions & Sources, and the full release-group link/content are reachable.
+- Album Credits no longer repeats the full tracklist and remains focused on album/release-level credits.
+- Tracklist, Album Credits, and Editions & Sources use consistent chevron disclosure controls.
+- Album Detail scrolls fully, and Tracklist, Album Credits, Editions & Sources, and the full release-group link/content are reachable.
 - Search, Results, Album Detail, Producer Search, and Help / Data Sources have appropriate scroll handling.
 - Album Detail scrolling was hardened after simulator restart in `a176dbd`.
 - Producer Search resolves MusicBrainz candidates and loads the first bounded release-level producer result batch.

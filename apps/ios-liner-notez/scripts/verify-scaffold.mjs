@@ -551,7 +551,7 @@ if (!albumDetailScreenSource.includes('alwaysBounceVertical') || !albumDetailScr
 }
 for (const sectionDisclosureLabel of [
   "accessibilityLabel={`${showTracklist ? 'Hide' : 'Show'} tracklist`}",
-  "accessibilityLabel={`${showCredits ? 'Hide' : 'Show'} credits`}",
+  "accessibilityLabel={`${showCredits ? 'Hide' : 'Show'} album credits`}",
   "accessibilityLabel={`${showEditionsSources ? 'Hide' : 'Show'} editions and sources`}"
 ]) {
   if (!albumDetailScreenSource.includes(sectionDisclosureLabel)) {
@@ -604,8 +604,8 @@ if (albumDetailScreenSource.includes('Real MusicBrainz album header') || albumDe
 if (!albumDetailScreenSource.includes('Tracklist is not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include deferred real tracklist copy')
 }
-if (!albumDetailScreenSource.includes('Album-level credits are unavailable or not documented for this selected release.')) {
-  throw new Error('AlbumDetailScreen does not include unavailable selected-release album-level credits copy')
+if (!albumDetailScreenSource.includes('No separate album-level credits are documented for this selected release. Track credits are shown in the Tracklist above when available.')) {
+  throw new Error('AlbumDetailScreen does not include clarified selected-release album-level credits copy')
 }
 if (!albumDetailScreenSource.includes('Editions are not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include deferred real editions copy')
@@ -625,8 +625,8 @@ if (!albumDetailScreenSource.includes('Tracklist')) {
 if (!albumDetailScreenSource.includes('track.position') || !albumDetailScreenSource.includes('track.title')) {
   throw new Error('AlbumDetailScreen does not render track number/title from mock data')
 }
-if (!albumDetailScreenSource.includes('Credits')) {
-  throw new Error('AlbumDetailScreen does not include Credits section label')
+if (!albumDetailScreenSource.includes('Album Credits')) {
+  throw new Error('AlbumDetailScreen does not include Album Credits section label')
 }
 if (!albumDetailScreenSource.includes('showCredits, setShowCredits] = useState(false)')) {
   throw new Error('AlbumDetailScreen does not keep Credits collapsed by default')
@@ -663,7 +663,7 @@ if (
 if (!albumDetailScreenSource.includes("{isTrackExpanded ? 'Hide credits' : 'Show credits'}")) {
   throw new Error('AlbumDetailScreen does not show track credit controls inside Tracklist rows')
 }
-if (!albumDetailScreenSource.includes('Album-level credits are unavailable or not documented for this selected release.')) {
+if (!albumDetailScreenSource.includes('No separate album-level credits are documented for this selected release. Track credits are shown in the Tracklist above when available.')) {
   throw new Error('AlbumDetailScreen does not keep Credits scoped to album-level credits')
 }
 if (albumDetailScreenSource.includes('Album and track credits, with songwriting and publishing when available.')) {

@@ -689,12 +689,12 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
           >
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel={`${showCredits ? 'Hide' : 'Show'} credits`}
+              accessibilityLabel={`${showCredits ? 'Hide' : 'Show'} album credits`}
               onPress={() => setShowCredits((current) => !current)}
               style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
             >
               <View style={{ flex: 1 }}>
-                <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Credits</Text>
+                <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Album Credits</Text>
               </View>
               <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showCredits ? '▾' : '▸'}</Text>
             </TouchableOpacity>
@@ -772,7 +772,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                 {!hasAlbumCredits ? (
                   <Text style={{ color: '#9ca3af', marginTop: 8 }}>
                     {isRealMusicBrainzDetail
-                      ? 'Album-level credits are unavailable or not documented for this selected release.'
+                      ? 'No separate album-level credits are documented for this selected release. Track credits are shown in the Tracklist above when available.'
                       : 'Credits are not available for this album.'}
                   </Text>
                 ) : null}
