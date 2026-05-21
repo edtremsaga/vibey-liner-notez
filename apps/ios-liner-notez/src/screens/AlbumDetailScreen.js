@@ -234,29 +234,12 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
     ['Discogs', externalLinks.discogsUrl]
   ].filter(([, value]) => !!value)
   const trackCreditsByTrackId = hasAlbum && album.credits?.trackCredits ? album.credits.trackCredits : {}
-  const hasTrackCredits =
-    hasTracks &&
-    album.tracks.some((track) => Array.isArray(trackCreditsByTrackId[track.trackId]) && trackCreditsByTrackId[track.trackId].length > 0)
-  const tracksWithCredits = hasTracks
-    ? album.tracks.filter((track) => Array.isArray(trackCreditsByTrackId[track.trackId]) && trackCreditsByTrackId[track.trackId].length > 0)
-    : []
   const groupedAlbumCredits = hasAlbumCredits ? groupTrackCredits(album.credits.albumCredits) : []
-  const tracksWithCreditDetails = hasTracks
-    ? album.tracks.filter((track) => {
-        const trackCredits = trackCreditsByTrackId[track.trackId]
-        return (
-          (Array.isArray(trackCredits) && trackCredits.length > 0) ||
-          !!track.songwriting ||
-          !!track.publishing
-        )
-      })
-    : []
-  const hasTrackCreditDetails = tracksWithCreditDetails.length > 0
   const creditHighlights = hasAlbum
     ? buildCreditHighlights(
         hasAlbumCredits ? album.credits.albumCredits : [],
-        hasTracks ? album.tracks : [],
-        trackCreditsByTrackId
+        [],
+        {}
       )
     : []
   const hasCreditHighlights = creditHighlights.length > 0
@@ -585,20 +568,105 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
             </TouchableOpacity>
             {showTracklist ? (
               hasTracks ? (
-                album.tracks.map((track, index) => (
-                  <View
-                    key={`track-${track.trackId ?? track.position ?? 'unknown'}-${index}`}
-                    style={{ marginTop: 2, paddingVertical: 4, flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}
-                  >
-                    <Text style={{ color: '#d1d5db', flex: 1, fontSize: 15 }}>
-                      {track.position ? `${track.position}. ` : ''}
-                      {track.title}
-                    </Text>
-                    {formatDuration(track.durationMs) ? (
-                      <Text style={{ color: '#9ca3af', fontSize: 14 }}>{formatDuration(track.durationMs)}</Text>
-                    ) : null}
-                  </View>
-                ))
+                album.tracks.map((track, index) => {
+                  const trackCredits = trackCreditsByTrackId[track.trackId] ?? []
+                  const groupedCredits = groupTrackCredits(trackCredits)
+                  const trackDuration = formatDuration(track.durationMs)
+                  const isTrackExpanded = !!expandedCreditTrackIds[track.trackId]
+                  const songwritingRows = [
+                    ...(track.songwriting?.writers ?? []).map((personName) => [personName, 'Writer']),
+                    ...(track.songwriting?.composers ?? []).map((personName) => [personName, 'Composer']),
+                    ...(track.songwriting?.lyricists ?? []).map((personName) => [personName, 'Lyricist'])
+                  ]
+                  const publishingRows = (track.publishing?.publishers ?? []).map((publisherName) => [publisherName, 'Publisher'])
+                  const hasTrackDetails =
+                    songwritingRows.length > 0 ||
+                    publishingRows.length > 0 ||
+                    groupedCredits.length > 0
+
+                  return (
+                    <View
+                      key={`track-${track.trackId ?? track.position ?? 'unknown'}-${index}`}
+                      style={{ marginTop: 2, paddingVertical: 6 }}
+                    >
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                        <Text style={{ color: '#d1d5db', flex: 1, fontSize: 15 }}>
+                          {track.position ? `${track.position}. ` : ''}
+                          {track.title}
+                        </Text>
+                        {trackDuration ? (
+                          <Text style={{ color: '#9ca3af', fontSize: 14 }}>{trackDuration}</Text>
+                        ) : null}
+                      </View>
+                      {hasTrackDetails ? (
+                        <>
+                          <TouchableOpacity
+                            accessibilityRole="button"
+                            accessibilityLabel={`${isTrackExpanded ? 'Hide' : 'Show'} credits for ${track.title}`}
+                            onPress={() => toggleTrackCredits(track.trackId)}
+                            style={{ marginTop: 4, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                          >
+                            <Text style={{ color: '#93c5fd', fontSize: 13, fontWeight: '700' }}>
+                              {isTrackExpanded ? 'Hide credits' : 'Show credits'}
+                            </Text>
+                            <Text style={{ color: '#93c5fd', fontSize: 13 }}>{isTrackExpanded ? '▾' : '▸'}</Text>
+                          </TouchableOpacity>
+                          {isTrackExpanded ? (
+                            <View style={{ marginTop: 8, paddingLeft: 12, borderLeftWidth: 1, borderLeftColor: '#374151' }}>
+                              {songwritingRows.length > 0 ? (
+                                <View>
+                                  <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
+                                    Songwriting
+                                  </Text>
+                                  {songwritingRows.map(([personName, role], index) => (
+                                    <Text
+                                      key={`${track.trackId}-songwriting-${personName}-${role}-${index}`}
+                                      style={{ color: '#d1d5db', marginTop: 2, fontSize: 14 }}
+                                    >
+                                      {personName} — {role}
+                                    </Text>
+                                  ))}
+                                </View>
+                              ) : null}
+                              {publishingRows.length > 0 ? (
+                                <View style={{ marginTop: 8 }}>
+                                  <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
+                                    Publishing
+                                  </Text>
+                                  {publishingRows.map(([publisherName, role], index) => (
+                                    <Text
+                                      key={`${track.trackId}-publishing-${publisherName}-${index}`}
+                                      style={{ color: '#d1d5db', marginTop: 2, fontSize: 14 }}
+                                    >
+                                      {publisherName} — {role}
+                                    </Text>
+                                  ))}
+                                </View>
+                              ) : null}
+                              {groupedCredits.map(([groupLabel, credits]) => (
+                                <View key={`${track.trackId}-${groupLabel}`} style={{ marginTop: 8 }}>
+                                  <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
+                                    {groupLabel}
+                                  </Text>
+                                  {credits.map((credit, index) => (
+                                    <Text
+                                      key={`${track.trackId}-${groupLabel}-${credit.personName}-${credit.role}-${index}`}
+                                      style={{ color: '#d1d5db', marginTop: 2, fontSize: 14 }}
+                                    >
+                                      {credit.personName}
+                                      {credit.role ? ` — ${credit.role}` : ''}
+                                      {credit.instrument ? ` (${credit.instrument})` : ''}
+                                    </Text>
+                                  ))}
+                                </View>
+                              ))}
+                            </View>
+                          ) : null}
+                        </>
+                      ) : null}
+                    </View>
+                  )
+                })
               ) : (
                 <Text style={{ color: '#9ca3af', marginTop: 8 }}>
                   {isRealMusicBrainzDetail
@@ -701,106 +769,10 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                       : null}
                   </View>
                 ) : null}
-                {hasTrackCreditDetails ? (
-                  <>
-                    <Text style={{ color: '#9ca3af', marginTop: 8, fontSize: 14 }}>
-                      Album and track credits, with songwriting and publishing when available.
-                    </Text>
-                    {tracksWithCreditDetails.map((track, index) => {
-                      const trackCredits = trackCreditsByTrackId[track.trackId] ?? []
-                      const groupedCredits = groupTrackCredits(trackCredits)
-                      const trackDuration = formatDuration(track.durationMs)
-                      const isTrackExpanded = !!expandedCreditTrackIds[track.trackId]
-                      const songwritingRows = [
-                        ...(track.songwriting?.writers ?? []).map((personName) => [personName, 'Writer']),
-                        ...(track.songwriting?.composers ?? []).map((personName) => [personName, 'Composer']),
-                        ...(track.songwriting?.lyricists ?? []).map((personName) => [personName, 'Lyricist'])
-                      ]
-                      const publishingRows = (track.publishing?.publishers ?? []).map((publisherName) => [publisherName, 'Publisher'])
-
-                      return (
-                        <View key={`credits-${track.trackId ?? track.position ?? 'unknown'}-${index}`} style={{ marginTop: 12 }}>
-                          <TouchableOpacity
-                            accessibilityRole="button"
-                            accessibilityLabel={`${isTrackExpanded ? 'Hide' : 'Show'} credits for ${track.title}`}
-                            onPress={() => toggleTrackCredits(track.trackId)}
-                            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
-                          >
-                            <Text style={{ color: '#d1d5db', flex: 1, fontWeight: '700', fontSize: 15 }}>
-                              {track.position ? `${track.position}. ` : ''}
-                              {track.title}
-                            </Text>
-                            <View style={{ alignItems: 'flex-end' }}>
-                              {trackDuration ? (
-                                <Text style={{ color: '#9ca3af', fontSize: 14 }}>{trackDuration}</Text>
-                              ) : null}
-                              <Text style={{ color: '#9ca3af', marginTop: 2, fontSize: 16 }}>
-                                {isTrackExpanded ? '▾' : '▸'}
-                              </Text>
-                            </View>
-                          </TouchableOpacity>
-                          {isTrackExpanded
-                            ? (
-                                <>
-                                  {songwritingRows.length > 0 ? (
-                                    <View style={{ marginTop: 8 }}>
-                                      <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
-                                        Songwriting
-                                      </Text>
-                                      {songwritingRows.map(([personName, role], index) => (
-                                        <Text
-                                          key={`${track.trackId}-songwriting-${personName}-${role}-${index}`}
-                                          style={{ color: '#d1d5db', marginTop: 2, fontSize: 14 }}
-                                        >
-                                          {personName} — {role}
-                                        </Text>
-                                      ))}
-                                    </View>
-                                  ) : null}
-                                  {publishingRows.length > 0 ? (
-                                    <View style={{ marginTop: 8 }}>
-                                      <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
-                                        Publishing
-                                      </Text>
-                                      {publishingRows.map(([publisherName, role], index) => (
-                                        <Text
-                                          key={`${track.trackId}-publishing-${publisherName}-${index}`}
-                                          style={{ color: '#d1d5db', marginTop: 2, fontSize: 14 }}
-                                        >
-                                          {publisherName} — {role}
-                                        </Text>
-                                      ))}
-                                    </View>
-                                  ) : null}
-                                  {groupedCredits.map(([groupLabel, credits]) => (
-                                    <View key={`${track.trackId}-${groupLabel}`} style={{ marginTop: 8 }}>
-                                      <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
-                                        {groupLabel}
-                                      </Text>
-                                      {credits.map((credit, index) => (
-                                        <Text
-                                          key={`${track.trackId}-${groupLabel}-${credit.personName}-${credit.role}-${index}`}
-                                          style={{ color: '#d1d5db', marginTop: 2, fontSize: 14 }}
-                                        >
-                                          {credit.personName}
-                                          {credit.role ? ` — ${credit.role}` : ''}
-                                          {credit.instrument ? ` (${credit.instrument})` : ''}
-                                        </Text>
-                                      ))}
-                                    </View>
-                                  ))}
-                                </>
-                              )
-                            : null}
-                        </View>
-                      )
-                    })}
-                  </>
-                ) : null}
-                {!hasAlbumCredits && !hasTrackCreditDetails ? (
+                {!hasAlbumCredits ? (
                   <Text style={{ color: '#9ca3af', marginTop: 8 }}>
                     {isRealMusicBrainzDetail
-                      ? 'Credits are unavailable or not documented for this selected release.'
+                      ? 'Album-level credits are unavailable or not documented for this selected release.'
                       : 'Credits are not available for this album.'}
                   </Text>
                 ) : null}

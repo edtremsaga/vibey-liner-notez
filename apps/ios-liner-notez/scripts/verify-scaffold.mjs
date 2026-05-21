@@ -604,8 +604,8 @@ if (albumDetailScreenSource.includes('Real MusicBrainz album header') || albumDe
 if (!albumDetailScreenSource.includes('Tracklist is not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include deferred real tracklist copy')
 }
-if (!albumDetailScreenSource.includes('Credits are unavailable or not documented for this selected release.')) {
-  throw new Error('AlbumDetailScreen does not include unavailable selected-release credits copy')
+if (!albumDetailScreenSource.includes('Album-level credits are unavailable or not documented for this selected release.')) {
+  throw new Error('AlbumDetailScreen does not include unavailable selected-release album-level credits copy')
 }
 if (!albumDetailScreenSource.includes('Editions are not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include deferred real editions copy')
@@ -658,17 +658,23 @@ if (
   !albumDetailScreenSource.includes('track.title') ||
   !albumDetailScreenSource.includes('trackCreditsByTrackId')
 ) {
-  throw new Error('AlbumDetailScreen does not render track-associated credit rows')
+  throw new Error('AlbumDetailScreen does not render track-associated credit rows inside Tracklist')
 }
-if (!albumDetailScreenSource.includes('Album and track credits, with songwriting and publishing when available.')) {
-  throw new Error('AlbumDetailScreen does not include user-facing credit scope copy')
+if (!albumDetailScreenSource.includes("{isTrackExpanded ? 'Hide credits' : 'Show credits'}")) {
+  throw new Error('AlbumDetailScreen does not show track credit controls inside Tracklist rows')
+}
+if (!albumDetailScreenSource.includes('Album-level credits are unavailable or not documented for this selected release.')) {
+  throw new Error('AlbumDetailScreen does not keep Credits scoped to album-level credits')
+}
+if (albumDetailScreenSource.includes('Album and track credits, with songwriting and publishing when available.')) {
+  throw new Error('AlbumDetailScreen still describes the Credits section as mixed album and track credits')
 }
 if (albumDetailScreenSource.includes('Selected-release track credits, songwriting, and publishing from MusicBrainz.')) {
   throw new Error('AlbumDetailScreen still includes technical selected-release credit scope copy')
 }
 if (
-  !albumDetailScreenSource.includes('tracksWithCreditDetails') ||
-  !albumDetailScreenSource.includes('hasTrackCreditDetails') ||
+  !albumDetailScreenSource.includes('const hasTrackDetails') ||
+  !albumDetailScreenSource.includes('groupedCredits.length > 0') ||
   !albumDetailScreenSource.includes('Songwriting') ||
   !albumDetailScreenSource.includes("track.songwriting?.writers") ||
   !albumDetailScreenSource.includes("track.songwriting?.composers") ||
@@ -726,35 +732,30 @@ if (
   !albumDetailScreenSource.includes('Credit Highlights') ||
   !albumDetailScreenSource.includes('showCreditHighlights') ||
   !albumDetailScreenSource.includes('buildCreditHighlights') ||
+  !albumDetailScreenSource.includes('buildCreditHighlights(') ||
+  !albumDetailScreenSource.includes('[],') ||
+  !albumDetailScreenSource.includes('{}') ||
   !albumDetailScreenSource.includes("accessibilityLabel={`${showCreditHighlights ? 'Hide' : 'Show'} credit highlights`}") ||
   !albumDetailScreenSource.includes("{showCreditHighlights ? '▾' : '▸'}")
 ) {
-  throw new Error('AlbumDetailScreen does not render credit highlights as a collapsed disclosure row')
+  throw new Error('AlbumDetailScreen does not render album-level credit highlights as a collapsed disclosure row')
 }
 for (const creditHighlightLabel of [
   'Producers',
   'Engineers / Mixers / Mastering',
-  'Performers & Instruments',
-  'Songwriting',
-  'Publishing'
+  'Performers & Instruments'
 ]) {
   if (!albumDetailScreenSource.includes(creditHighlightLabel)) {
     throw new Error(`AlbumDetailScreen is missing credit highlight category: ${creditHighlightLabel}`)
   }
-}
-if (
-  !albumDetailScreenSource.includes('trackIds.size') ||
-  !albumDetailScreenSource.includes("trackCount === 1 ? 'track' : 'tracks'")
-) {
-  throw new Error('AlbumDetailScreen credit highlights do not include derived track counts')
 }
 for (const creditGroupLabel of ['Performers & Instruments', 'Production & Technical', 'Other']) {
   if (!albumDetailScreenSource.includes(creditGroupLabel)) {
     throw new Error(`AlbumDetailScreen is missing track credit group label: ${creditGroupLabel}`)
   }
 }
-if (!albumDetailScreenSource.includes('tracksWithCreditDetails.map') || albumDetailScreenSource.includes('album.tracks.slice(0, 3)')) {
-  throw new Error('AlbumDetailScreen does not render all tracks with selected-release credits, songwriting, or publishing')
+if (!albumDetailScreenSource.includes('album.tracks.map') || albumDetailScreenSource.includes('album.tracks.slice(0, 3)')) {
+  throw new Error('AlbumDetailScreen does not render all Tracklist rows with selected-release credits, songwriting, or publishing')
 }
 if (
   !albumDetailScreenSource.includes('expandedCreditTrackIds') ||
