@@ -925,6 +925,13 @@ if (!appSource.includes('selectedAlbumResult') || !appSource.includes('buildAlbu
 if (!appSource.includes('fetchMusicBrainzAlbumBasicInfo') || !appSource.includes('setAlbumDetailLoading')) {
   throw new Error('App router does not fetch release-group basic enrichment for Album Detail')
 }
+if (
+  !appSource.includes('albumDetailOpenRequestId') ||
+  !appSource.includes('setAlbumDetailOpenRequestId((current) => current + 1)') ||
+  !appSource.includes('[selectedAlbumId, selectedAlbumResult, albumDetailOpenRequestId]')
+) {
+  throw new Error('App router does not refetch Album Detail enrichment when the same album is explicitly reopened')
+}
 if (!appSource.includes('fetchMusicBrainzSelectedReleaseTracklist') || !appSource.includes('tracks: tracklistDetail.tracks')) {
   throw new Error('App router does not fetch and merge selected-release tracklist for Album Detail')
 }

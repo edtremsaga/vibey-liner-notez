@@ -191,6 +191,7 @@ export default function App() {
   const [detailReturnRoute, setDetailReturnRoute] = useState('Results')
   const [producerSearchState, setProducerSearchState] = useState(INITIAL_PRODUCER_SEARCH_STATE)
   const albumSearchRequestId = useRef(0)
+  const [albumDetailOpenRequestId, setAlbumDetailOpenRequestId] = useState(0)
 
   useEffect(() => {
     if (!selectedAlbumResult || !selectedAlbumId) {
@@ -340,7 +341,7 @@ export default function App() {
     return () => {
       isCurrent = false
     }
-  }, [selectedAlbumId, selectedAlbumResult])
+  }, [selectedAlbumId, selectedAlbumResult, albumDetailOpenRequestId])
 
   async function handleSubmitArtistSearch({ artistName, albumTitle, releaseType }) {
     const requestId = albumSearchRequestId.current + 1
@@ -383,6 +384,7 @@ export default function App() {
       setSelectedAlbumDetail(null)
       setAlbumDetailError('')
       setDetailReturnRoute(sourceRoute)
+      setAlbumDetailOpenRequestId((current) => current + 1)
       setRoute('Album Detail')
       return
     }
