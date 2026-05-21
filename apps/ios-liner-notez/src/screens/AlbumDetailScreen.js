@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Image, Linking, Modal, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
+import { ActivityIndicator, Image, Linking, Modal, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 
 function formatDuration(durationMs) {
   if (!durationMs || Number.isNaN(durationMs)) {
@@ -175,8 +175,16 @@ function getArtworkThumbnailUrl(image) {
     null
 }
 
+function getArtworkViewerUrl(image) {
+  return image?.thumbnails?.['1200'] ||
+    image?.thumbnails?.large ||
+    image?.image ||
+    null
+}
+
 export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorMessage, isLoading, onBackToResults }) {
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions()
+  const artworkViewerScrollRef = useRef(null)
   const [showLoading, setShowLoading] = useState(false)
   const [showTracklist, setShowTracklist] = useState(true)
   const [showCredits, setShowCredits] = useState(false)
@@ -188,6 +196,8 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
   const [expandedCreditTrackIds, setExpandedCreditTrackIds] = useState({})
   const [failedCoverArtUrls, setFailedCoverArtUrls] = useState({})
   const [failedArtworkUrls, setFailedArtworkUrls] = useState({})
+  const [failedViewerImageUrls, setFailedViewerImageUrls] = useState({})
+  const [loadedViewerImageUrls, setLoadedViewerImageUrls] = useState({})
   const [selectedArtworkIndex, setSelectedArtworkIndex] = useState(0)
   const [isArtworkViewerOpen, setIsArtworkViewerOpen] = useState(false)
 
@@ -270,6 +280,31 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
   const viewerImages = hasArtworkGallery ? artworkImages : fallbackCoverArtwork
   const selectedArtwork = isArtworkViewerOpen ? viewerImages[selectedArtworkIndex] ?? null : null
   const viewerImageCount = viewerImages.length
+
+  useEffect(() => {
+    if (!isArtworkViewerOpen || viewerImageCount === 0) {
+      return
+    }
+
+    artworkViewerScrollRef.current?.scrollTo({
+      x: selectedArtworkIndex * viewportWidth,
+      y: 0,
+      animated: false
+    })
+
+    const indexesToPrefetch = [
+      selectedArtworkIndex - 1,
+      selectedArtworkIndex,
+      selectedArtworkIndex + 1
+    ].filter((index) => index >= 0 && index < viewerImageCount)
+
+    for (const index of indexesToPrefetch) {
+      const viewerUrl = getArtworkViewerUrl(viewerImages[index])
+      if (viewerUrl) {
+        Image.prefetch(viewerUrl).catch(() => {})
+      }
+    }
+  }, [isArtworkViewerOpen, selectedArtworkIndex, viewportWidth, viewerImageCount, viewerImages])
 
   function openArtworkViewer(index = 0) {
     if (viewerImages.length === 0) {
@@ -994,7 +1029,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
 
           {viewerImageCount > 0 ? (
             <ScrollView
-              key={`artwork-viewer-${selectedArtworkIndex ?? 0}`}
+              ref={artworkViewerScrollRef}
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
@@ -1009,38 +1044,75 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
               }}
               style={{ flex: 1 }}
             >
-              {viewerImages.map((image, index) => (
-                <View
-                  key={`viewer-artwork-${image.id ?? image.image ?? 'image'}-${index}`}
-                  style={{ width: viewportWidth, height: viewportHeight - 118 }}
-                >
-                  <ScrollView
-                    maximumZoomScale={4}
-                    minimumZoomScale={1}
-                    centerContent
-                    bouncesZoom
-                    showsHorizontalScrollIndicator={false}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{
-                      width: viewportWidth,
-                      minHeight: viewportHeight - 118,
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
+              {viewerImages.map((image, index) => {
+                const viewerUrl = getArtworkViewerUrl(image)
+                const isViewerImageLoaded = !!loadedViewerImageUrls[viewerUrl]
+                const didViewerImageFail = !!failedViewerImageUrls[viewerUrl]
+
+                return (
+                  <View
+                    key={`viewer-artwork-${image.id ?? image.image ?? 'image'}-${index}`}
+                    style={{ width: viewportWidth, height: viewportHeight - 118 }}
                   >
-                    <Image
-                      source={{ uri: image.image }}
-                      accessibilityLabel={`${getArtworkTypeLabel(image)} artwork image ${index + 1} of ${viewerImageCount}`}
-                      style={{
+                    <ScrollView
+                      maximumZoomScale={4}
+                      minimumZoomScale={1}
+                      centerContent
+                      bouncesZoom
+                      showsHorizontalScrollIndicator={false}
+                      showsVerticalScrollIndicator={false}
+                      contentContainerStyle={{
                         width: viewportWidth,
-                        height: viewportHeight - 118,
-                        backgroundColor: '#050608'
+                        minHeight: viewportHeight - 118,
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}
-                      resizeMode="contain"
-                    />
-                  </ScrollView>
-                </View>
-              ))}
+                    >
+                      {viewerUrl ? (
+                        <Image
+                          source={{ uri: viewerUrl }}
+                          accessibilityLabel={`${getArtworkTypeLabel(image)} artwork image ${index + 1} of ${viewerImageCount}`}
+                          onLoad={() => {
+                            setLoadedViewerImageUrls((current) => ({
+                              ...current,
+                              [viewerUrl]: true
+                            }))
+                          }}
+                          onError={() => {
+                            setFailedViewerImageUrls((current) => ({
+                              ...current,
+                              [viewerUrl]: true
+                            }))
+                            setLoadedViewerImageUrls((current) => ({
+                              ...current,
+                              [viewerUrl]: true
+                            }))
+                          }}
+                          style={{
+                            width: viewportWidth,
+                            height: viewportHeight - 118,
+                            backgroundColor: '#050608'
+                          }}
+                          resizeMode="contain"
+                        />
+                      ) : (
+                        <Text style={{ color: '#d1d5db' }}>Image unavailable.</Text>
+                      )}
+                      {viewerUrl && !isViewerImageLoaded ? (
+                        <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
+                          <ActivityIndicator color="#f3f4f6" />
+                          <Text style={{ color: '#d1d5db', marginTop: 10 }}>Loading image...</Text>
+                        </View>
+                      ) : null}
+                      {viewerUrl && didViewerImageFail ? (
+                        <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
+                          <Text style={{ color: '#d1d5db' }}>Image unavailable.</Text>
+                        </View>
+                      ) : null}
+                    </ScrollView>
+                  </View>
+                )
+              })}
             </ScrollView>
           ) : null}
         </View>

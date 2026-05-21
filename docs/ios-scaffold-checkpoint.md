@@ -188,7 +188,7 @@
 - Missing or failing cover art preserves the current no-art Album Detail layout silently.
 - Artwork gallery images use Cover Art Archive release-group JSON, are limited to 20 images, and are optional/non-blocking.
 - Album Detail shows `Album Art & Liner Images` thumbnails with product-facing copy and an image-count/full-screen cue when gallery images are available.
-- Tapping primary cover art or an Album Art & Liner Images thumbnail opens a full-screen viewer with close, swipe paging, image count, type labels, and iOS ScrollView pinch zoom/pan.
+- Tapping primary cover art or an Album Art & Liner Images thumbnail opens a full-screen viewer with close, swipe paging, image count, type labels, visible image-loading feedback, adjacent-image prefetching, viewer-sized image URLs, and iOS ScrollView pinch zoom/pan.
 - Gallery data is iOS-local for now; the shared album schema still only defines `coverArtUrl`.
 - Wikipedia album links are resolved through MusicBrainz release-group `url-rels` -> Wikidata QID -> English Wikipedia sitelink.
 - Wikipedia links are optional/non-blocking, do not fetch summary text, and are not guessed from artist/title strings.

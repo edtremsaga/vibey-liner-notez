@@ -713,12 +713,31 @@ if (
   !albumDetailScreenSource.includes('function closeArtworkViewer') ||
   !albumDetailScreenSource.includes('if (!isArtworkViewerOpen)') ||
   !albumDetailScreenSource.includes('getArtworkTypeLabel') ||
-  !albumDetailScreenSource.includes('getArtworkThumbnailUrl')
+  !albumDetailScreenSource.includes('getArtworkThumbnailUrl') ||
+  !albumDetailScreenSource.includes('getArtworkViewerUrl') ||
+  !albumDetailScreenSource.includes("image?.thumbnails?.['1200']") ||
+  !albumDetailScreenSource.includes('Image.prefetch(viewerUrl)') ||
+  !albumDetailScreenSource.includes('selectedArtworkIndex - 1') ||
+  !albumDetailScreenSource.includes('selectedArtworkIndex + 1') ||
+  !albumDetailScreenSource.includes('ActivityIndicator') ||
+  !albumDetailScreenSource.includes('Loading image...') ||
+  !albumDetailScreenSource.includes('loadedViewerImageUrls') ||
+  !albumDetailScreenSource.includes('failedViewerImageUrls')
 ) {
-  throw new Error('AlbumDetailScreen does not include the optional artwork gallery viewer wiring')
+  throw new Error('AlbumDetailScreen does not include responsive artwork gallery viewer wiring')
+}
+if (
+  !albumDetailScreenSource.includes('artworkViewerScrollRef') ||
+  !albumDetailScreenSource.includes('ref={artworkViewerScrollRef}') ||
+  !albumDetailScreenSource.includes('scrollTo({')
+) {
+  throw new Error('AlbumDetailScreen does not keep the artwork pager aligned without remounting')
 }
 if (albumDetailScreenSource.includes('visible={selectedArtworkIndex !== null}')) {
   throw new Error('AlbumDetailScreen couples artwork viewer visibility to selectedArtworkIndex, which can reopen after Close')
+}
+if (albumDetailScreenSource.includes('key={`artwork-viewer-${selectedArtworkIndex')) {
+  throw new Error('AlbumDetailScreen remounts the artwork pager when the selected artwork index changes')
 }
 if (
   !albumDetailScreenSource.includes('showAlbumCredits') ||
