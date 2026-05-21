@@ -51,6 +51,7 @@
 - Producer Search results use compact user-facing selected-producer context, filtered alias display, and no visible raw release IDs in normal result cards.
 - Album Detail shows real selected-result header data for Search results, enriches release-group Editions & Sources from MusicBrainz, loads the selected-release tracklist, and displays selected-release album-level credits plus expandable per-track credits, songwriting, and publishing when documented.
 - Album Detail selected-release album-level credits are loaded from the existing selected-release response without adding another MusicBrainz request.
+- Album Detail selected-release choice prefers Official releases with more specific dates within the same release year so year-only editions are less likely to hide richer selected-release credits.
 - Album Detail album-level credits render directly inside Album Credits without a nested `Album` disclosure row.
 - Album Detail Album Credits includes a collapsed album-level `Credit Highlights` row that derives scan-friendly producers, engineers/mixers/mastering, and performer summaries from already-loaded selected-release album credits.
 - Album Detail Tracklist rows with documented details use subtle row-level chevrons and can expand to show selected-release track credits, songwriting, and publishing.
@@ -169,6 +170,7 @@
   - `notes`
 - iOS extracts selected-release album-level credits from release `relations` using the same compact credit shape.
 - Album-level credits use the already-fetched selected-release response; iOS does not probe alternate releases for album credits yet.
+- Selected-release sorting still avoids alternate-release probing, but prefers full-date official editions over year-only editions within the same release year.
 - Album-level credits render directly inside Album Credits with user-facing group labels such as `Artwork, Design & Photography`, `Production & Technical`, `Performers & Instruments`, and `Additional Credits`.
 - Credit Highlights are derived in the iOS UI from already-loaded album-level credits only; they do not add MusicBrainz requests or schema fields.
 - Track-level credits, songwriting, and publishing now live inside expandable Tracklist rows instead of repeating the tracklist inside Album Credits.

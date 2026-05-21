@@ -59,7 +59,26 @@ function buildWikipediaUrlFromSitelinkTitle(title) {
 }
 
 function sortReleasesForSelectedRelease(releases) {
+  function getReleaseYear(release) {
+    const year = Number.parseInt(release?.date?.slice(0, 4), 10)
+    return Number.isNaN(year) ? 9999 : year
+  }
+
+  function getReleaseDatePrecision(release) {
+    return release?.date ? release.date.split('-').length : 0
+  }
+
   const sorted = [...releases].sort((a, b) => {
+    const yearDifference = getReleaseYear(a) - getReleaseYear(b)
+    if (yearDifference !== 0) {
+      return yearDifference
+    }
+
+    const precisionDifference = getReleaseDatePrecision(b) - getReleaseDatePrecision(a)
+    if (precisionDifference !== 0) {
+      return precisionDifference
+    }
+
     const dateA = a?.date || '9999'
     const dateB = b?.date || '9999'
     return dateA.localeCompare(dateB)

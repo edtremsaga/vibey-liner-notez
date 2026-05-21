@@ -1031,8 +1031,14 @@ if (
 ) {
   throw new Error('iOS MusicBrainz album detail service does not resolve Wikipedia links through MusicBrainz/Wikidata sitelinks')
 }
-if (!musicBrainzAlbumDetailSource.includes("release?.status === 'Official'") || !musicBrainzAlbumDetailSource.includes('dateA.localeCompare(dateB)')) {
-  throw new Error('iOS MusicBrainz album detail service does not choose selected release like React basic info')
+if (
+  !musicBrainzAlbumDetailSource.includes("release?.status === 'Official'") ||
+  !musicBrainzAlbumDetailSource.includes('getReleaseDatePrecision') ||
+  !musicBrainzAlbumDetailSource.includes("release.date.split('-').length") ||
+  !musicBrainzAlbumDetailSource.includes('precisionDifference') ||
+  !musicBrainzAlbumDetailSource.includes('dateA.localeCompare(dateB)')
+) {
+  throw new Error('iOS MusicBrainz album detail service does not prefer specific dated official selected releases')
 }
 if (!musicBrainzAlbumDetailSource.includes('mapReleaseToEdition') || !musicBrainzAlbumDetailSource.includes('editionId')) {
   throw new Error('iOS MusicBrainz album detail service does not map minimal release-group editions')
