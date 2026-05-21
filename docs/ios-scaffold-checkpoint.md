@@ -53,7 +53,7 @@
 - Album Detail selected-release album-level credits are loaded from the existing selected-release response without adding another MusicBrainz request.
 - Album Detail album-level credits render directly inside Album Credits without a nested `Album` disclosure row.
 - Album Detail Album Credits includes a collapsed album-level `Credit Highlights` row that derives scan-friendly producers, engineers/mixers/mastering, and performer summaries from already-loaded selected-release album credits.
-- Album Detail Tracklist rows can expand to show selected-release track credits, songwriting, and publishing with iOS-style disclosure controls.
+- Album Detail Tracklist rows with documented details use subtle row-level chevrons and can expand to show selected-release track credits, songwriting, and publishing.
 - Album Detail Album Credits is reserved for album/release-level credits and no longer repeats the full tracklist.
 - Album Detail Album Credits now defaults collapsed to keep dense album pages calmer while preserving full credit detail behind disclosure.
 - Album Detail section-level disclosure controls use chevrons consistently for Tracklist, Album Credits, and Editions & Sources.
@@ -250,7 +250,7 @@
 - Credit Highlights summarize loaded album-level contributors without changing the underlying credit data.
 - Songwriting appears in expanded Tracklist rows when writer/composer/lyricist data is documented.
 - Publishing appears in expanded Tracklist rows when publisher label data is documented.
-- Track credits are readable, grouped, collapsed by default, and expandable from Tracklist rows.
+- Track credits are readable, grouped, collapsed by default, and expandable from Tracklist rows using subtle chevrons instead of repeated text links.
 - Album Credits no longer repeats the full tracklist and remains focused on album/release-level credits.
 - Tracklist, Album Credits, and Editions & Sources use consistent chevron disclosure controls.
 - Album Detail scrolls fully, and Tracklist, Album Credits, Editions & Sources, and the full release-group link/content are reachable.

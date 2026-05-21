@@ -660,8 +660,16 @@ if (
 ) {
   throw new Error('AlbumDetailScreen does not render track-associated credit rows inside Tracklist')
 }
-if (!albumDetailScreenSource.includes("{isTrackExpanded ? 'Hide credits' : 'Show credits'}")) {
-  throw new Error('AlbumDetailScreen does not show track credit controls inside Tracklist rows')
+if (
+  !albumDetailScreenSource.includes('hasExpandableTrackCredits') ||
+  !albumDetailScreenSource.includes('Tap a track to view credits.') ||
+  !albumDetailScreenSource.includes("{isTrackExpanded ? '▾' : '›'}") ||
+  !albumDetailScreenSource.includes("accessibilityLabel={`${isTrackExpanded ? 'Hide' : 'Show'} credits for ${track.title}`}")
+) {
+  throw new Error('AlbumDetailScreen does not show subtle row-level track credit controls inside Tracklist')
+}
+if (albumDetailScreenSource.includes("{isTrackExpanded ? 'Hide credits' : 'Show credits'}")) {
+  throw new Error('AlbumDetailScreen still shows repeated Show credits / Hide credits text in Tracklist rows')
 }
 if (!albumDetailScreenSource.includes('No separate album-level credits are documented for this selected release. Track credits are shown in the Tracklist above when available.')) {
   throw new Error('AlbumDetailScreen does not keep Credits scoped to album-level credits')
@@ -787,8 +795,8 @@ if (
 ) {
   throw new Error('AlbumDetailScreen does not provide per-track credit expand/collapse controls')
 }
-if (!albumDetailScreenSource.includes("{isTrackExpanded ? '▾' : '▸'}")) {
-  throw new Error('AlbumDetailScreen does not use iOS-style disclosure indicators for per-track credits')
+if (!albumDetailScreenSource.includes("{isTrackExpanded ? '▾' : '›'}")) {
+  throw new Error('AlbumDetailScreen does not use subtle row-level disclosure indicators for per-track credits')
 }
 if (!albumDetailScreenSource.includes('isTrackExpanded') || !albumDetailScreenSource.includes(': null}')) {
   throw new Error('AlbumDetailScreen does not keep per-track credits collapsed until expanded')

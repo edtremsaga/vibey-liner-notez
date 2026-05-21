@@ -287,6 +287,14 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
   const tracklistSummary = hasTracks
     ? `${album.tracks.length} ${album.tracks.length === 1 ? 'track' : 'tracks'}`
     : null
+  const hasExpandableTrackCredits = hasTracks && album.tracks.some((track) => {
+    const trackCredits = trackCreditsByTrackId[track.trackId] ?? []
+    return (
+      trackCredits.length > 0 ||
+      !!track.songwriting ||
+      !!track.publishing
+    )
+  })
   const editionsSourcesSummary = selectedEdition && hasSources
     ? 'Selected edition and sources'
     : hasEditions
@@ -629,6 +637,9 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                 {!!tracklistSummary && (
                   <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>{tracklistSummary}</Text>
                 )}
+                {hasExpandableTrackCredits ? (
+                  <Text style={{ color: '#6b7280', marginTop: 3, fontSize: 13 }}>Tap a track to view credits.</Text>
+                ) : null}
               </View>
               <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showTracklist ? '▾' : '▸'}</Text>
             </TouchableOpacity>
@@ -655,27 +666,24 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                       key={`track-${track.trackId ?? track.position ?? 'unknown'}-${index}`}
                       style={{ marginTop: 2, paddingVertical: 6 }}
                     >
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                        <Text style={{ color: '#d1d5db', flex: 1, fontSize: 15 }}>
-                          {track.position ? `${track.position}. ` : ''}
-                          {track.title}
-                        </Text>
-                        {trackDuration ? (
-                          <Text style={{ color: '#9ca3af', fontSize: 14 }}>{trackDuration}</Text>
-                        ) : null}
-                      </View>
                       {hasTrackDetails ? (
                         <>
                           <TouchableOpacity
                             accessibilityRole="button"
                             accessibilityLabel={`${isTrackExpanded ? 'Hide' : 'Show'} credits for ${track.title}`}
                             onPress={() => toggleTrackCredits(track.trackId)}
-                            style={{ marginTop: 4, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                            style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}
                           >
-                            <Text style={{ color: '#93c5fd', fontSize: 13, fontWeight: '700' }}>
-                              {isTrackExpanded ? 'Hide credits' : 'Show credits'}
+                            <Text style={{ color: '#d1d5db', flex: 1, fontSize: 15 }}>
+                              {track.position ? `${track.position}. ` : ''}
+                              {track.title}
                             </Text>
-                            <Text style={{ color: '#93c5fd', fontSize: 13 }}>{isTrackExpanded ? '▾' : '▸'}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                              {trackDuration ? (
+                                <Text style={{ color: '#9ca3af', fontSize: 14 }}>{trackDuration}</Text>
+                              ) : null}
+                              <Text style={{ color: '#9ca3af', fontSize: 16 }}>{isTrackExpanded ? '▾' : '›'}</Text>
+                            </View>
                           </TouchableOpacity>
                           {isTrackExpanded ? (
                             <View style={{ marginTop: 8, paddingLeft: 12, borderLeftWidth: 1, borderLeftColor: '#374151' }}>
@@ -729,7 +737,17 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                             </View>
                           ) : null}
                         </>
-                      ) : null}
+                      ) : (
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                          <Text style={{ color: '#d1d5db', flex: 1, fontSize: 15 }}>
+                            {track.position ? `${track.position}. ` : ''}
+                            {track.title}
+                          </Text>
+                          {trackDuration ? (
+                            <Text style={{ color: '#9ca3af', fontSize: 14 }}>{trackDuration}</Text>
+                          ) : null}
+                        </View>
+                      )}
                     </View>
                   )
                 })
