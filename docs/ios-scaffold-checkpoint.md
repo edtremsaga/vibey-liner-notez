@@ -91,7 +91,8 @@
 - This is a real-data iOS prototype close to v1 scope-complete, but it is not yet TestFlight/App Store production-ready.
 - Code-based iOS privacy notes are tracked in `docs/ios-privacy-notes.md` for later App Store privacy answers and privacy policy drafting.
 - Draft iOS App Store/TestFlight metadata is tracked in `docs/ios-app-store-metadata-draft.md`; it is support material only, not final submission copy.
-- Remaining production-readiness gaps include production app config in `app.json`, manual simulator/device smoke testing, App Store/TestFlight metadata, icon/splash/versioning/privacy details, and later cleanup of remaining scaffold-era doc/tool names.
+- Minimal EAS/TestFlight release setup notes are tracked in `docs/ios-eas-testflight-runbook.md`; do not run EAS build/submit/login/credential commands outside a dedicated release setup session.
+- Remaining production-readiness gaps include manual simulator/device smoke testing, final App Store/TestFlight metadata review, privacy/support URLs, screenshots, EAS/TestFlight credential setup, and later cleanup of remaining scaffold-era doc/tool names.
 
 ## Album Workflow Phase-Complete Checkpoint
 - The iOS album-search workflow is phase-complete for the current read-only vertical slice.
