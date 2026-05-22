@@ -169,7 +169,7 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
             backgroundColor: '#181a1f'
           }}
         >
-          <Text style={{ color: '#d1d5db', fontWeight: '700', fontSize: 16 }}>Searching MusicBrainz</Text>
+          <Text style={{ color: '#d1d5db', fontWeight: '700', fontSize: 16 }}>Searching music data</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
             {loadingDetail}
           </Text>

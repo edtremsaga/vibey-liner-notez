@@ -21,7 +21,7 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
           marginBottom: 14
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Search</Text>
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Album Search</Text>
       </TouchableOpacity>
 
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Help / Data Sources</Text>

@@ -238,7 +238,7 @@ if (!resultsScreenSource.includes('No albums found')) {
 if (!resultsScreenSource.includes('Music data search error')) {
   throw new Error('ResultsScreen does not include MusicBrainz error state text')
 }
-if (!resultsScreenSource.includes('Searching MusicBrainz')) {
+if (!resultsScreenSource.includes('Searching music data')) {
   throw new Error('ResultsScreen does not include MusicBrainz loading state text')
 }
 if (!resultsScreenSource.includes('artistCredit') || !resultsScreenSource.includes('firstReleaseDate')) {
@@ -462,7 +462,7 @@ const helpDataSourcesScreenSource = readFileSync(
 if (!helpDataSourcesScreenSource.includes('ScrollView') || !helpDataSourcesScreenSource.includes('contentContainerStyle')) {
   throw new Error('HelpDataSourcesScreen is not scrollable for help/data-source content')
 }
-if (!helpDataSourcesScreenSource.includes('onBackToSearch') || !helpDataSourcesScreenSource.includes('Back to Search')) {
+if (!helpDataSourcesScreenSource.includes('onBackToSearch') || !helpDataSourcesScreenSource.includes('Back to Album Search')) {
   throw new Error('HelpDataSourcesScreen does not include contextual back-to-search action')
 }
 if (helpDataSourcesScreenSource.includes('Placeholder screen for help, attribution, and data-source disclosures.')) {
@@ -624,10 +624,10 @@ if (!albumDetailScreenSource.includes('No separate album-level credits are docum
 if (!albumDetailScreenSource.includes('Editions are not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include deferred real editions copy')
 }
-if (!albumDetailScreenSource.includes('Loading MusicBrainz details...')) {
+if (!albumDetailScreenSource.includes('Loading album details...')) {
   throw new Error('AlbumDetailScreen does not include release-group enrichment loading state')
 }
-if (!albumDetailScreenSource.includes('MusicBrainz detail enrichment unavailable')) {
+if (!albumDetailScreenSource.includes('Additional album details unavailable')) {
   throw new Error('AlbumDetailScreen does not include release-group enrichment error state')
 }
 if (!albumDetailScreenSource.includes('Release-group editions')) {

@@ -448,7 +448,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
             backgroundColor: '#181a1f'
           }}
         >
-          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading MusicBrainz details...</Text>
+          <Text style={{ color: '#d1d5db', fontWeight: '600' }}>Loading album details...</Text>
           <Text style={{ color: '#9ca3af', marginTop: 4 }}>
             Keeping the selected result visible while release-group and tracklist information loads.
           </Text>
@@ -466,7 +466,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
             backgroundColor: '#2a1215'
           }}
         >
-          <Text style={{ color: '#fecaca', fontWeight: '600' }}>MusicBrainz detail enrichment unavailable</Text>
+          <Text style={{ color: '#fecaca', fontWeight: '600' }}>Additional album details unavailable</Text>
           <Text style={{ color: '#fca5a5', marginTop: 4 }}>{errorMessage}</Text>
         </View>
       )}
