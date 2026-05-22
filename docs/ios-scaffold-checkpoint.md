@@ -101,6 +101,7 @@
   - Results support client-side Oldest first / Newest first sorting, clearer card metadata, and contextual navigation.
   - Album Detail shows the selected album identity, primary cover art, source-backed Wikipedia link, Album Art & Liner Images viewer, selected-release tracklist, selected-release album/track credits, work-level songwriting, instrument-specific credits, publishing, and traceable Editions & Sources.
 - Manual smoke-test checklist:
+  - Use the full manual runbook in `docs/ios-v1-smoke-checklist.md` before declaring the current iOS version v1/prototype-complete or starting TestFlight/App Store work.
   - Search `David Bowie` / `Hunky Dory` / Studio Albums and open the correct album.
   - Search `R.E.M.` or `REM` / Studio Albums and confirm artist identity resolution avoids unrelated `Rem`/`Rém` results.
   - Search `Steely Dan` / `Aja` and confirm cover art, tracklist, selected edition metadata, and sources load.
