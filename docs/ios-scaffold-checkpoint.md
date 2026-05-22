@@ -89,6 +89,7 @@
 - Album Detail opens immediately from selected Results row data, then fetches release-group basic info, optional Wikipedia article links, optional cover art/gallery images, selected-release edition metadata, selected-release tracklist data, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing in the background.
 - Producer Search has real MusicBrainz producer candidate resolution plus bounded release-level producer album results that can open existing Album Detail; recording-level fallback is not implemented.
 - This is a real-data iOS prototype close to v1 scope-complete, but it is not yet TestFlight/App Store production-ready.
+- Code-based iOS privacy notes are tracked in `docs/ios-privacy-notes.md` for later App Store privacy answers and privacy policy drafting.
 - Remaining production-readiness gaps include production app config in `app.json`, manual simulator/device smoke testing, App Store/TestFlight metadata, icon/splash/versioning/privacy details, and later cleanup of remaining scaffold-era doc/tool names.
 
 ## Album Workflow Phase-Complete Checkpoint
