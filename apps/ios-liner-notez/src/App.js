@@ -5,7 +5,6 @@ import { ResultsScreen } from './screens/ResultsScreen'
 import { AlbumDetailScreen } from './screens/AlbumDetailScreen'
 import { ProducerSearchScreen } from './screens/ProducerSearchScreen'
 import { HelpDataSourcesScreen } from './screens/HelpDataSourcesScreen'
-import { getMockAlbumById, getMockAlbums } from 'core-liner-notez'
 import {
   fetchMusicBrainzAlbumBasicInfo,
   fetchMusicBrainzArtworkGallery,
@@ -115,9 +114,7 @@ function ScreenRouter({
 }) {
   const selectedAlbum = selectedAlbumResult
     ? buildAlbumDetailFromResult(selectedAlbumId, selectedAlbumResult, selectedAlbumDetail)
-    : selectedAlbumId
-      ? getMockAlbumById(selectedAlbumId)
-      : null
+    : null
 
   switch (route) {
     case 'Results':
@@ -378,26 +375,17 @@ export default function App() {
   }
 
   function handleSelectAlbum(albumId, albumResult = null, sourceRoute = 'Results') {
-    if (albumResult) {
-      setSelectedAlbumId(albumId)
-      setSelectedAlbumResult(albumResult)
-      setSelectedAlbumDetail(null)
-      setAlbumDetailError('')
-      setDetailReturnRoute(sourceRoute)
-      setAlbumDetailOpenRequestId((current) => current + 1)
-      setRoute('Album Detail')
+    if (!albumResult) {
       return
     }
 
-    const selected = getMockAlbumById(albumId) || getMockAlbums()[0]
-    if (selected) {
-      setSelectedAlbumId(selected.albumId)
-      setSelectedAlbumResult(null)
-      setSelectedAlbumDetail(null)
-      setAlbumDetailError('')
-      setDetailReturnRoute(route === 'Producer Search' ? 'Producer Search' : 'Results')
-      setRoute('Album Detail')
-    }
+    setSelectedAlbumId(albumId)
+    setSelectedAlbumResult(albumResult)
+    setSelectedAlbumDetail(null)
+    setAlbumDetailError('')
+    setDetailReturnRoute(sourceRoute)
+    setAlbumDetailOpenRequestId((current) => current + 1)
+    setRoute('Album Detail')
   }
 
   function handleBackToAlbumSource() {

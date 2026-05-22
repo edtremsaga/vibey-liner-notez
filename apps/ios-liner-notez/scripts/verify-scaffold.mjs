@@ -71,7 +71,7 @@ if (
 if (
   !appSource.includes("const [detailReturnRoute, setDetailReturnRoute] = useState('Results')") ||
   !appSource.includes("setDetailReturnRoute('Results')") ||
-  !appSource.includes("setDetailReturnRoute(route === 'Producer Search' ? 'Producer Search' : 'Results')") ||
+  !appSource.includes('setDetailReturnRoute(sourceRoute)') ||
   !appSource.includes('setRoute(detailReturnRoute)')
 ) {
   throw new Error('App.js does not preserve contextual Album Detail back routing')
@@ -991,8 +991,8 @@ if (!appSource.includes('credits: tracklistDetail.credits')) {
 if (!appSource.includes('musicbrainzReleaseGroupUrl:') || !appSource.includes('`https://musicbrainz.org/release-group/${releaseGroupId}`')) {
   throw new Error('App router does not build MusicBrainz release-group link for real Album Detail header')
 }
-if (!appSource.includes('getMockAlbumById')) {
-  throw new Error('App router does not use shared core getMockAlbumById accessor')
+if (appSource.includes('getMockAlbumById') || appSource.includes('getMockAlbums')) {
+  throw new Error('App router still uses mock album fallback access')
 }
 if (!appSource.includes('handleBackToAlbumSource') || !appSource.includes('setRoute(detailReturnRoute)')) {
   throw new Error('App router does not restore contextual source route from album detail')
