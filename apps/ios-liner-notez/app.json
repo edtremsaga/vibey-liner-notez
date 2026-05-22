@@ -1,10 +1,15 @@
 {
   "expo": {
     "name": "Liner Notez",
-    "slug": "ios-liner-notez",
-    "version": "0.0.1",
+    "slug": "liner-notez",
+    "scheme": "linernotez",
+    "version": "0.1.0",
     "orientation": "portrait",
     "platforms": ["ios"],
-    "userInterfaceStyle": "dark"
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "bundleIdentifier": "com.edtremblay.linernotez",
+      "buildNumber": "1"
+    }
   }
 }
