@@ -4,6 +4,8 @@
 - iOS scaffold is stable on `main` for read-only Search -> Results development.
 - Current `main` includes live MusicBrainz Search -> Results behavior that matches the current React app search model.
 - Recent iOS milestone commits:
+  - `47cf54f` Remove iOS mock fallback wiring
+  - `c004c00` Polish iOS production readiness copy
   - Add iOS selected release publishing
   - `9b4646a` Add iOS selected release songwriting
   - `736c51b` Add iOS album-level credits
@@ -32,6 +34,7 @@
 - Results cards label first-release dates, call out `aka` disambiguation as `Also known as`, and show compact MusicBrainz edition counts when available.
 - Album-only search is not supported.
 - SearchScreen is now the real artist-first search entry point; the old mock album preview card has been removed.
+- The iOS runtime no longer has a mock album fallback path in `App.js`; Album Detail is opened from real selected album results only.
 - SearchScreen root copy now states the product promise around albums, credits, tracklists, editions, sources, and liner images while keeping the same artist-first behavior.
 - SearchScreen keeps Artist name, Album title, and Release Type in session-only app state so users can return from Results or Album Detail and adjust a search without retyping.
 - SearchScreen has subtle in-field clear controls for Artist name and Album title; clearing Album title restores the artist-only Release Type control.
@@ -74,6 +77,7 @@
 - Help / Data Sources reflects the current album workflow, real bounded Producer Search, source roles, Wikidata/Wikipedia behavior, data limitations, support contact, concise privacy/network data notes, source affiliation disclaimers, and trust rules.
 - Album Search, Album Detail enrichment, Producer Search, and Producer Search Load More normalize raw API/network failures into calmer user-facing music-data error messages, with lightweight scaffold verification for representative mappings and wiring coverage.
 - Album Detail uses an explicit open request token so reopening the same selected album refetches enrichment instead of staying on the optimistic header shell.
+- The scaffold verifier rejects reintroducing the old `getMockAlbumById` / `getMockAlbums` Album Detail fallback wiring.
 - Internal marker strings are removed from visible UI.
 - Outdated “Placeholder screen for album search flow” copy is removed.
 - `apps/ios-liner-notez/.expo/` is ignored as generated local Expo state.
@@ -84,7 +88,8 @@
 - Album Detail real-data scope now includes selected-result header data, release-group basic enrichment from MusicBrainz, source-backed Wikipedia album links, primary cover art and release-group artwork gallery images from Cover Art Archive, selected-release edition metadata, the selected-release tracklist, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing.
 - Album Detail opens immediately from selected Results row data, then fetches release-group basic info, optional Wikipedia article links, optional cover art/gallery images, selected-release edition metadata, selected-release tracklist data, selected-release album-level credits, selected-release track credits, selected-release songwriting, and selected-release publishing in the background.
 - Producer Search has real MusicBrainz producer candidate resolution plus bounded release-level producer album results that can open existing Album Detail; recording-level fallback is not implemented.
-- This does not mean the iOS app is production-ready; several real-data and polish areas remain deferred.
+- This is a real-data iOS prototype close to v1 scope-complete, but it is not yet TestFlight/App Store production-ready.
+- Remaining production-readiness gaps include production app config in `app.json`, manual simulator/device smoke testing, App Store/TestFlight metadata, icon/splash/versioning/privacy details, and later cleanup of remaining scaffold-era doc/tool names.
 
 ## Album Workflow Phase-Complete Checkpoint
 - The iOS album-search workflow is phase-complete for the current read-only vertical slice.
@@ -116,6 +121,8 @@
   - Advanced credit compaction/dedupe.
   - Wikipedia summary text.
   - Persistent/recent searches.
+  - Production app config, App Store/TestFlight metadata, icon/splash/versioning/privacy details, and final device smoke testing.
+  - Remaining scaffold-era naming/docs cleanup that does not affect current runtime behavior.
 - Current final-hardening lane: keep v1 copy, network failure messages, manual smoke testing, and App Store readiness notes aligned with the implemented iOS scope.
 - Producer Search v1 is implemented with candidate lookup, candidate selection, bounded release-level producer results, Load More, presentation ranking, evidence lines, Album Detail opening, and state preservation.
 - Later, not now: port the iOS album-search quality improvements back into shared/web search behavior.
