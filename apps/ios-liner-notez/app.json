@@ -5,8 +5,14 @@
     "scheme": "linernotez",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "platforms": ["ios"],
     "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#07090f"
+    },
     "ios": {
       "bundleIdentifier": "com.edtremblay.linernotez",
       "buildNumber": "1"
