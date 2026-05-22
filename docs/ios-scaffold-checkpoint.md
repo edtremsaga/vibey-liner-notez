@@ -90,6 +90,7 @@
 - Producer Search has real MusicBrainz producer candidate resolution plus bounded release-level producer album results that can open existing Album Detail; recording-level fallback is not implemented.
 - This is a real-data iOS prototype close to v1 scope-complete, but it is not yet TestFlight/App Store production-ready.
 - Code-based iOS privacy notes are tracked in `docs/ios-privacy-notes.md` for later App Store privacy answers and privacy policy drafting.
+- Draft iOS App Store/TestFlight metadata is tracked in `docs/ios-app-store-metadata-draft.md`; it is support material only, not final submission copy.
 - Remaining production-readiness gaps include production app config in `app.json`, manual simulator/device smoke testing, App Store/TestFlight metadata, icon/splash/versioning/privacy details, and later cleanup of remaining scaffold-era doc/tool names.
 
 ## Album Workflow Phase-Complete Checkpoint
