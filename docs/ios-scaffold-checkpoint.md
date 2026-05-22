@@ -52,6 +52,7 @@
 - Album Detail shows real selected-result header data for Search results, enriches release-group Editions & Sources from MusicBrainz, loads the selected-release tracklist, and displays selected-release album-level credits plus expandable per-track credits, songwriting, and publishing when documented.
 - Album Detail selected-release album-level credits are loaded from the existing selected-release response without adding another MusicBrainz request.
 - Album Detail selected-release choice prefers Official releases with more specific dates within the same release year so year-only editions are less likely to hide richer selected-release credits.
+- Manual iOS UI smoke testing reported by the user after `c6524f9` confirmed Album Credits render for R.E.M. `Murmur`, R.E.M. `Green`, Pink Floyd `Animals`, Nirvana `Bleach`, and David Bowie `Aladdin Sane`; this is manual validation, not an automated verifier test.
 - Album Detail album-level credits render directly inside Album Credits without a nested `Album` disclosure row.
 - Album Detail Album Credits includes a collapsed album-level `Credit Highlights` row that derives scan-friendly producers, engineers/mixers/mastering, and performer summaries from already-loaded selected-release album credits.
 - Album Detail Tracklist rows with documented details use subtle row-level chevrons and can expand to show selected-release track credits, songwriting, and publishing.
