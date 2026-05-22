@@ -75,6 +75,20 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
         MusicBrainz release groups can include regional or unusual official album entries, so missing or surprising data should be expected sometimes.
       </Text>
 
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Important notes about the data</Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Liner Notez is an informational music discovery app. Metadata comes from public third-party sources and may be incomplete, outdated, duplicated, or incorrect.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Credits can vary by release, country, edition, reissue, or source. The app is not an official record-label, artist, publisher, royalty, copyright, or legal-credit authority.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Album artwork and metadata remain subject to the rights and terms of their original sources. Verify important credit, licensing, royalty, publishing, or legal questions with official sources.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Source links are provided when possible so you can judge confidence for yourself.
+      </Text>
+
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Trust rule</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         We do not invent credits. If data is missing, it should be shown as unavailable or not documented.
@@ -95,7 +109,7 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Source disclaimer</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Liner Notez is an independent app and is not affiliated with MusicBrainz, Cover Art Archive, Wikidata, Wikipedia, artists, labels, or Apple.
+        Liner Notez is an independent app and is not affiliated with or endorsed by MusicBrainz, MetaBrainz, Cover Art Archive, Wikidata, Wikipedia, artists, labels, rights holders, or Apple unless explicitly stated.
       </Text>
     </ScrollView>
   )

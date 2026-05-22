@@ -527,11 +527,25 @@ if (
   throw new Error('HelpDataSourcesScreen does not explain current source data limitations')
 }
 if (
+  !helpDataSourcesScreenSource.includes('Important notes about the data') ||
+  !helpDataSourcesScreenSource.includes('informational music discovery app') ||
+  !helpDataSourcesScreenSource.includes('incomplete, outdated, duplicated, or incorrect') ||
+  !helpDataSourcesScreenSource.includes('not an official record-label, artist, publisher, royalty, copyright, or legal-credit authority') ||
+  !helpDataSourcesScreenSource.includes('rights and terms of their original sources') ||
+  !helpDataSourcesScreenSource.includes('Verify important credit, licensing, royalty, publishing, or legal questions with official sources') ||
+  !helpDataSourcesScreenSource.includes('judge confidence for yourself')
+) {
+  throw new Error('HelpDataSourcesScreen does not include clear source and accuracy disclaimer copy')
+}
+if (
   !helpDataSourcesScreenSource.includes('vibeycraft@gmail.com') ||
   !helpDataSourcesScreenSource.includes('does not require an account') ||
   !helpDataSourcesScreenSource.includes('does not intentionally collect personal information') ||
   !helpDataSourcesScreenSource.includes('Searches and album lookups are sent to public metadata services') ||
-  !helpDataSourcesScreenSource.includes('not affiliated with MusicBrainz')
+  !helpDataSourcesScreenSource.includes('not affiliated with or endorsed by MusicBrainz') ||
+  !helpDataSourcesScreenSource.includes('MetaBrainz') ||
+  !helpDataSourcesScreenSource.includes('rights holders') ||
+  !helpDataSourcesScreenSource.includes('unless explicitly stated')
 ) {
   throw new Error('HelpDataSourcesScreen does not include support, privacy, and source disclaimer copy')
 }
