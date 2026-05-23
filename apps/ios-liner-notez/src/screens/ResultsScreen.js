@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
 const RELEASE_TYPE_LABELS = {
@@ -15,7 +15,7 @@ const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest first' }
 ]
 
-function getDefaultSortOption({ albumTitle, releaseType }) {
+export function getDefaultSortOption({ albumTitle, releaseType }) {
   return !albumTitle && releaseType === 'Album' ? 'oldest' : 'newest'
 }
 
@@ -63,8 +63,18 @@ function getEditionContext(album) {
   return `${releaseCount} editions in MusicBrainz`
 }
 
-export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, isLoading, releaseType = 'Album', onBackToSearch, onSelectAlbum }) {
-  const [sortOption, setSortOption] = useState(() => getDefaultSortOption({ albumTitle, releaseType }))
+export function ResultsScreen({
+  albums,
+  albumTitle,
+  artistName,
+  errorMessage,
+  isLoading,
+  releaseType = 'Album',
+  sortOption = getDefaultSortOption({ albumTitle, releaseType }),
+  onBackToSearch,
+  onSelectAlbum,
+  onSortOptionChange
+}) {
   const showLoading = isLoading
   const showError = !isLoading && !!errorMessage
   const showEmpty = !isLoading && !errorMessage && artistName && albums.length === 0
@@ -88,10 +98,6 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
   const emptyDetail = albumTitle
     ? 'Try another album title or search by artist only.'
     : 'Try another artist name or choose a different release type.'
-
-  useEffect(() => {
-    setSortOption(getDefaultSortOption({ albumTitle, releaseType }))
-  }, [albumTitle, releaseType, artistName])
 
   return (
     <ScrollView
@@ -138,7 +144,7 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
                   key={option.value}
                   accessibilityRole="button"
                   accessibilityLabel={`Sort results ${option.label.toLowerCase()}`}
-                  onPress={() => setSortOption(option.value)}
+                  onPress={() => onSortOptionChange?.(option.value)}
                   style={{
                     borderWidth: 1,
                     borderColor: isActive ? '#f3f4f6' : '#4b5563',

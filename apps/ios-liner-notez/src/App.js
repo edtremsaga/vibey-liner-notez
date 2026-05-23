@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SearchScreen } from './screens/SearchScreen'
-import { ResultsScreen } from './screens/ResultsScreen'
+import { ResultsScreen, getDefaultSortOption } from './screens/ResultsScreen'
 import { AlbumDetailScreen } from './screens/AlbumDetailScreen'
 import { ProducerSearchScreen } from './screens/ProducerSearchScreen'
 import { HelpDataSourcesScreen } from './screens/HelpDataSourcesScreen'
@@ -89,6 +89,7 @@ function ScreenRouter({
   albumSearchAlbumTitle,
   albumSearchArtistName,
   albumSearchReleaseType,
+  albumSearchSortOption,
   albumSearchError,
   albumSearchLoading,
   selectedAlbumId,
@@ -102,6 +103,7 @@ function ScreenRouter({
   onBackToAlbumSource,
   onOpenProducerSearch,
   onOpenHelpDataSources,
+  onAlbumSearchSortOptionChange,
   onSearchFormAlbumTitleChange,
   onSearchFormArtistNameChange,
   onSearchFormReleaseTypeChange,
@@ -124,10 +126,12 @@ function ScreenRouter({
           albumTitle={albumSearchAlbumTitle}
           artistName={albumSearchArtistName}
           releaseType={albumSearchReleaseType}
+          sortOption={albumSearchSortOption}
           errorMessage={albumSearchError}
           isLoading={albumSearchLoading}
           onBackToSearch={onBackToSearch}
           onSelectAlbum={onSelectAlbum}
+          onSortOptionChange={onAlbumSearchSortOptionChange}
         />
       )
     case 'Album Detail':
@@ -178,6 +182,10 @@ export default function App() {
   const [albumSearchAlbumTitle, setAlbumSearchAlbumTitle] = useState('')
   const [albumSearchArtistName, setAlbumSearchArtistName] = useState('')
   const [albumSearchReleaseType, setAlbumSearchReleaseType] = useState('Album')
+  const [albumSearchSortOption, setAlbumSearchSortOption] = useState(() => getDefaultSortOption({
+    albumTitle: '',
+    releaseType: 'Album'
+  }))
   const [albumSearchError, setAlbumSearchError] = useState('')
   const [albumSearchLoading, setAlbumSearchLoading] = useState(false)
   const [selectedAlbumId, setSelectedAlbumId] = useState(null)
@@ -350,6 +358,7 @@ export default function App() {
     setAlbumSearchArtistName(artistName)
     setAlbumSearchAlbumTitle(albumTitle)
     setAlbumSearchReleaseType(releaseType)
+    setAlbumSearchSortOption(getDefaultSortOption({ albumTitle, releaseType }))
     setAlbumSearchResults([])
     setAlbumSearchError('')
     setAlbumSearchLoading(true)
@@ -421,6 +430,7 @@ export default function App() {
           albumSearchAlbumTitle={albumSearchAlbumTitle}
           albumSearchArtistName={albumSearchArtistName}
           albumSearchReleaseType={albumSearchReleaseType}
+          albumSearchSortOption={albumSearchSortOption}
           albumSearchError={albumSearchError}
           albumSearchLoading={albumSearchLoading}
           selectedAlbumId={selectedAlbumId}
@@ -434,6 +444,7 @@ export default function App() {
           onBackToAlbumSource={handleBackToAlbumSource}
           onOpenProducerSearch={handleOpenProducerSearch}
           onOpenHelpDataSources={handleOpenHelpDataSources}
+          onAlbumSearchSortOptionChange={setAlbumSearchSortOption}
           onSearchFormAlbumTitleChange={setSearchFormAlbumTitle}
           onSearchFormArtistNameChange={setSearchFormArtistName}
           onSearchFormReleaseTypeChange={setSearchFormReleaseType}

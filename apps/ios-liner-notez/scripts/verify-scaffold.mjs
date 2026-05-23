@@ -227,9 +227,17 @@ if (
 }
 if (
   !resultsScreenSource.includes('sortAlbums(albums, sortOption)') ||
-  !resultsScreenSource.includes('setSortOption')
+  !resultsScreenSource.includes('onSortOptionChange?.(option.value)')
 ) {
   throw new Error('ResultsScreen does not sort already-loaded results client-side')
+}
+if (
+  !appSource.includes('albumSearchSortOption') ||
+  !appSource.includes('setAlbumSearchSortOption') ||
+  !appSource.includes('onAlbumSearchSortOptionChange={setAlbumSearchSortOption}') ||
+  !appSource.includes('setAlbumSearchSortOption(getDefaultSortOption({ albumTitle, releaseType }))')
+) {
+  throw new Error('App does not preserve Results sort state across Album Detail navigation')
 }
 if (!resultsScreenSource.includes('onBackToSearch') || !resultsScreenSource.includes('Back to Search')) {
   throw new Error('ResultsScreen does not include contextual back-to-search action')
