@@ -10,6 +10,15 @@ const RELEASE_TYPES = [
   { value: 'Soundtrack', label: 'Soundtracks' }
 ]
 
+const SEARCH_BUTTON_LABELS = {
+  Album: 'Find Albums',
+  EP: 'Find EPs',
+  Single: 'Find Singles',
+  Live: 'Find Live Albums',
+  Compilation: 'Find Compilations',
+  Soundtrack: 'Find Soundtracks'
+}
+
 export function SearchScreen({
   albumInput = '',
   artistInput = '',
@@ -25,6 +34,9 @@ export function SearchScreen({
   const [validationMessage, setValidationMessage] = useState('')
   const selectedReleaseType = RELEASE_TYPES.find((type) => type.value === releaseType) ?? RELEASE_TYPES[0]
   const showReleaseTypeSelector = !albumInput.trim()
+  const searchButtonLabel = showReleaseTypeSelector
+    ? SEARCH_BUTTON_LABELS[releaseType] ?? SEARCH_BUTTON_LABELS.Album
+    : SEARCH_BUTTON_LABELS.Album
 
   function handleClearArtist() {
     onArtistInputChange('')
@@ -182,7 +194,7 @@ export function SearchScreen({
             <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showReleaseTypes ? '▾' : '▸'}</Text>
           </TouchableOpacity>
           <Text style={{ color: '#6b7280', marginTop: 5, fontSize: 13 }}>
-            Used when browsing an artist's albums.
+            Choose what kind of releases to browse.
           </Text>
 
           {showReleaseTypes && (
@@ -238,7 +250,7 @@ export function SearchScreen({
           alignSelf: 'flex-start'
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Find Albums</Text>
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>{searchButtonLabel}</Text>
       </TouchableOpacity>
 
       <View

@@ -410,6 +410,7 @@ Suggested follow-up:
    - `Open album detail` -> `Open details`
    - dynamic search button by release type
    - neutral Release Type helper text
+   - Status: addressed in the follow-up iOS release-type copy polish.
 3. Diagnose album-credit coverage for representative albums.
 4. Revisit sort defaults by release type.
 5. Recheck splash behavior only after standalone/TestFlight build.

@@ -112,7 +112,7 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
           marginBottom: 14
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Album Search</Text>
+        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Search</Text>
       </TouchableOpacity>
 
       <Text style={{ color: '#f3f4f6', fontSize: 24, fontWeight: '700' }}>{resultsHeading}</Text>
@@ -251,7 +251,7 @@ export function ResultsScreen({ albums, albumTitle, artistName, errorMessage, is
               {!!editionContext && (
                 <Text style={{ color: '#6b7280', marginTop: 6 }}>{editionContext}</Text>
               )}
-              <Text style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open album detail</Text>
+              <Text style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open details</Text>
             </TouchableOpacity>
           )
         })}

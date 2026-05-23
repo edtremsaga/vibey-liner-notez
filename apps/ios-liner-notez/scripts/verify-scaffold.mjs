@@ -147,14 +147,19 @@ if (
 if (!searchScreenSource.includes('Explore Album Liner Notes') || !searchScreenSource.includes('Find Albums')) {
   throw new Error('SearchScreen does not include polished album search heading/action')
 }
+for (const searchButtonLabel of ['Find Albums', 'Find Singles', 'Find EPs', 'Find Live Albums', 'Find Compilations']) {
+  if (!searchScreenSource.includes(searchButtonLabel)) {
+    throw new Error(`SearchScreen is missing release-type-aware search button copy: ${searchButtonLabel}`)
+  }
+}
 if (!searchScreenSource.includes('Search by artist to browse albums, credits, tracklists, editions, sources, and liner images.')) {
   throw new Error('SearchScreen does not include user-facing artist-first helper copy')
 }
 if (!searchScreenSource.includes('Optional: narrow results to a specific album.')) {
   throw new Error('SearchScreen does not include optional album helper copy')
 }
-if (!searchScreenSource.includes("Used when browsing an artist's albums.")) {
-  throw new Error('SearchScreen does not explain artist-only release type behavior')
+if (!searchScreenSource.includes('Choose what kind of releases to browse.')) {
+  throw new Error('SearchScreen does not include neutral release type helper copy')
 }
 if (!searchScreenSource.includes('Other tools')) {
   throw new Error('SearchScreen does not use polished secondary tools label')
@@ -226,7 +231,7 @@ if (
 ) {
   throw new Error('ResultsScreen does not sort already-loaded results client-side')
 }
-if (!resultsScreenSource.includes('onBackToSearch') || !resultsScreenSource.includes('Back to Album Search')) {
+if (!resultsScreenSource.includes('onBackToSearch') || !resultsScreenSource.includes('Back to Search')) {
   throw new Error('ResultsScreen does not include contextual back-to-search action')
 }
 if (!resultsScreenSource.includes('onSelectAlbum(albumId, album)')) {
@@ -261,8 +266,8 @@ if (!resultsScreenSource.includes('${releaseTypeLabel} by ${artistName}')) {
 if (!resultsScreenSource.includes('MusicBrainz may list several editions or similarly named releases. Choose the album that best matches.')) {
   throw new Error('ResultsScreen does not explain why similar MusicBrainz results may appear')
 }
-if (!resultsScreenSource.includes('Open album detail')) {
-  throw new Error('ResultsScreen does not include row album-detail affordance text')
+if (!resultsScreenSource.includes('Open details')) {
+  throw new Error('ResultsScreen does not include row details affordance text')
 }
 if (resultsScreenSource.includes('Open preview') || resultsScreenSource.includes('current preview')) {
   throw new Error('ResultsScreen still uses preview/dev copy for real album detail flow')
