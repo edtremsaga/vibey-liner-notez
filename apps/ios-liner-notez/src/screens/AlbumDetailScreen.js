@@ -295,6 +295,9 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
       !!track.publishing
     )
   })
+  const albumCreditsEmptyMessage = hasExpandableTrackCredits
+    ? 'No separate album-level credits are documented for this selected release. Track credits are available in the Tracklist above when documented.'
+    : 'No separate album-level credits are documented for this selected release.'
   const editionsSourcesSummary = selectedEdition && hasSources
     ? 'Selected edition and sources'
     : hasEditions
@@ -845,7 +848,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                 {!hasAlbumCredits ? (
                   <Text style={{ color: '#9ca3af', marginTop: 8 }}>
                     {isRealMusicBrainzDetail
-                      ? 'No separate album-level credits are documented for this selected release. Track credits are shown in the Tracklist above when available.'
+                      ? albumCreditsEmptyMessage
                       : 'Credits are not available for this album.'}
                   </Text>
                 ) : null}

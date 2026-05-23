@@ -413,5 +413,6 @@ Suggested follow-up:
    - neutral Release Type helper text
    - Status: addressed in the follow-up iOS release-type copy polish.
 3. Diagnose album-credit coverage for representative albums.
+   - Status: Album Credits empty-state copy clarified for selected-release album-level credits vs Tracklist credits.
 4. Revisit sort defaults by release type.
 5. Recheck splash behavior only after standalone/TestFlight build.

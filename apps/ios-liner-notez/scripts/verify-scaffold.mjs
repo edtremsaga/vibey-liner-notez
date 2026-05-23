@@ -623,7 +623,11 @@ if (albumDetailScreenSource.includes('Real MusicBrainz album header') || albumDe
 if (!albumDetailScreenSource.includes('Tracklist is not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include deferred real tracklist copy')
 }
-if (!albumDetailScreenSource.includes('No separate album-level credits are documented for this selected release. Track credits are shown in the Tracklist above when available.')) {
+if (
+  !albumDetailScreenSource.includes('albumCreditsEmptyMessage') ||
+  !albumDetailScreenSource.includes('No separate album-level credits are documented for this selected release. Track credits are available in the Tracklist above when documented.') ||
+  !albumDetailScreenSource.includes('No separate album-level credits are documented for this selected release.')
+) {
   throw new Error('AlbumDetailScreen does not include clarified selected-release album-level credits copy')
 }
 if (!albumDetailScreenSource.includes('Editions are not loaded yet.')) {
@@ -690,7 +694,10 @@ if (
 if (albumDetailScreenSource.includes("{isTrackExpanded ? 'Hide credits' : 'Show credits'}")) {
   throw new Error('AlbumDetailScreen still shows repeated Show credits / Hide credits text in Tracklist rows')
 }
-if (!albumDetailScreenSource.includes('No separate album-level credits are documented for this selected release. Track credits are shown in the Tracklist above when available.')) {
+if (
+  !albumDetailScreenSource.includes('albumCreditsEmptyMessage') ||
+  !albumDetailScreenSource.includes('Track credits are available in the Tracklist above when documented.')
+) {
   throw new Error('AlbumDetailScreen does not keep Credits scoped to album-level credits')
 }
 if (albumDetailScreenSource.includes('Album and track credits, with songwriting and publishing when available.')) {
