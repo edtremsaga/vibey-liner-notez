@@ -58,7 +58,7 @@ function buildWikipediaUrlFromSitelinkTitle(title) {
   return `https://en.wikipedia.org/wiki/${encodeURIComponent(title).replace(/%20/g, '_')}`
 }
 
-function sortReleasesForSelectedRelease(releases) {
+export function sortReleasesForSelectedRelease(releases) {
   function getReleaseYear(release) {
     const year = Number.parseInt(release?.date?.slice(0, 4), 10)
     return Number.isNaN(year) ? 9999 : year
@@ -66,6 +66,10 @@ function sortReleasesForSelectedRelease(releases) {
 
   function getReleaseDatePrecision(release) {
     return release?.date ? release.date.split('-').length : 0
+  }
+
+  function getExactDateCountryPreference(release) {
+    return release?.country === 'US' ? 0 : 1
   }
 
   const sorted = [...releases].sort((a, b) => {
@@ -81,7 +85,21 @@ function sortReleasesForSelectedRelease(releases) {
 
     const dateA = a?.date || '9999'
     const dateB = b?.date || '9999'
-    return dateA.localeCompare(dateB)
+    const dateDifference = dateA.localeCompare(dateB)
+    if (dateDifference !== 0) {
+      return dateDifference
+    }
+
+    if (
+      a?.status === 'Official' &&
+      b?.status === 'Official' &&
+      getReleaseDatePrecision(a) === 3 &&
+      getReleaseDatePrecision(b) === 3
+    ) {
+      return getExactDateCountryPreference(a) - getExactDateCountryPreference(b)
+    }
+
+    return 0
   })
   const officialReleases = sorted.filter((release) => release?.status === 'Official')
 

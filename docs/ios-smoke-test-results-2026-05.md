@@ -405,6 +405,7 @@ Suggested follow-up:
 ## Recommended Post-Smoke Priority
 
 1. Diagnose selected-edition ranking and U.S./expected-region preference.
+   - Status: exact full-date Official U.S. tie-break addressed in the follow-up selected-edition ranking polish.
 2. Fix low-risk terminology/copy issues:
    - `Back to Album Search` -> `Back to Search`
    - `Open album detail` -> `Open details`

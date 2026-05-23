@@ -1029,6 +1029,67 @@ const musicBrainzAlbumDetailSource = readFileSync(
   path.join(appRoot, 'src/services/musicbrainzAlbumDetail.js'),
   'utf8'
 )
+function extractFunctionSource(source, functionName) {
+  const start = source.indexOf(`export function ${functionName}`)
+  if (start === -1) {
+    throw new Error(`Could not find exported function: ${functionName}`)
+  }
+
+  const braceStart = source.indexOf('{', start)
+  let depth = 0
+  for (let index = braceStart; index < source.length; index += 1) {
+    if (source[index] === '{') {
+      depth += 1
+    } else if (source[index] === '}') {
+      depth -= 1
+      if (depth === 0) {
+        return source
+          .slice(start, index + 1)
+          .replace(`export function ${functionName}`, `function ${functionName}`)
+      }
+    }
+  }
+
+  throw new Error(`Could not parse exported function: ${functionName}`)
+}
+
+const sortReleasesForSelectedRelease = new Function(
+  `${extractFunctionSource(musicBrainzAlbumDetailSource, 'sortReleasesForSelectedRelease')}\nreturn sortReleasesForSelectedRelease;`
+)()
+function assertSelectedRelease(fixtureName, releases, expectedReleaseId) {
+  const selectedRelease = sortReleasesForSelectedRelease(releases)[0]
+  if (selectedRelease?.id !== expectedReleaseId) {
+    throw new Error(
+      `Selected-release ranking fixture failed for ${fixtureName}: expected ${expectedReleaseId}, got ${selectedRelease?.id ?? 'none'}`
+    )
+  }
+}
+
+assertSelectedRelease('exact full-date AU/US official tie prefers US', [
+  { id: 'au-full-date', status: 'Official', date: '1991-09-24', country: 'AU' },
+  { id: 'us-full-date', status: 'Official', date: '1991-09-24', country: 'US' }
+], 'us-full-date')
+assertSelectedRelease('exact full-date XE/US official tie prefers US', [
+  { id: 'xe-full-date', status: 'Official', date: '2025-03-07', country: 'XE' },
+  { id: 'us-full-date', status: 'Official', date: '2025-03-07', country: 'US' }
+], 'us-full-date')
+assertSelectedRelease('earlier official non-US release beats later US release', [
+  { id: 'gb-original', status: 'Official', date: '1971-12-03', country: 'GB' },
+  { id: 'us-later', status: 'Official', date: '1972-03', country: 'US' }
+], 'gb-original')
+assertSelectedRelease('official beats earlier non-official release', [
+  { id: 'bootleg-earlier', status: 'Bootleg', date: '1970-01-01', country: 'US' },
+  { id: 'official-later', status: 'Official', date: '1971-01-01', country: 'GB' }
+], 'official-later')
+assertSelectedRelease('full date still beats year-only within same year', [
+  { id: 'year-only', status: 'Official', date: '1991', country: 'US' },
+  { id: 'full-date', status: 'Official', date: '1991-09-24', country: 'AU' }
+], 'full-date')
+assertSelectedRelease('month-only GB/US tie preserves original order', [
+  { id: 'gb-month', status: 'Official', date: '1980-09', country: 'GB' },
+  { id: 'us-month', status: 'Official', date: '1980-09', country: 'US' }
+], 'gb-month')
+
 if (!musicBrainzAlbumDetailSource.includes('fetchMusicBrainzAlbumBasicInfo')) {
   throw new Error('iOS MusicBrainz album detail service does not expose basic info fetch')
 }
@@ -1055,9 +1116,13 @@ if (
   !musicBrainzAlbumDetailSource.includes('getReleaseDatePrecision') ||
   !musicBrainzAlbumDetailSource.includes("release.date.split('-').length") ||
   !musicBrainzAlbumDetailSource.includes('precisionDifference') ||
-  !musicBrainzAlbumDetailSource.includes('dateA.localeCompare(dateB)')
+  !musicBrainzAlbumDetailSource.includes('dateA.localeCompare(dateB)') ||
+  !musicBrainzAlbumDetailSource.includes('getExactDateCountryPreference') ||
+  !musicBrainzAlbumDetailSource.includes("release?.country === 'US'") ||
+  !musicBrainzAlbumDetailSource.includes('getReleaseDatePrecision(a) === 3') ||
+  !musicBrainzAlbumDetailSource.includes('getReleaseDatePrecision(b) === 3')
 ) {
-  throw new Error('iOS MusicBrainz album detail service does not prefer specific dated official selected releases')
+  throw new Error('iOS MusicBrainz album detail service does not prefer specific dated official selected releases with exact-date US tie-breaks')
 }
 if (!musicBrainzAlbumDetailSource.includes('mapReleaseToEdition') || !musicBrainzAlbumDetailSource.includes('editionId')) {
   throw new Error('iOS MusicBrainz album detail service does not map minimal release-group editions')
