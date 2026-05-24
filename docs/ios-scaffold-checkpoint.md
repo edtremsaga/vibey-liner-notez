@@ -76,7 +76,7 @@
 - Visible iOS app copy has been softened so the title reads `Liner Notez`, Album Detail uses user-facing helper text, and the main album card no longer shows the release-group MBID.
 - Search, Results, Album Detail, Producer Search, and Help / Data Sources have screen-owned vertical scrolling for smaller iPhones.
 - Album Detail scrolling works reliably after simulator restart.
-- Help / Data Sources is written as polished iPhone product help and reflects the current album workflow, Producer Search guidance, source roles, Wikidata/Wikipedia behavior, missing-credit expectations, support contact, privacy/network data notes, source affiliation disclaimers, and trust rules.
+- Help / Data Sources uses final polished iPhone product-help copy and reflects the current album workflow, Producer Search guidance, source roles, Wikidata/Wikipedia behavior, missing-credit expectations, support contact, privacy/network data notes, source affiliation disclaimers, and trust rules.
 - Album Search, Album Detail enrichment, Producer Search, and Producer Search Load More normalize raw API/network failures into calmer user-facing music-data error messages, with lightweight scaffold verification for representative mappings and wiring coverage.
 - Album Detail uses an explicit open request token so reopening the same selected album refetches enrichment instead of staying on the optimistic header shell.
 - The scaffold verifier rejects reintroducing the old `getMockAlbumById` / `getMockAlbums` Album Detail fallback wiring.
