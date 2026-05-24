@@ -94,6 +94,7 @@
 - Code-based iOS privacy notes are tracked in `docs/ios-privacy-notes.md` for later App Store privacy answers and privacy policy drafting.
 - Draft iOS App Store/TestFlight metadata is tracked in `docs/ios-app-store-metadata-draft.md`; it is support material only, not final submission copy.
 - Minimal EAS/TestFlight release setup notes are tracked in `docs/ios-eas-testflight-runbook.md`; do not run EAS build/submit/login/credential commands outside a dedicated release setup session.
+- The reusable Codex safe-change workflow for narrow iOS tasks is tracked in `docs/codex-liner-notez-ios-safe-change-protocol.md`.
 - Remaining production-readiness gaps include manual simulator/device smoke testing, final App Store/TestFlight metadata review, privacy/support URLs, screenshots, EAS/TestFlight credential setup, and later cleanup of remaining scaffold-era doc/tool names.
 
 ## Album Workflow Phase-Complete Checkpoint
