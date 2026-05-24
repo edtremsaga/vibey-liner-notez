@@ -578,7 +578,7 @@ if (!albumDetailScreenSource.includes('alwaysBounceVertical') || !albumDetailScr
 }
 for (const sectionDisclosureLabel of [
   "accessibilityLabel={`${showTracklist ? 'Hide' : 'Show'} tracklist`}",
-  "accessibilityLabel={`${showCredits ? 'Hide' : 'Show'} album credits`}",
+  "accessibilityLabel={`${showCredits ? 'Hide' : 'Show'} release credits`}",
   "accessibilityLabel={`${showEditionsSources ? 'Hide' : 'Show'} editions and sources`}"
 ]) {
   if (!albumDetailScreenSource.includes(sectionDisclosureLabel)) {
@@ -633,10 +633,10 @@ if (!albumDetailScreenSource.includes('Tracklist is not loaded yet.')) {
 }
 if (
   !albumDetailScreenSource.includes('albumCreditsEmptyMessage') ||
-  !albumDetailScreenSource.includes('No separate album-level credits are documented for this selected release. Track credits are available in the Tracklist above when documented.') ||
-  !albumDetailScreenSource.includes('No separate album-level credits are documented for this selected release.')
+  !albumDetailScreenSource.includes('No separate release-level credits are documented for this selected release. Track credits are available in the Tracklist above when documented.') ||
+  !albumDetailScreenSource.includes('No separate release-level credits are documented for this selected release.')
 ) {
-  throw new Error('AlbumDetailScreen does not include clarified selected-release album-level credits copy')
+  throw new Error('AlbumDetailScreen does not include clarified selected-release release-level credits copy')
 }
 if (!albumDetailScreenSource.includes('Editions are not loaded yet.')) {
   throw new Error('AlbumDetailScreen does not include deferred real editions copy')
@@ -656,8 +656,8 @@ if (!albumDetailScreenSource.includes('Tracklist')) {
 if (!albumDetailScreenSource.includes('track.position') || !albumDetailScreenSource.includes('track.title')) {
   throw new Error('AlbumDetailScreen does not render track number/title from mock data')
 }
-if (!albumDetailScreenSource.includes('Album Credits')) {
-  throw new Error('AlbumDetailScreen does not include Album Credits section label')
+if (!albumDetailScreenSource.includes('Release Credits')) {
+  throw new Error('AlbumDetailScreen does not include Release Credits section label')
 }
 if (!albumDetailScreenSource.includes('showCredits, setShowCredits] = useState(false)')) {
   throw new Error('AlbumDetailScreen does not keep Credits collapsed by default')
@@ -706,7 +706,7 @@ if (
   !albumDetailScreenSource.includes('albumCreditsEmptyMessage') ||
   !albumDetailScreenSource.includes('Track credits are available in the Tracklist above when documented.')
 ) {
-  throw new Error('AlbumDetailScreen does not keep Credits scoped to album-level credits')
+  throw new Error('AlbumDetailScreen does not keep Credits scoped to release-level credits')
 }
 if (albumDetailScreenSource.includes('Album and track credits, with songwriting and publishing when available.')) {
   throw new Error('AlbumDetailScreen still describes the Credits section as mixed album and track credits')
@@ -787,10 +787,10 @@ if (
   !albumDetailScreenSource.includes('Artwork, Design & Photography') ||
   !albumDetailScreenSource.includes('Additional Credits')
 ) {
-  throw new Error('AlbumDetailScreen does not render album-level credits as direct user-facing groups')
+  throw new Error('AlbumDetailScreen does not render release-level credits as direct user-facing groups')
 }
 if (albumDetailScreenSource.includes('showAlbumCredits') || albumDetailScreenSource.includes('setShowAlbumCredits')) {
-  throw new Error('AlbumDetailScreen still uses a nested Album disclosure inside Album Credits')
+  throw new Error('AlbumDetailScreen still uses a nested Album disclosure inside Release Credits')
 }
 if (
   !albumDetailScreenSource.includes('Credit Highlights') ||
@@ -802,7 +802,7 @@ if (
   !albumDetailScreenSource.includes("accessibilityLabel={`${showCreditHighlights ? 'Hide' : 'Show'} credit highlights`}") ||
   !albumDetailScreenSource.includes("{showCreditHighlights ? '▾' : '▸'}")
 ) {
-  throw new Error('AlbumDetailScreen does not render album-level credit highlights as a collapsed disclosure row')
+  throw new Error('AlbumDetailScreen does not render release-level credit highlights as a collapsed disclosure row')
 }
 for (const creditHighlightLabel of [
   'Producers',
@@ -1196,7 +1196,7 @@ if (
   !musicBrainzAlbumDetailSource.includes("relation?.['target-type'] !== 'artist'") ||
   !musicBrainzAlbumDetailSource.includes('albumCredits: extractAlbumCredits(release)')
 ) {
-  throw new Error('iOS MusicBrainz album detail service does not extract selected-release album-level credits')
+  throw new Error('iOS MusicBrainz album detail service does not extract selected-release release-level credits')
 }
 for (const trackField of ['trackId', 'position', 'title', 'durationMs']) {
   if (!musicBrainzAlbumDetailSource.includes(trackField)) {

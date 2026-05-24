@@ -402,6 +402,28 @@ Suggested follow-up:
 
 - Recheck in standalone/TestFlight build.
 
+## Second Smoke Pass
+
+Environment:
+
+- Test style: targeted manual follow-up smoke after selected-edition, sort-preservation, and copy polish.
+
+Results:
+
+- Sort preservation: PASS. Results sort selection was preserved after opening Album Detail and returning to Results.
+- Nirvana - `Nevermind`: PASS. Selected edition now shows United States / Official / 1991-09-24.
+- Lady Gaga - `MAYHEM`: PASS. Selected edition now shows United States / Official / 2025-03-07; Tracklist loads; the credit empty-state path works.
+- ELO - `The Electric Light Orchestra`: PASS. Selected edition remains United Kingdom / Official / 1971-12-03 / Harvest / SHVL 797; the U.S. exact-date tie-break did not override the UK original.
+- Dead Kennedys - `Fresh Fruit for Rotting Vegetables`: PASS. Selected edition remains United Kingdom / Official / 1980-09; month-only ties were not forced to U.S.
+- Black Flag Singles - `Louie Louie`: PASS with terminology issue. Single opens correctly; artwork, Tracklist, and Editions & Sources load. Remaining issue: detail credits label was still album-centric.
+- Black Flag EPs - `Nervous Breakdown`: PASS with terminology/data-type issue. EP opens correctly; artwork viewer and detail load. Remaining issue: detail page still used album-centric wording.
+- ELO Compilations: PASS. Detail opens; Tracklist, credit empty-state copy, and Editions & Sources load.
+
+Follow-up addressed:
+
+- `Album Credits` renamed to `Release Credits`.
+- Empty-state copy now says `release-level credits` instead of `album-level credits`.
+
 ## Recommended Post-Smoke Priority
 
 1. Diagnose selected-edition ranking and U.S./expected-region preference.
@@ -413,6 +435,6 @@ Suggested follow-up:
    - neutral Release Type helper text
    - Status: addressed in the follow-up iOS release-type copy polish.
 3. Diagnose album-credit coverage for representative albums.
-   - Status: Album Credits empty-state copy clarified for selected-release album-level credits vs Tracklist credits.
+   - Status: Release Credits empty-state copy clarified for selected-release release-level credits vs Tracklist credits.
 4. Revisit sort defaults by release type.
 5. Recheck splash behavior only after standalone/TestFlight build.

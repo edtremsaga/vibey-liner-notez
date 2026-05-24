@@ -296,8 +296,8 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
     )
   })
   const albumCreditsEmptyMessage = hasExpandableTrackCredits
-    ? 'No separate album-level credits are documented for this selected release. Track credits are available in the Tracklist above when documented.'
-    : 'No separate album-level credits are documented for this selected release.'
+    ? 'No separate release-level credits are documented for this selected release. Track credits are available in the Tracklist above when documented.'
+    : 'No separate release-level credits are documented for this selected release.'
   const editionsSourcesSummary = selectedEdition && hasSources
     ? 'Selected edition and sources'
     : hasEditions
@@ -776,12 +776,12 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
           >
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel={`${showCredits ? 'Hide' : 'Show'} album credits`}
+              accessibilityLabel={`${showCredits ? 'Hide' : 'Show'} release credits`}
               onPress={() => setShowCredits((current) => !current)}
               style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
             >
               <View style={{ flex: 1 }}>
-                <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Album Credits</Text>
+                <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Release Credits</Text>
               </View>
               <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showCredits ? '▾' : '▸'}</Text>
             </TouchableOpacity>
