@@ -31,75 +31,72 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>What Liner Notez helps you do</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Search for an artist, browse release types, open a selected release, and dig into tracklists, available credits, artwork, editions, and source links.
+        Find an album, open a selected release, and dig into tracklists, available credits, artwork, editions, and source links.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Results come from public music data, so the app shows what is documented instead of guessing.
+        Liner Notez shows documented public music data instead of guessing.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Get better album results</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Start with the artist name. Add an album title to narrow the search, or leave it blank to browse albums, singles, EPs, live releases, compilations, or soundtracks.
+        Search with artist and album title together when you know both. Leave the album blank to browse albums, singles, EPs, live releases, compilations, or soundtracks.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Open the result that best matches the release edition you want. Different editions can have different credits, artwork, labels, and source links.
+        If several editions appear, open the one that best matches what you want. Different editions can have different credits, artwork, labels, and source links.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Explore an album</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        On Album Detail, check the selected release, open artwork, expand tracks for song-level credits, and review Release Credits when available.
+        On Album Detail, open artwork, expand tracks for song-level credits, and review Release Credits when available.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Editions & Sources keeps release-edition details and source links available when you want to inspect the data.
+        Editions & Sources shows the selected release and the source links behind it.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Follow producer connections</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Producer Search helps you discover releases connected by documented release-level producer credits.
+        Producer Search follows documented release-level producer credits so you can discover connected albums.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        If a name is ambiguous, choose the correct person or artist. Searches can take a moment while Liner Notez checks MusicBrainz credits.
+        If a name is ambiguous, choose the correct person or artist. Searches can take a moment while Liner Notez checks MusicBrainz.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        It is a discovery tool, not a complete career discography, and may miss albums without documented release-level producer credits.
+        It is a discovery tool, not a complete career discography, and may miss albums without documented producer credits.
       </Text>
 
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Why some credits are missing</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Why credits may be missing</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Credit data can vary by release edition. Older albums, reissues, compilations, imports, and country-specific editions may have different levels of detail.
+        Credits are only as complete as the public records for the selected release. Older albums, reissues, imports, compilations, and country-specific editions can vary.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        A missing credit usually means the public source does not document it for the selected release. Liner Notez does not invent credits.
+        When a credit is missing, it usually means the source record does not document it there. Liner Notez does not invent credits.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Data sources</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        MusicBrainz provides album, release, track, credit, and relationship data.
+        MusicBrainz supplies album, release, track, credit, and relationship data.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Cover Art Archive provides album art and liner image files when available.
+        Cover Art Archive supplies artwork when available.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Wikidata and Wikipedia provide source-backed album article links when available.
+        Wikidata and Wikipedia help with background links when available.
       </Text>
 
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>A few important notes</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>A few notes</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Liner Notez is an informational music discovery app. Public music data may be incomplete, outdated, duplicated, or incorrect.
+        Public music data may be incomplete, outdated, duplicated, or incorrect.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Credits can vary by release edition and source. The app is not an official label, artist, publisher, royalty, copyright, or legal-credit authority.
+        Liner Notez is for music discovery, not official credit, licensing, royalty, publishing, or legal questions. Check official sources for anything important.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Artwork and metadata remain subject to their original sources. Verify important credit, licensing, royalty, publishing, or legal questions with official sources.
-      </Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Source links are included when possible so you can judge confidence for yourself.
+        Source links are included when possible so you can inspect the data yourself.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Independent app</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Liner Notez is independent and is not affiliated with or endorsed by MusicBrainz, MetaBrainz, Cover Art Archive, Wikidata, Wikipedia, artists, labels, rights holders, streaming services, or Apple unless explicitly stated.
+        Liner Notez is independent. It is not affiliated with MusicBrainz, Cover Art Archive, Wikidata, Wikipedia, artists, labels, rights holders, streaming services, or Apple.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Support</Text>
@@ -109,10 +106,10 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Privacy and network data</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Liner Notez does not require an account and does not intentionally collect personal information.
+        Liner Notez needs an internet connection to search and load music data.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Searches and album lookups use the internet and may be sent to public data sources such as MusicBrainz, Cover Art Archive, Wikidata, and Wikipedia.
+        Searches may be sent to public data sources so the app can return results. The app does not require an account.
       </Text>
     </ScrollView>
   )
