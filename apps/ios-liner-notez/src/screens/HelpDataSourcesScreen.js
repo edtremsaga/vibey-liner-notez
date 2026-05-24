@@ -26,53 +26,61 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Help / Data Sources</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Liner Notez helps explore albums, tracklists, credits, editions, sources, liner images, and album context from source-backed music data.
+        Liner Notez helps you explore albums the way liner notes used to: credits, musicians, producers, artwork, release editions, and source links using public music data.
       </Text>
 
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Current app scope</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>What Liner Notez helps you do</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Search and Results use read-only MusicBrainz artist-first album search. Artist name is required, and Album title can narrow results.
+        Search for an artist, browse release types, open a selected release, and dig into the details that make an album feel alive: tracklists, available credits, artwork, editions, and source links.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Release Type filters artist-only searches. Search can filter Studio Albums, sort loaded Results by Oldest first or Newest first, and keep Search fields editable during the current app session.
-      </Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Producer Search is available as a bounded, source-backed tool. It finds albums from documented MusicBrainz release-level producer credits.
-      </Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Ambiguous producer names may ask you to choose the intended MusicBrainz artist or person before results load.
-      </Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Producer Search does not promise a complete producer discography. Recording-level producer fallback is not implemented.
+        Results come from public music data, so the app shows what is documented instead of guessing.
       </Text>
 
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>MusicBrainz</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Get better album results</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        MusicBrainz provides artist and release-group search, selected releases, tracklists, relationships, album and track credits, songwriting, instruments, publishing, edition details, source links, and producer-credit relationships.
+        Start with the artist name. Add an album title when you want to narrow the search, or leave it blank to browse a type of release such as albums, singles, EPs, live releases, compilations, or soundtracks.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Search uses confident MusicBrainz artist matches when it can, then loads album results from MusicBrainz release groups.
+        Open the result that best matches the album or release edition you want. Different countries, reissues, formats, and release dates can have different credits, artwork, labels, and source links.
       </Text>
 
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Cover Art Archive</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Explore an album</Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        On Album Detail, check the selected release, open artwork when available, expand tracks to see song-level credits, and review Release Credits when they are documented for that selected release.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Editions & Sources keeps source links and release-edition details available when you want to inspect where the data came from.
+      </Text>
+
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Follow producer connections</Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Producer Search helps you discover releases connected by documented MusicBrainz release-level producer credits.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        If a producer name is ambiguous, choose the correct person or artist from the candidate results. Producer searches can take a moment while Liner Notez checks release-level credits from MusicBrainz.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Producer Search is a discovery tool, not a complete career discography. It may miss albums where producer credits are not documented at the release level.
+      </Text>
+
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Why some credits are missing</Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Music credit data can vary by release edition. Older albums, reissues, compilations, imports, and different countries' editions may have different levels of detail.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        A missing credit usually means the public data source does not document it for the selected release. Liner Notez does not invent credits; unavailable or missing data should be shown as not documented.
+      </Text>
+
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Data sources</Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        MusicBrainz provides artist and release search, selected releases, tracklists, relationships, available credits, songwriting, instruments, publishing, edition details, source links, and producer-credit relationships.
+      </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Cover Art Archive provides album art, booklet pages, media images, tray images, back covers, and other release artwork when available.
       </Text>
-
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Wikidata and Wikipedia</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Wikidata is used only when MusicBrainz provides a Wikidata relation for the album release group.
-      </Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Wikipedia album article links are resolved from Wikidata sitelinks. Wikipedia URLs are not guessed from artist or title, and Wikipedia summary text is not fetched.
-      </Text>
-
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Data limitations</Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Credits and producer results depend on what MusicBrainz contributors have entered. Some albums may have sparse credits, missing producer relationships, missing artwork, or no Wikipedia link.
-      </Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        MusicBrainz release groups can include regional or unusual official album entries, so missing or surprising data should be expected sometimes.
+        Wikidata is used when MusicBrainz provides a Wikidata relation for an album release group. Wikipedia album article links are resolved from Wikidata sitelinks when available.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Important notes about the data</Text>
@@ -89,9 +97,9 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
         Source links are provided when possible so you can judge confidence for yourself.
       </Text>
 
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Trust rule</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Independent app</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        We do not invent credits. If data is missing, it should be shown as unavailable or not documented.
+        Liner Notez is independent and is not affiliated with or endorsed by MusicBrainz, MetaBrainz, Cover Art Archive, Wikidata, Wikipedia, artists, labels, rights holders, streaming services, or Apple unless explicitly stated.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Support</Text>
@@ -105,11 +113,6 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Searches and album lookups are sent to public metadata services such as MusicBrainz, Cover Art Archive, Wikidata, and Wikipedia so the app can retrieve results.
-      </Text>
-
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Source disclaimer</Text>
-      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Liner Notez is an independent app and is not affiliated with or endorsed by MusicBrainz, MetaBrainz, Cover Art Archive, Wikidata, Wikipedia, artists, labels, rights holders, or Apple unless explicitly stated.
       </Text>
     </ScrollView>
   )

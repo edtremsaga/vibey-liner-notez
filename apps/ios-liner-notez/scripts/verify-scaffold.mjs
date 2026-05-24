@@ -489,22 +489,29 @@ if (helpDataSourcesScreenSource.includes('Placeholder screen for help, attributi
   throw new Error('HelpDataSourcesScreen still contains placeholder-only copy')
 }
 if (
-  !helpDataSourcesScreenSource.includes('explore albums, tracklists, credits, editions, sources, liner images, and album context') ||
-  !helpDataSourcesScreenSource.includes('read-only MusicBrainz artist-first album search')
+  !helpDataSourcesScreenSource.includes('What Liner Notez helps you do') ||
+  !helpDataSourcesScreenSource.includes('explore albums the way liner notes used to') ||
+  !helpDataSourcesScreenSource.includes('tracklists, available credits, artwork, editions, and source links')
 ) {
-  throw new Error('HelpDataSourcesScreen does not disclose read-only MusicBrainz album search scope')
-}
-if (!helpDataSourcesScreenSource.includes('Artist name is required')) {
-  throw new Error('HelpDataSourcesScreen does not explain required artist search scope')
-}
-if (!helpDataSourcesScreenSource.includes('Release Type filters artist-only searches.')) {
-  throw new Error('HelpDataSourcesScreen does not explain release type search scope')
+  throw new Error('HelpDataSourcesScreen does not explain the product value in user-facing language')
 }
 if (
-  !helpDataSourcesScreenSource.includes('release-group search') ||
-  !helpDataSourcesScreenSource.includes('selected releases')
+  !helpDataSourcesScreenSource.includes('Get better album results') ||
+  !helpDataSourcesScreenSource.includes('Start with the artist name') ||
+  !helpDataSourcesScreenSource.includes('Add an album title when you want to narrow the search') ||
+  !helpDataSourcesScreenSource.includes('release edition you want') ||
+  !helpDataSourcesScreenSource.includes('Different countries, reissues, formats, and release dates')
 ) {
-  throw new Error('HelpDataSourcesScreen does not disclose real release-group enrichment scope')
+  throw new Error('HelpDataSourcesScreen does not explain how to get better album results')
+}
+if (
+  !helpDataSourcesScreenSource.includes('Explore an album') ||
+  !helpDataSourcesScreenSource.includes('check the selected release') ||
+  !helpDataSourcesScreenSource.includes('expand tracks to see song-level credits') ||
+  !helpDataSourcesScreenSource.includes('review Release Credits') ||
+  !helpDataSourcesScreenSource.includes('Editions & Sources keeps source links')
+) {
+  throw new Error('HelpDataSourcesScreen does not explain Album Detail exploration')
 }
 if (
   !helpDataSourcesScreenSource.includes('album art, booklet pages, media images, tray images, back covers') ||
@@ -513,38 +520,38 @@ if (
   throw new Error('HelpDataSourcesScreen does not disclose optional cover art gallery scope')
 }
 if (
-  !helpDataSourcesScreenSource.includes('Producer Search is available as a bounded, source-backed tool') ||
+  !helpDataSourcesScreenSource.includes('Follow producer connections') ||
   !helpDataSourcesScreenSource.includes('documented MusicBrainz release-level producer credits') ||
-  !helpDataSourcesScreenSource.includes('Ambiguous producer names may ask you to choose') ||
-  !helpDataSourcesScreenSource.includes('does not promise a complete producer discography') ||
-  !helpDataSourcesScreenSource.includes('Recording-level producer fallback is not implemented')
+  !helpDataSourcesScreenSource.includes('choose the correct person or artist from the candidate results') ||
+  !helpDataSourcesScreenSource.includes('Producer searches can take a moment') ||
+  !helpDataSourcesScreenSource.includes('not a complete career discography') ||
+  !helpDataSourcesScreenSource.includes('not documented at the release level')
 ) {
-  throw new Error('HelpDataSourcesScreen does not explain current Producer Search scope and limits')
+  throw new Error('HelpDataSourcesScreen does not explain Producer Search in user-facing language')
 }
 for (const source of ['MusicBrainz', 'Cover Art Archive', 'Wikidata', 'Wikipedia']) {
   if (!helpDataSourcesScreenSource.includes(source)) {
     throw new Error(`HelpDataSourcesScreen is missing planned real source: ${source}`)
   }
 }
-if (!helpDataSourcesScreenSource.includes('We do not invent credits.')) {
+if (!helpDataSourcesScreenSource.includes('Liner Notez does not invent credits')) {
   throw new Error('HelpDataSourcesScreen does not include no-invented-credits trust rule')
 }
 if (
-  !helpDataSourcesScreenSource.includes('Wikidata is used only when MusicBrainz provides a Wikidata relation') ||
-  !helpDataSourcesScreenSource.includes('Wikipedia album article links are resolved from Wikidata sitelinks') ||
-  !helpDataSourcesScreenSource.includes('Wikipedia URLs are not guessed from artist or title') ||
-  !helpDataSourcesScreenSource.includes('Wikipedia summary text is not fetched')
+  !helpDataSourcesScreenSource.includes('Data sources') ||
+  !helpDataSourcesScreenSource.includes('Wikidata is used when MusicBrainz provides a Wikidata relation') ||
+  !helpDataSourcesScreenSource.includes('Wikipedia album article links are resolved from Wikidata sitelinks')
 ) {
   throw new Error('HelpDataSourcesScreen does not explain source-backed Wikidata/Wikipedia behavior')
 }
 if (
-  !helpDataSourcesScreenSource.includes('Credits and producer results depend on what MusicBrainz contributors have entered') ||
-  !helpDataSourcesScreenSource.includes('sparse credits') ||
-  !helpDataSourcesScreenSource.includes('missing producer relationships') ||
-  !helpDataSourcesScreenSource.includes('missing artwork') ||
-  !helpDataSourcesScreenSource.includes('regional or unusual official album entries')
+  !helpDataSourcesScreenSource.includes('Why some credits are missing') ||
+  !helpDataSourcesScreenSource.includes('Music credit data can vary by release edition') ||
+  !helpDataSourcesScreenSource.includes('Older albums, reissues, compilations, imports') ||
+  !helpDataSourcesScreenSource.includes('public data source does not document it for the selected release') ||
+  !helpDataSourcesScreenSource.includes('not documented')
 ) {
-  throw new Error('HelpDataSourcesScreen does not explain current source data limitations')
+  throw new Error('HelpDataSourcesScreen does not explain missing-credit limitations')
 }
 if (
   !helpDataSourcesScreenSource.includes('Important notes about the data') ||
@@ -562,8 +569,10 @@ if (
   !helpDataSourcesScreenSource.includes('does not require an account') ||
   !helpDataSourcesScreenSource.includes('does not intentionally collect personal information') ||
   !helpDataSourcesScreenSource.includes('Searches and album lookups are sent to public metadata services') ||
+  !helpDataSourcesScreenSource.includes('Independent app') ||
   !helpDataSourcesScreenSource.includes('not affiliated with or endorsed by MusicBrainz') ||
   !helpDataSourcesScreenSource.includes('MetaBrainz') ||
+  !helpDataSourcesScreenSource.includes('streaming services') ||
   !helpDataSourcesScreenSource.includes('rights holders') ||
   !helpDataSourcesScreenSource.includes('unless explicitly stated')
 ) {
