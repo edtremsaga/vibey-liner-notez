@@ -456,6 +456,13 @@ Non-blocking follow-ups:
 - Producer Search sort controls may be useful later, but should not be implemented yet.
 - Help / Data Sources should get a focused copy review before TestFlight readiness.
 
+Follow-up addressed:
+
+- Producer Search now sets expectations that release-level producer-credit checks can take a moment.
+- Producer result cards now use `Open details`.
+- Producer result card titles suppress leading numeric prefixes for display.
+- Producer result count copy now says results are `found so far`.
+
 ## Recommended Post-Smoke Priority
 
 1. Diagnose selected-edition ranking and U.S./expected-region preference.

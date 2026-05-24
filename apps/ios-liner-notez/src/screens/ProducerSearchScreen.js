@@ -96,6 +96,10 @@ function formatAttributes(attributes) {
   return entries.map(([key, value]) => value === true ? key : `${key}: ${value}`).join(', ')
 }
 
+function formatProducerResultTitle(title) {
+  return String(title ?? 'Untitled release').replace(/^\s*\d+\.\s*/, '')
+}
+
 function mapProducerResultToAlbumResult(result) {
   return {
     id: result.releaseGroupId,
@@ -170,11 +174,12 @@ function ProducerResultCard({ onOpenAlbumDetail, result }) {
   const evidence = result.producerEvidence ?? {}
   const secondaryTypes = formatSecondaryTypes(result.secondaryTypes)
   const attributes = formatAttributes(evidence.relationshipAttributes)
+  const displayTitle = formatProducerResultTitle(result.releaseGroupTitle)
 
   return (
     <TouchableOpacity
       accessibilityRole="button"
-      accessibilityLabel={`Open album detail for ${result.releaseGroupTitle}`}
+      accessibilityLabel={`Open details for ${displayTitle}`}
       onPress={() => onOpenAlbumDetail(result)}
       style={{
         marginTop: 8,
@@ -186,7 +191,7 @@ function ProducerResultCard({ onOpenAlbumDetail, result }) {
         backgroundColor: '#111827'
       }}
     >
-      <Text style={{ color: '#e5e7eb', fontWeight: '700', fontSize: 16 }}>{result.releaseGroupTitle}</Text>
+      <Text style={{ color: '#e5e7eb', fontWeight: '700', fontSize: 16 }}>{displayTitle}</Text>
       <Text style={{ color: '#9ca3af', marginTop: 2 }}>
         {result.releaseGroupArtistCredit}{result.firstReleaseDate ? ` · ${result.firstReleaseDate}` : ''}
       </Text>
@@ -203,7 +208,7 @@ function ProducerResultCard({ onOpenAlbumDetail, result }) {
           Producer credit detail: {attributes}
         </Text>
       ) : null}
-      <Text style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open album detail</Text>
+      <Text style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open details</Text>
     </TouchableOpacity>
   )
 }
@@ -214,8 +219,8 @@ function ProducerResultsContext({ producer, resultCount = null }) {
   }
 
   const resultCountLabel = Number.isInteger(resultCount)
-    ? `Showing ${resultCount} ${resultCount === 1 ? 'album' : 'albums'} found from MusicBrainz producer credits.`
-    : 'Albums found from MusicBrainz producer credits.'
+    ? `Showing ${resultCount} producer-credit ${resultCount === 1 ? 'result' : 'results'} found so far.`
+    : 'Producer-credit results found so far.'
 
   return (
     <View style={{ marginTop: 8, marginBottom: 4 }}>
@@ -484,6 +489,9 @@ export function ProducerSearchScreen({
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Producer Search</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Find albums with producer credits documented in MusicBrainz.
+      </Text>
+      <Text style={{ color: '#6b7280', marginTop: 6, fontSize: 12 }}>
+        Producer searches can take a moment while Liner Notez checks release-level credits from MusicBrainz.
       </Text>
 
       <Text style={{ color: '#d1d5db', marginTop: 12 }}>Producer</Text>

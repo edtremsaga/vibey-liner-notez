@@ -337,8 +337,8 @@ if (
   !producerSearchScreenSource.includes('ProducerResultsContext') ||
   !producerSearchScreenSource.includes('Producer: {producer.name}') ||
   !producerSearchScreenSource.includes('resultCountLabel') ||
-  !producerSearchScreenSource.includes('Showing ${resultCount} ${resultCount === 1 ?') ||
-  !producerSearchScreenSource.includes('found from MusicBrainz producer credits.') ||
+  !producerSearchScreenSource.includes("Showing ${resultCount} producer-credit ${resultCount === 1 ? 'result' : 'results'} found so far.") ||
+  !producerSearchScreenSource.includes('Producer-credit results found so far.') ||
   producerSearchScreenSource.includes('Selected producer:') ||
   producerSearchScreenSource.includes('MusicBrainz artist MBID:') ||
   producerSearchScreenSource.includes('duplicate release groups skipped') ||
@@ -348,6 +348,11 @@ if (
   producerSearchScreenSource.includes('Source release MBID:')
 ) {
   throw new Error('ProducerSearchScreen does not include compact user-facing selected-producer results context')
+}
+if (
+  !producerSearchScreenSource.includes('Producer searches can take a moment while Liner Notez checks release-level credits from MusicBrainz.')
+) {
+  throw new Error('ProducerSearchScreen does not set expectations for slower release-level producer searches')
 }
 if (
   !producerSearchScreenSource.includes('searchMusicBrainzAlbumsByProducer') ||
@@ -395,9 +400,11 @@ if (
 }
 if (
   !producerSearchScreenSource.includes('mapProducerResultToAlbumResult') ||
-  !producerSearchScreenSource.includes('Open album detail') ||
+  !producerSearchScreenSource.includes('Open details') ||
+  !producerSearchScreenSource.includes('formatProducerResultTitle') ||
   !producerSearchScreenSource.includes("onSelectAlbum?.(releaseGroupId, mapProducerResultToAlbumResult(result), 'Producer Search')") ||
-  !producerSearchScreenSource.includes("accessibilityLabel={`Open album detail for ${result.releaseGroupTitle}`}")
+  !producerSearchScreenSource.includes("accessibilityLabel={`Open details for ${displayTitle}`}") ||
+  !producerSearchScreenSource.includes("replace(/^\\s*\\d+\\.\\s*/, '')")
 ) {
   throw new Error('ProducerSearchScreen does not open producer results with the existing Album Detail flow')
 }
