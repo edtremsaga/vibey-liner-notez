@@ -424,6 +424,38 @@ Follow-up addressed:
 - `Album Credits` renamed to `Release Credits`.
 - Empty-state copy now says `release-level credits` instead of `album-level credits`.
 
+## Latest Manual Smoke Pass After `4b928f1`
+
+Environment:
+
+- Test style: targeted manual smoke pass after `4b928f1` / `Release Credits` terminology polish.
+
+Results:
+
+- Bad-spelling Album Search no-results state: PASS. Typo example `Dvid Bowiea` returned a clear `No albums found` state and did not crash.
+- Results sort preservation: PASS.
+- Selected-edition sanity check: PASS.
+- Help / Data Sources basic content check: acceptable, with a future focused copy review still recommended.
+- Producer Search - `Brian Eno`: PASS functionally. Candidate/result flow worked, Load More worked, and the result count increased after loading more.
+- Producer Search - `Fear of Music` follow-up: PASS / not a bug. Release Credits matched Album Search for the same selected release, so the empty Release Credits state appears to be selected-release data behavior rather than a Producer Search bug.
+- Producer Search - `Quincy Jones`: PASS functionally. Candidate selection worked, results loaded, Load More worked, and the result count increased from the initial batch.
+- Producer Search - `George Martin`: PASS. Loading state appeared, results loaded, and a producer result opened Album Detail successfully.
+- Weak/nonsense Producer Search queries: PASS. Examples `Zzzzzzzz`, `Quincy Jonez`, and random text returned clear `No producer candidates found` states and did not crash.
+- Producer Search clear controls: PASS.
+- Offline/reconnect spot check: PASS. With Wi-Fi off, Album Search showed a calm `Music data search error` message; reconnect behavior was acceptable.
+- No crashes observed.
+- No blocking navigation failures observed.
+- No stale `Album Credits` wording observed in tested screens.
+
+Non-blocking follow-ups:
+
+- Producer Search may need expectation-setting copy that searches can take a moment because release-level MusicBrainz credits are being checked.
+- Producer result action copy says `Open album detail`, which is inconsistent with Album Search's newer `Open details` wording.
+- Producer result numbering looks questionable/cramped, for example `1.Outside...`; consider removing visible numbering.
+- Producer Search result count copy may be misleading before Load More; consider `found so far`.
+- Producer Search sort controls may be useful later, but should not be implemented yet.
+- Help / Data Sources should get a focused copy review before TestFlight readiness.
+
 ## Recommended Post-Smoke Priority
 
 1. Diagnose selected-edition ranking and U.S./expected-region preference.
