@@ -462,7 +462,7 @@ Follow-up addressed:
 - Producer result cards now use `Open details`.
 - Producer result card titles suppress leading numeric prefixes for display.
 - Producer result count copy now says results are `found so far`.
-- Help / Data Sources was rewritten as user-facing product help with album tips, Producer Search guidance, missing-credit expectations, source attribution, independence language, privacy notes, and support contact.
+- Help / Data Sources was rewritten and tightened as user-facing product help with album tips, Producer Search guidance, missing-credit expectations, source attribution, independence language, privacy notes, and support contact.
 
 ## Recommended Post-Smoke Priority
 
