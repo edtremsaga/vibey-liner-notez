@@ -36,10 +36,16 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Liner Notez shows documented public data. It does not guess or invent credits.
       </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Liner Notez is for album information and discovery. It does not play, stream, download, or provide music audio.
+      </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Get better album results</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Start with the artist name. Add an album title when you want a closer match, or leave the title blank to browse albums, singles, EPs, live releases, compilations, or soundtracks.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        For example, search for an artist like David Bowie, then add an album title like Aladdin Sane when you want a closer match.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Open the result that best matches the album or release edition you want. Different countries, reissues, formats, and release dates can have different artwork, credits, labels, and source links.
@@ -87,6 +93,9 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Source links are shown when possible so you can inspect the underlying records.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Artwork, background links, and summaries appear only when they are available from the connected public source records.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Important notes about the data</Text>

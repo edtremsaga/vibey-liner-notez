@@ -492,7 +492,8 @@ if (
   !helpDataSourcesScreenSource.includes('What Liner Notez helps you do') ||
   !helpDataSourcesScreenSource.includes('explore albums the way liner notes used to') ||
   !helpDataSourcesScreenSource.includes('Search for an artist, browse releases, open an album') ||
-  !helpDataSourcesScreenSource.includes('does not guess or invent credits')
+  !helpDataSourcesScreenSource.includes('does not guess or invent credits') ||
+  !helpDataSourcesScreenSource.includes('does not play, stream, download, or provide music audio')
 ) {
   throw new Error('HelpDataSourcesScreen does not explain the product value in user-facing language')
 }
@@ -500,6 +501,8 @@ if (
   !helpDataSourcesScreenSource.includes('Get better album results') ||
   !helpDataSourcesScreenSource.includes('Start with the artist name') ||
   !helpDataSourcesScreenSource.includes('Add an album title when you want a closer match') ||
+  !helpDataSourcesScreenSource.includes('David Bowie') ||
+  !helpDataSourcesScreenSource.includes('Aladdin Sane') ||
   !helpDataSourcesScreenSource.includes('leave the title blank to browse albums, singles, EPs') ||
   !helpDataSourcesScreenSource.includes('Different countries, reissues, formats, and release dates')
 ) {
@@ -545,7 +548,8 @@ if (
   !helpDataSourcesScreenSource.includes('MusicBrainz — album, release, track, credit, and relationship data') ||
   !helpDataSourcesScreenSource.includes('Cover Art Archive — artwork and release images when available') ||
   !helpDataSourcesScreenSource.includes('Wikidata and Wikipedia — background links when available through public source records') ||
-  !helpDataSourcesScreenSource.includes('Source links are shown when possible')
+  !helpDataSourcesScreenSource.includes('Source links are shown when possible') ||
+  !helpDataSourcesScreenSource.includes('Artwork, background links, and summaries appear only when they are available')
 ) {
   throw new Error('HelpDataSourcesScreen does not explain source-backed Wikidata/Wikipedia behavior')
 }
