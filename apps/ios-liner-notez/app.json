@@ -6,7 +6,9 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "platforms": ["ios"],
+    "platforms": [
+      "ios"
+    ],
     "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash.png",
@@ -15,7 +17,15 @@
     },
     "ios": {
       "bundleIdentifier": "com.edtremblay.linernotez",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c1c6553e-c38a-44b2-8dc2-fd35f9e915d4"
+      }
     }
   }
 }
