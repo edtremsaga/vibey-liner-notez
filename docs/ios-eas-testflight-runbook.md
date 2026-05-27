@@ -84,6 +84,8 @@ npx eas-cli build -p ios --profile production
 
 These commands require Expo/EAS service access and iOS signing credentials.
 
+If App Store Connect rejects an upload because the IPA was built with an old iOS SDK, do not retry submit on the same IPA. Rebuild first with the current EAS iOS image configured in `apps/ios-liner-notez/eas.json`, then submit the new build.
+
 For TestFlight/App Store upload later:
 
 ```bash
@@ -113,6 +115,7 @@ The repo now includes a minimal `apps/ios-liner-notez/eas.json` with separate lo
 
 - `preview`: internal TestFlight-style build for smoke testing.
 - `production`: release candidate build.
+- Both iOS build profiles pin the current Xcode 26 EAS image so App Store Connect uploads are built with an Apple-accepted iOS SDK.
 
 Keep runtime behavior unchanged. Do not add analytics, crash reporting, payments, accounts, or push notifications just for build setup.
 
