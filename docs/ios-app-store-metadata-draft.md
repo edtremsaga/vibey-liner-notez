@@ -93,10 +93,10 @@ Liner Notez does not require an account or special credentials. The app uses pub
 
 There are no purchases, payments, subscriptions, user accounts, ads, or tracking features in the current iOS app.
 
-## Privacy / Support URL Placeholders
+## Privacy / Support URLs
 
-- Privacy policy URL: TBD
-- Support URL: TBD
+- Privacy policy URL: `https://vibeycraft.com/liner-notez/privacy`
+- Support URL: `https://vibeycraft.com/liner-notez/support`
 - Marketing URL: optional / TBD
 
 Internal source material:
@@ -127,11 +127,8 @@ Capture screenshots after final manual smoke testing and visual review:
 
 ## Remaining Metadata Gaps
 
-- Final privacy policy URL
-- Support URL
 - Optional marketing URL
 - App screenshots
-- App icon and splash assets
 - Final manual simulator/device smoke pass
 - EAS/TestFlight build setup
 - Final App Store privacy answers

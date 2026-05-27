@@ -18,6 +18,10 @@ Do not run build, submit, login, credential, upload, or publish commands until E
 - Orientation: portrait
 - UI style: dark
 - Icon and splash assets are configured in `apps/ios-liner-notez/app.json`.
+- Minimal EAS build profiles are configured in `apps/ios-liner-notez/eas.json`.
+- App Store Connect app record exists for Liner Notez, and bundle identifier `com.edtremblay.linernotez` is registered.
+- Public privacy URL: `https://vibeycraft.com/liner-notez/privacy`
+- Public support URL: `https://vibeycraft.com/liner-notez/support`
 
 ## Local Preflight
 
@@ -50,10 +54,7 @@ Ed needs these outside the repo before EAS/TestFlight work:
 - Expo account with access to the project.
 - Apple Developer Program membership.
 - App Store Connect access.
-- Confirmation that `com.edtremblay.linernotez` is the final bundle identifier.
-- App Store Connect app record for Liner Notez.
-- Privacy policy URL.
-- Support URL.
+- Confirmation that the existing `com.edtremblay.linernotez` App Store Connect record should be used for the first TestFlight build.
 - Final App Store privacy answers.
 - Screenshots and final metadata review.
 
@@ -106,9 +107,9 @@ Do not configure these from an ordinary app-code task:
 
 Those steps should happen in a dedicated release setup session.
 
-## Suggested First EAS Config Shape
+## EAS Config Shape
 
-When Ed is ready, create a minimal `eas.json` with separate local intent:
+The repo now includes a minimal `apps/ios-liner-notez/eas.json` with separate local intent:
 
 - `preview`: internal TestFlight-style build for smoke testing.
 - `production`: release candidate build.
