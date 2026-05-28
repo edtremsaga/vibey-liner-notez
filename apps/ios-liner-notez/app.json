@@ -17,7 +17,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.edtremblay.linernotez",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
