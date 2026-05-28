@@ -173,7 +173,45 @@ function ScreenRouter({
   }
 }
 
-export default function App() {
+class StartupErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { error: null }
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error }
+  }
+
+  componentDidCatch(error) {
+    console.error('Liner Notez startup error', error)
+  }
+
+  render() {
+    if (this.state.error) {
+      const errorMessage = this.state.error?.message || String(this.state.error)
+
+      return (
+        <SafeAreaView style={styles.startupErrorRoot}>
+          <View style={styles.startupErrorCard}>
+            <Text style={styles.startupErrorTitle}>Liner Notez startup error</Text>
+            <Text style={styles.startupErrorText}>
+              The app hit an error before the first screen loaded.
+            </Text>
+            <Text style={styles.startupErrorMessage}>{errorMessage}</Text>
+            <Text style={styles.startupErrorNote}>
+              Diagnostic text for TestFlight.
+            </Text>
+          </View>
+        </SafeAreaView>
+      )
+    }
+
+    return this.props.children
+  }
+}
+
+function LinerNotezApp() {
   const [route, setRoute] = useState('Search')
   const [searchFormArtistName, setSearchFormArtistName] = useState('')
   const [searchFormAlbumTitle, setSearchFormAlbumTitle] = useState('')
@@ -460,10 +498,51 @@ export default function App() {
   )
 }
 
+export default function App() {
+  return (
+    <StartupErrorBoundary>
+      <LinerNotezApp />
+    </StartupErrorBoundary>
+  )
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#101114' },
   header: { paddingHorizontal: 16, paddingVertical: 12 },
   title: { color: '#f3f4f6', fontSize: 22, fontWeight: '600' },
   subtitle: { color: '#9ca3af', marginTop: 6, fontSize: 12 },
-  content: { flex: 1, minHeight: 0, padding: 16 }
+  content: { flex: 1, minHeight: 0, padding: 16 },
+  startupErrorRoot: {
+    flex: 1,
+    backgroundColor: '#101114',
+    padding: 20,
+    justifyContent: 'center'
+  },
+  startupErrorCard: {
+    borderWidth: 1,
+    borderColor: '#7f1d1d',
+    borderRadius: 12,
+    padding: 16,
+    backgroundColor: '#2a1215'
+  },
+  startupErrorTitle: {
+    color: '#fecaca',
+    fontSize: 22,
+    fontWeight: '700'
+  },
+  startupErrorText: {
+    color: '#fca5a5',
+    fontSize: 16,
+    marginTop: 10
+  },
+  startupErrorMessage: {
+    color: '#fef2f2',
+    fontSize: 14,
+    marginTop: 12
+  },
+  startupErrorNote: {
+    color: '#fca5a5',
+    fontSize: 13,
+    marginTop: 14
+  }
 })

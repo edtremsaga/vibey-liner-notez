@@ -53,6 +53,16 @@ if (appSource.includes('Placeholder screen for help, attribution, and data-sourc
 if (!appSource.includes('content: { flex: 1, minHeight: 0, padding: 16 }')) {
   throw new Error('App content shell does not provide a bounded scroll host for screen ScrollViews')
 }
+if (
+  !appSource.includes('class StartupErrorBoundary extends React.Component') ||
+  !appSource.includes('Liner Notez startup error') ||
+  !appSource.includes('The app hit an error before the first screen loaded.') ||
+  !appSource.includes('Diagnostic text for TestFlight.') ||
+  !appSource.includes('<StartupErrorBoundary>') ||
+  !appSource.includes('<LinerNotezApp />')
+) {
+  throw new Error('App.js does not include the visible TestFlight startup diagnostic error boundary')
+}
 if (!appSource.includes('Liner Notez') || appSource.includes('liner notez (iOS scaffold)')) {
   throw new Error('App visible title still uses scaffold/dev copy')
 }
