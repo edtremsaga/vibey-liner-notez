@@ -464,6 +464,36 @@ Follow-up addressed:
 - Producer result count copy now says results are `found so far`.
 - Help / Data Sources visible copy was replaced with final polished product help covering album tips, Producer Search guidance, missing-credit expectations, source attribution, independence language, privacy notes, and support contact.
 
+## Signed TestFlight iPhone Smoke Pass After ExpoAsset Fix
+
+Environment:
+
+- Device: iPhone 11.
+- Build path: signed TestFlight build after the missing native `ExpoAsset` module startup fix.
+- Test style: manual smoke with screenshots observed by Ed and ChatGPT.
+
+Results:
+
+- App launches successfully from TestFlight on iPhone 11.
+- No black screen.
+- No startup diagnostic/error screen.
+- Search screen renders.
+- Results render for R.E.M. studio albums.
+- Album Detail renders for R.E.M. `Murmur`.
+- Selected edition/source details render.
+- Release Credits render.
+- Tracklist renders.
+- Expandable track credits work.
+- Album Art & Liner Images section loads.
+- Artwork gallery shows 11 images.
+- Full-screen artwork viewer opens and swipes.
+- Back navigation appears present.
+- No obvious crash observed.
+
+Non-blocking follow-up:
+
+- The iPhone screenshots appear to use very large Dynamic Type / accessibility text sizing. The app remains functional, but dense screens become cramped: large headings dominate the screen, cards show limited content at once, Release Credits and Tracklist are readable but dense, image viewer controls are very large, and artwork labels truncate. Review iPhone accessibility / Dynamic Type layout as a follow-up, not a blocker for this signed-build smoke pass.
+
 ## Recommended Post-Smoke Priority
 
 1. Diagnose selected-edition ranking and U.S./expected-region preference.
