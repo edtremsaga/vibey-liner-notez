@@ -494,6 +494,51 @@ Non-blocking follow-up:
 
 - The iPhone screenshots appear to use very large Dynamic Type / accessibility text sizing. The app remains functional, but dense screens become cramped: large headings dominate the screen, cards show limited content at once, Release Credits and Tracklist are readable but dense, image viewer controls are very large, and artwork labels truncate. Review iPhone accessibility / Dynamic Type layout as a follow-up, not a blocker for this signed-build smoke pass.
 
+## Build 3 iPhone Smoke-Test and Screenshot Checklist
+
+Purpose:
+
+- Verify Dynamic Type chrome polish on iPhone 11.
+- Verify splash / launch polish if added before Build 3.
+- Confirm no regression from the `ExpoAsset` startup fix.
+- Capture possible App Store screenshots.
+
+Settings to test:
+
+- Ed's normal larger iPhone text size.
+- Normal/default iPhone text size.
+- Wi-Fi on.
+- Wi-Fi off or poor-network conditions.
+
+Screens to test and optionally capture:
+
+- Search screen.
+- Results screen.
+- Album Detail hero / selected edition.
+- Release Credits.
+- Expanded Tracklist credits.
+- Artwork gallery.
+- Full-screen artwork viewer.
+- Producer Search.
+- Help / Data Sources.
+
+Known test records:
+
+- R.E.M. - `Murmur`: use for selected edition, Release Credits, expanded Tracklist credits, artwork gallery, and full-screen artwork viewer.
+- Nirvana - `Nevermind`: use for U.S. selected-edition sanity.
+- Lady Gaga - `MAYHEM`: use for modern-release selected edition, Tracklist, and empty Release Credits behavior.
+- Black Flag - `Louie Louie` / `Nervous Breakdown`: use for single / EP terminology sanity.
+- Brian Eno or Quincy Jones: use for Producer Search candidate selection, results, Load More, and Album Detail handoff.
+
+Pass / fail notes:
+
+- Launch: app opens from TestFlight/Home Screen without black screen or startup diagnostic.
+- Dynamic Type: Ed's larger text size remains readable, but headings, buttons, section controls, artwork labels, and image-viewer controls no longer dominate the layout.
+- Default text size: screens still look normal and not artificially small.
+- Splash / launch: if polish is included, launch should feel intentional and should not show placeholder/default visual artifacts.
+- Network handling: Wi-Fi off or poor-network search shows a calm error state and does not crash.
+- Screenshots: capture App Store candidate screenshots at default text size unless accessibility screenshots are intentionally desired.
+
 ## Recommended Post-Smoke Priority
 
 1. Diagnose selected-edition ranking and U.S./expected-region preference.

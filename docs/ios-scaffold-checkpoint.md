@@ -249,6 +249,7 @@
 - Do not start canonical studio albums cleanup here; that is a later shared React+iOS search-semantics project.
 
 ## Manual Smoke Status
+- Build 3 now has a reusable iPhone smoke-test and screenshot checklist in `docs/ios-smoke-test-results-2026-05.md`, covering Dynamic Type chrome polish, optional splash / launch polish, ExpoAsset startup regression, network handling, and App Store screenshot capture.
 - David Bowie / Aladdin Sane passed after `ec75193` and again after the selected-release tracklist milestone `b13a7f1`.
 - Search used the artist-first flow with Artist `David Bowie` and Album `Aladdin Sane`.
 - Release Type was hidden because Album Name had text.
