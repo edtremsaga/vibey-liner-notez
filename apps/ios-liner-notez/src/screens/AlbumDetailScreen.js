@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Image, Linking, Modal, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 
+const SECTION_FONT_MAX_MULTIPLIER = 1.3
+const CONTROL_FONT_MAX_MULTIPLIER = 1.25
+const DENSE_LABEL_FONT_MAX_MULTIPLIER = 1.25
+
 function formatDuration(durationMs) {
   if (!durationMs || Number.isNaN(durationMs)) {
     return null
@@ -388,7 +392,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
           marginBottom: 14
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>{backLabel}</Text>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>{backLabel}</Text>
       </TouchableOpacity>
 
       {!isRealMusicBrainzDetail && (
@@ -544,7 +548,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
 	                backgroundColor: '#181a1f'
 	              }}
 	            >
-	              <Text style={{ color: '#93c5fd', fontSize: 16, fontWeight: '700' }}>
+	              <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#93c5fd', fontSize: 16, fontWeight: '700' }}>
 	                Read album article on Wikipedia
 	              </Text>
 	              <Text style={{ color: '#9ca3af', marginTop: 5, fontSize: 14 }}>
@@ -564,7 +568,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                 backgroundColor: '#181a1f'
               }}
             >
-              <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Album Art & Liner Images</Text>
+              <Text maxFontSizeMultiplier={SECTION_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Album Art & Liner Images</Text>
               <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>
                 Browse cover, booklet, media, and other release images.
               </Text>
@@ -607,6 +611,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                         resizeMode="cover"
                       />
                       <Text
+                        maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER}
                         numberOfLines={1}
                         style={{ color: '#9ca3af', marginTop: 5, fontSize: 12 }}
                       >
@@ -636,7 +641,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
               style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
             >
               <View style={{ flex: 1 }}>
-                <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Tracklist</Text>
+                <Text maxFontSizeMultiplier={SECTION_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Tracklist</Text>
                 {!!tracklistSummary && (
                   <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>{tracklistSummary}</Text>
                 )}
@@ -644,7 +649,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                   <Text style={{ color: '#6b7280', marginTop: 3, fontSize: 13 }}>Tap a track to view credits.</Text>
                 ) : null}
               </View>
-              <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showTracklist ? '▾' : '▸'}</Text>
+              <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontSize: 16 }}>{showTracklist ? '▾' : '▸'}</Text>
             </TouchableOpacity>
             {showTracklist ? (
               hasTracks ? (
@@ -685,14 +690,14 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                               {trackDuration ? (
                                 <Text style={{ color: '#9ca3af', fontSize: 14 }}>{trackDuration}</Text>
                               ) : null}
-                              <Text style={{ color: '#9ca3af', fontSize: 16 }}>{isTrackExpanded ? '▾' : '›'}</Text>
+                              <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontSize: 16 }}>{isTrackExpanded ? '▾' : '›'}</Text>
                             </View>
                           </TouchableOpacity>
                           {isTrackExpanded ? (
                             <View style={{ marginTop: 8, paddingLeft: 12, borderLeftWidth: 1, borderLeftColor: '#374151' }}>
                               {songwritingRows.length > 0 ? (
                                 <View>
-                                  <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
+	                                  <Text maxFontSizeMultiplier={DENSE_LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
                                     Songwriting
                                   </Text>
                                   {songwritingRows.map(([personName, role], index) => (
@@ -707,7 +712,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                               ) : null}
                               {publishingRows.length > 0 ? (
                                 <View style={{ marginTop: 8 }}>
-                                  <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
+                                  <Text maxFontSizeMultiplier={DENSE_LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
                                     Publishing
                                   </Text>
                                   {publishingRows.map(([publisherName, role], index) => (
@@ -722,7 +727,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                               ) : null}
                               {groupedCredits.map(([groupLabel, credits]) => (
                                 <View key={`${track.trackId}-${groupLabel}`} style={{ marginTop: 8 }}>
-                                  <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
+                                  <Text maxFontSizeMultiplier={DENSE_LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
                                     {groupLabel}
                                   </Text>
                                   {credits.map((credit, index) => (
@@ -781,9 +786,9 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
               style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
             >
               <View style={{ flex: 1 }}>
-                <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Release Credits</Text>
+                <Text maxFontSizeMultiplier={SECTION_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Release Credits</Text>
               </View>
-              <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showCredits ? '▾' : '▸'}</Text>
+              <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontSize: 16 }}>{showCredits ? '▾' : '▸'}</Text>
             </TouchableOpacity>
             {showCredits ? (
               <>
@@ -795,15 +800,15 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                       onPress={() => setShowCreditHighlights((current) => !current)}
                       style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
                     >
-                      <Text style={{ color: '#d1d5db', flex: 1, fontWeight: '700', fontSize: 15 }}>
+                      <Text maxFontSizeMultiplier={DENSE_LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#d1d5db', flex: 1, fontWeight: '700', fontSize: 15 }}>
                         Credit Highlights
                       </Text>
-                      <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showCreditHighlights ? '▾' : '▸'}</Text>
+                      <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontSize: 16 }}>{showCreditHighlights ? '▾' : '▸'}</Text>
                     </TouchableOpacity>
                     {showCreditHighlights
                       ? creditHighlights.map(([category, contributors]) => (
                           <View key={`credit-highlight-${category}`} style={{ marginTop: 8 }}>
-                            <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
+                            <Text maxFontSizeMultiplier={DENSE_LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
                               {category}
                             </Text>
                             {contributors.slice(0, 8).map((contributor, index) => {
@@ -828,7 +833,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                   <View style={{ marginTop: 12 }}>
                     {groupedAlbumCredits.map(([groupLabel, credits]) => (
                       <View key={`album-${groupLabel}`} style={{ marginTop: 8 }}>
-                        <Text style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
+                        <Text maxFontSizeMultiplier={DENSE_LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontWeight: '700', fontSize: 13 }}>
                           {groupLabel}
                         </Text>
                         {credits.map((credit, index) => (
@@ -873,20 +878,20 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
               style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
             >
               <View style={{ flex: 1 }}>
-                <Text style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>
+                <Text maxFontSizeMultiplier={SECTION_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>
                   Editions & Sources
                 </Text>
                 {!!editionsSourcesSummary && (
                   <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 13 }}>{editionsSourcesSummary}</Text>
                 )}
               </View>
-              <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showEditionsSources ? '▾' : '▸'}</Text>
+              <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontSize: 16 }}>{showEditionsSources ? '▾' : '▸'}</Text>
             </TouchableOpacity>
             {showEditionsSources ? (
               <>
                 {selectedEdition ? (
                   <View>
-                    <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Selected Edition</Text>
+                    <Text maxFontSizeMultiplier={DENSE_LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Selected Edition</Text>
                     {selectedEditionSummary ? (
                       <Text style={{ color: '#d1d5db', marginTop: 4, fontSize: 15 }}>{selectedEditionSummary}</Text>
                     ) : null}
@@ -914,10 +919,10 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                       onPress={() => setShowReleaseGroupEditions((current) => !current)}
                       style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
                     >
-                      <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>
+                      <Text maxFontSizeMultiplier={DENSE_LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>
                         Release-group editions
                       </Text>
-                      <Text style={{ color: '#9ca3af', fontSize: 14 }}>{showReleaseGroupEditions ? '▾' : '▸'}</Text>
+                      <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontSize: 14 }}>{showReleaseGroupEditions ? '▾' : '▸'}</Text>
                     </TouchableOpacity>
                     {showReleaseGroupEditions
                       ? editionRows.map((edition, index) => {
@@ -936,7 +941,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                 )}
                 {hasSources ? (
                   <View style={{ marginTop: 10 }}>
-                    <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Sources</Text>
+                    <Text maxFontSizeMultiplier={DENSE_LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Sources</Text>
                     {album.sources.map((source, index) => (
                       <Text key={`source-${source.sourceName ?? 'unknown'}-${index}`} style={{ color: '#9ca3af', marginTop: 3, fontSize: 14 }}>
                         {source.sourceName}
@@ -949,7 +954,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                         onPress={() => Linking.openURL(album.wikipediaArticle.url)}
                         style={{ marginTop: 8 }}
                       >
-                        <Text style={{ color: '#93c5fd', fontSize: 14, fontWeight: '600' }}>
+                        <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#93c5fd', fontSize: 14, fontWeight: '600' }}>
                           Read album article on Wikipedia
                         </Text>
                       </TouchableOpacity>
@@ -966,8 +971,8 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                       onPress={() => setShowTechnicalLinks((current) => !current)}
                       style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
                     >
-                      <Text style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Technical links</Text>
-                      <Text style={{ color: '#9ca3af', fontSize: 14 }}>{showTechnicalLinks ? '▾' : '▸'}</Text>
+                      <Text maxFontSizeMultiplier={DENSE_LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#d1d5db', fontWeight: '600', fontSize: 15 }}>Technical links</Text>
+                      <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontSize: 14 }}>{showTechnicalLinks ? '▾' : '▸'}</Text>
                     </TouchableOpacity>
                     {showTechnicalLinks ? (
                       <>
@@ -1022,7 +1027,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
           alignSelf: 'flex-start'
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>{backLabel}</Text>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>{backLabel}</Text>
       </TouchableOpacity>
 
       <Modal
@@ -1054,14 +1059,14 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                 paddingHorizontal: 10
               }}
             >
-              <Text style={{ color: '#f3f4f6', fontWeight: '700' }}>Close</Text>
+              <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '700' }}>Close</Text>
             </TouchableOpacity>
             <View style={{ alignItems: 'flex-end', flex: 1, marginLeft: 12 }}>
-              <Text style={{ color: '#f3f4f6', fontWeight: '700' }}>
+              <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '700' }}>
                 {selectedArtwork ? getArtworkTypeLabel(selectedArtwork) : 'Artwork'}
               </Text>
               {viewerImageCount > 0 ? (
-                <Text style={{ color: '#9ca3af', marginTop: 2 }}>
+                <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', marginTop: 2 }}>
                   {(selectedArtworkIndex ?? 0) + 1} of {viewerImageCount}
                 </Text>
               ) : null}

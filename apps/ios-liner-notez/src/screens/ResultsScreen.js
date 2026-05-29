@@ -15,6 +15,9 @@ const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest first' }
 ]
 
+const DISPLAY_FONT_MAX_MULTIPLIER = 1.25
+const CONTROL_FONT_MAX_MULTIPLIER = 1.3
+
 export function getDefaultSortOption({ albumTitle, releaseType }) {
   return !albumTitle && releaseType === 'Album' ? 'oldest' : 'newest'
 }
@@ -118,10 +121,10 @@ export function ResultsScreen({
           marginBottom: 14
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Search</Text>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>Back to Search</Text>
       </TouchableOpacity>
 
-      <Text style={{ color: '#f3f4f6', fontSize: 24, fontWeight: '700' }}>{resultsHeading}</Text>
+      <Text maxFontSizeMultiplier={DISPLAY_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontSize: 24, fontWeight: '700' }}>{resultsHeading}</Text>
       {showResults && (
         <View style={{ marginTop: 8 }}>
           <Text style={{ color: '#9ca3af' }}>
@@ -135,7 +138,7 @@ export function ResultsScreen({
 
       {canSortResults && (
         <View style={{ marginTop: 14 }}>
-          <Text style={{ color: '#d1d5db', fontWeight: '700', marginBottom: 8 }}>Sort</Text>
+          <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#d1d5db', fontWeight: '700', marginBottom: 8 }}>Sort</Text>
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
             {SORT_OPTIONS.map((option) => {
               const isActive = sortOption === option.value
@@ -154,7 +157,7 @@ export function ResultsScreen({
                     backgroundColor: isActive ? '#1f2937' : 'transparent'
                   }}
                 >
-                  <Text style={{ color: '#f3f4f6', fontWeight: isActive ? '700' : '500' }}>
+                  <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: isActive ? '700' : '500' }}>
                     {option.label}
                   </Text>
                 </TouchableOpacity>
@@ -257,7 +260,7 @@ export function ResultsScreen({
               {!!editionContext && (
                 <Text style={{ color: '#6b7280', marginTop: 6 }}>{editionContext}</Text>
               )}
-              <Text style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open details</Text>
+              <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open details</Text>
             </TouchableOpacity>
           )
         })}

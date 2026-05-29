@@ -19,6 +19,10 @@ const SEARCH_BUTTON_LABELS = {
   Soundtrack: 'Find Soundtracks'
 }
 
+const DISPLAY_FONT_MAX_MULTIPLIER = 1.25
+const LABEL_FONT_MAX_MULTIPLIER = 1.35
+const CONTROL_FONT_MAX_MULTIPLIER = 1.3
+
 export function SearchScreen({
   albumInput = '',
   artistInput = '',
@@ -71,12 +75,12 @@ export function SearchScreen({
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator
     >
-      <Text style={{ color: '#e5e7eb', fontSize: 24, fontWeight: '700' }}>Explore Album Liner Notes</Text>
+      <Text maxFontSizeMultiplier={DISPLAY_FONT_MAX_MULTIPLIER} style={{ color: '#e5e7eb', fontSize: 24, fontWeight: '700' }}>Explore Album Liner Notes</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Search by artist to browse albums, credits, tracklists, editions, sources, and liner images.
       </Text>
 
-      <Text style={{ color: '#d1d5db', marginTop: 16, marginBottom: 6 }}>Artist name</Text>
+      <Text maxFontSizeMultiplier={LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#d1d5db', marginTop: 16, marginBottom: 6 }}>Artist name</Text>
       <View style={{ position: 'relative' }}>
         <TextInput
           accessibilityLabel="Artist search input"
@@ -116,12 +120,12 @@ export function SearchScreen({
               justifyContent: 'center'
             }}
           >
-            <Text style={{ color: '#9ca3af', fontSize: 18, fontWeight: '700' }}>×</Text>
+            <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontSize: 18, fontWeight: '700' }}>×</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      <Text style={{ color: '#d1d5db', marginTop: 12, marginBottom: 6 }}>Album title (optional)</Text>
+      <Text maxFontSizeMultiplier={LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#d1d5db', marginTop: 12, marginBottom: 6 }}>Album title (optional)</Text>
       <View style={{ position: 'relative' }}>
         <TextInput
           accessibilityLabel="Album search input"
@@ -164,7 +168,7 @@ export function SearchScreen({
               justifyContent: 'center'
             }}
           >
-            <Text style={{ color: '#9ca3af', fontSize: 18, fontWeight: '700' }}>×</Text>
+            <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontSize: 18, fontWeight: '700' }}>×</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -174,7 +178,7 @@ export function SearchScreen({
 
       {showReleaseTypeSelector && (
         <View>
-          <Text style={{ color: '#d1d5db', marginTop: 12, marginBottom: 6 }}>Release Type</Text>
+          <Text maxFontSizeMultiplier={LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#d1d5db', marginTop: 12, marginBottom: 6 }}>Release Type</Text>
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel={`${showReleaseTypes ? 'Hide' : 'Show'} release type options`}
@@ -190,8 +194,8 @@ export function SearchScreen({
               alignItems: 'center'
             }}
           >
-            <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>{selectedReleaseType.label}</Text>
-            <Text style={{ color: '#9ca3af', fontSize: 16 }}>{showReleaseTypes ? '▾' : '▸'}</Text>
+            <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>{selectedReleaseType.label}</Text>
+            <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontSize: 16 }}>{showReleaseTypes ? '▾' : '▸'}</Text>
           </TouchableOpacity>
           <Text style={{ color: '#6b7280', marginTop: 5, fontSize: 13 }}>
             Choose what kind of releases to browse.
@@ -224,7 +228,7 @@ export function SearchScreen({
                     borderTopColor: '#374151'
                   }}
                 >
-                  <Text style={{ color: '#f3f4f6', fontWeight: type.value === releaseType ? '700' : '500' }}>
+                  <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: type.value === releaseType ? '700' : '500' }}>
                     {type.value === releaseType ? '✓ ' : ''}
                     {type.label}
                   </Text>
@@ -250,7 +254,7 @@ export function SearchScreen({
           alignSelf: 'flex-start'
         }}
       >
-        <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>{searchButtonLabel}</Text>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>{searchButtonLabel}</Text>
       </TouchableOpacity>
 
       <View
@@ -261,7 +265,7 @@ export function SearchScreen({
           paddingTop: 14
         }}
       >
-        <Text style={{ color: '#9ca3af', marginBottom: 8 }}>Other tools</Text>
+        <Text maxFontSizeMultiplier={LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', marginBottom: 8 }}>Other tools</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           <TouchableOpacity
             accessibilityRole="button"
@@ -274,7 +278,7 @@ export function SearchScreen({
               paddingHorizontal: 11
             }}
           >
-            <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Producer Search</Text>
+            <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>Producer Search</Text>
           </TouchableOpacity>
           <TouchableOpacity
             accessibilityRole="button"
@@ -287,7 +291,7 @@ export function SearchScreen({
               paddingHorizontal: 11
             }}
           >
-            <Text style={{ color: '#f3f4f6', fontWeight: '600' }}>Help / Data Sources</Text>
+            <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>Help / Data Sources</Text>
           </TouchableOpacity>
         </View>
       </View>

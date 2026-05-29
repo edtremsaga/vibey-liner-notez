@@ -63,6 +63,12 @@ if (
 ) {
   throw new Error('App.js does not include the visible TestFlight startup diagnostic error boundary')
 }
+if (
+  !appSource.includes('HEADER_FONT_MAX_MULTIPLIER') ||
+  !appSource.includes('maxFontSizeMultiplier={HEADER_FONT_MAX_MULTIPLIER}')
+) {
+  throw new Error('App header does not include targeted Dynamic Type chrome caps')
+}
 if (!appSource.includes('Liner Notez') || appSource.includes('liner notez (iOS scaffold)')) {
   throw new Error('App visible title still uses scaffold/dev copy')
 }
@@ -214,6 +220,14 @@ if (!searchScreenSource.includes('const showReleaseTypeSelector = !albumInput.tr
 if (searchScreenSource.includes('Please enter an album title to continue.')) {
   throw new Error('SearchScreen incorrectly requires album-only search')
 }
+if (
+  !searchScreenSource.includes('DISPLAY_FONT_MAX_MULTIPLIER') ||
+  !searchScreenSource.includes('CONTROL_FONT_MAX_MULTIPLIER') ||
+  !searchScreenSource.includes('maxFontSizeMultiplier={DISPLAY_FONT_MAX_MULTIPLIER}') ||
+  !searchScreenSource.includes('maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER}')
+) {
+  throw new Error('SearchScreen does not include targeted Dynamic Type caps for UI chrome')
+}
 
 const resultsScreenSource = readFileSync(path.join(appRoot, 'src/screens/ResultsScreen.js'), 'utf8')
 if (!resultsScreenSource.includes('ScrollView') || !resultsScreenSource.includes('contentContainerStyle')) {
@@ -292,6 +306,14 @@ if (resultsScreenSource.includes('Open preview') || resultsScreenSource.includes
 }
 if (resultsScreenSource.includes('Search for an album to load MusicBrainz results.')) {
   throw new Error('ResultsScreen still presents album-only search copy')
+}
+if (
+  !resultsScreenSource.includes('DISPLAY_FONT_MAX_MULTIPLIER') ||
+  !resultsScreenSource.includes('CONTROL_FONT_MAX_MULTIPLIER') ||
+  !resultsScreenSource.includes('maxFontSizeMultiplier={DISPLAY_FONT_MAX_MULTIPLIER}') ||
+  !resultsScreenSource.includes('maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER}')
+) {
+  throw new Error('ResultsScreen does not include targeted Dynamic Type caps for headings and controls')
 }
 
 const producerSearchScreenSource = readFileSync(
@@ -604,6 +626,15 @@ if (
 const albumDetailScreenSource = readFileSync(path.join(appRoot, 'src/screens/AlbumDetailScreen.js'), 'utf8')
 if (!albumDetailScreenSource.includes('ScrollView') || !albumDetailScreenSource.includes('contentContainerStyle')) {
   throw new Error('AlbumDetailScreen is not scrollable for long album detail content')
+}
+if (
+  !albumDetailScreenSource.includes('SECTION_FONT_MAX_MULTIPLIER') ||
+  !albumDetailScreenSource.includes('CONTROL_FONT_MAX_MULTIPLIER') ||
+  !albumDetailScreenSource.includes('DENSE_LABEL_FONT_MAX_MULTIPLIER') ||
+  !albumDetailScreenSource.includes('maxFontSizeMultiplier={SECTION_FONT_MAX_MULTIPLIER}') ||
+  !albumDetailScreenSource.includes('maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER}')
+) {
+  throw new Error('AlbumDetailScreen does not include targeted Dynamic Type caps for dense UI chrome')
 }
 if (!albumDetailScreenSource.includes('alwaysBounceVertical') || !albumDetailScreenSource.includes('paddingBottom: 96')) {
   throw new Error('AlbumDetailScreen ScrollView does not include hardened scroll props for long detail content')

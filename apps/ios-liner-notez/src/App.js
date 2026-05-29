@@ -15,6 +15,8 @@ import {
 import { searchMusicBrainzAlbumsByArtist } from './services/musicbrainzAlbumSearch'
 import { formatMusicDataError } from './services/musicDataErrors'
 
+const HEADER_FONT_MAX_MULTIPLIER = 1.3
+
 const INITIAL_PRODUCER_SEARCH_STATE = {
   producerName: '',
   showValidation: false,
@@ -454,9 +456,9 @@ function LinerNotezApp() {
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
-        <Text style={styles.title}>Liner Notez</Text>
+        <Text maxFontSizeMultiplier={HEADER_FONT_MAX_MULTIPLIER} style={styles.title}>Liner Notez</Text>
         {!!albumSearchArtistName && (
-          <Text style={styles.subtitle}>
+          <Text maxFontSizeMultiplier={HEADER_FONT_MAX_MULTIPLIER} style={styles.subtitle}>
             Browsing albums by {albumSearchArtistName}{albumSearchAlbumTitle ? ` matching ${albumSearchAlbumTitle}` : ''}
           </Text>
         )}
