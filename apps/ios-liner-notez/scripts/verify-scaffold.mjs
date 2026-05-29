@@ -173,6 +173,11 @@ if (!searchScreenSource.includes('Artist search input')) {
 if (!searchScreenSource.includes('Album search input')) {
   throw new Error('SearchScreen does not include optional album search input marker')
 }
+const albumSearchSubmitHandlerCount = searchScreenSource.match(/onSubmitEditing=\{handleSearchPress\}/g)?.length ?? 0
+const albumSearchReturnKeyCount = searchScreenSource.match(/returnKeyType="search"/g)?.length ?? 0
+if (albumSearchSubmitHandlerCount < 2 || albumSearchReturnKeyCount < 2) {
+  throw new Error('SearchScreen inputs do not submit Album Search from the iOS keyboard search key')
+}
 if (
   !searchScreenSource.includes('Clear artist name') ||
   !searchScreenSource.includes('Clear album title') ||
@@ -358,6 +363,12 @@ if (!producerSearchScreenSource.includes('onBackToSearch') || !producerSearchScr
 }
 if (!producerSearchScreenSource.includes('Producer search input')) {
   throw new Error('ProducerSearchScreen does not include producer input')
+}
+if (
+  !producerSearchScreenSource.includes('onSubmitEditing={handleResolveProducerCandidates}') ||
+  !producerSearchScreenSource.includes('returnKeyType="search"')
+) {
+  throw new Error('ProducerSearchScreen input does not submit Producer Search from the iOS keyboard search key')
 }
 if (
   !producerSearchScreenSource.includes('resetProducerSearchState') ||

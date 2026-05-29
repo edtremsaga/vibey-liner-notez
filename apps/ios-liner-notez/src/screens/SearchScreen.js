@@ -91,8 +91,10 @@ export function SearchScreen({
               setValidationMessage('')
             }
           }}
+          onSubmitEditing={handleSearchPress}
           placeholder="e.g. David Bowie"
           placeholderTextColor="#6b7280"
+          returnKeyType="search"
           style={{
             borderWidth: 1,
             borderColor: '#4b5563',
@@ -139,8 +141,10 @@ export function SearchScreen({
               setValidationMessage('')
             }
           }}
+          onSubmitEditing={handleSearchPress}
           placeholder="e.g. Aladdin Sane (optional)"
           placeholderTextColor="#6b7280"
+          returnKeyType="search"
           style={{
             borderWidth: 1,
             borderColor: '#4b5563',

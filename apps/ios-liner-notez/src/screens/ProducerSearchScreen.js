@@ -503,6 +503,8 @@ export function ProducerSearchScreen({
           placeholderTextColor="#9ca3af"
           value={producerName}
           editable={!isLoadingCandidates}
+          onSubmitEditing={handleResolveProducerCandidates}
+          returnKeyType="search"
           onChangeText={(value) => {
             producerLookupRequestId.current += 1
             setProducerName(value)
