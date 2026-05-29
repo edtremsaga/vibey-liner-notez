@@ -96,6 +96,16 @@ if (!appSource.includes('Browsing albums by') || appSource.includes('Artist sear
   throw new Error('App search context copy still reads like internal state')
 }
 if (
+  !appSource.includes('function getHeaderSubtitle') ||
+  !appSource.includes("route === 'Producer Search'") ||
+  !appSource.includes("detailReturnRoute === 'Producer Search'") ||
+  !appSource.includes('Producer credits for ${producerName}') ||
+  !appSource.includes('const headerSubtitle = getHeaderSubtitle') ||
+  !appSource.includes('{headerSubtitle}')
+) {
+  throw new Error('App header does not use route-aware Producer Search context copy')
+}
+if (
   appSource.includes('const ROUTES') ||
   appSource.includes('const tabs') ||
   appSource.includes('styles.tabs') ||

@@ -32,6 +32,23 @@ const INITIAL_PRODUCER_SEARCH_STATE = {
   errorMessage: ''
 }
 
+function getHeaderSubtitle({
+  albumSearchAlbumTitle,
+  albumSearchArtistName,
+  detailReturnRoute,
+  producerSearchState,
+  route
+}) {
+  if (route === 'Producer Search' || (route === 'Album Detail' && detailReturnRoute === 'Producer Search')) {
+    const producerName = producerSearchState?.selectedProducer?.name ?? producerSearchState?.producerName?.trim()
+    return producerName ? `Producer credits for ${producerName}` : 'Producer Search'
+  }
+
+  return albumSearchArtistName
+    ? `Browsing albums by ${albumSearchArtistName}${albumSearchAlbumTitle ? ` matching ${albumSearchAlbumTitle}` : ''}`
+    : ''
+}
+
 function buildAlbumDetailFromResult(albumId, albumResult, enrichedDetail = null) {
   if (!albumResult) {
     return null
@@ -453,13 +470,21 @@ function LinerNotezApp() {
     setRoute('Help / Data Sources')
   }
 
+  const headerSubtitle = getHeaderSubtitle({
+    albumSearchAlbumTitle,
+    albumSearchArtistName,
+    detailReturnRoute,
+    producerSearchState,
+    route
+  })
+
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
         <Text maxFontSizeMultiplier={HEADER_FONT_MAX_MULTIPLIER} style={styles.title}>Liner Notez</Text>
-        {!!albumSearchArtistName && (
+        {!!headerSubtitle && (
           <Text maxFontSizeMultiplier={HEADER_FONT_MAX_MULTIPLIER} style={styles.subtitle}>
-            Browsing albums by {albumSearchArtistName}{albumSearchAlbumTitle ? ` matching ${albumSearchAlbumTitle}` : ''}
+            {headerSubtitle}
           </Text>
         )}
       </View>
