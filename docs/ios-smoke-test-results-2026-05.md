@@ -18,6 +18,51 @@
 - App appears usable as a real beta candidate
 - Several product-quality and terminology follow-ups were found
 
+## Signed TestFlight Build 3 - iPhone Smoke Pass
+
+Status: PASS
+
+Context:
+
+- Build: TestFlight build 3
+- App version: 0.1.0
+- Device: iPhone 11
+- Tester setting: larger iPhone text size intentionally enabled for readability without reader glasses
+- Scope: signed-build smoke, Dynamic Type review, core app flow, Producer Search follow-up
+
+Confirmed:
+
+- App launched successfully from TestFlight.
+- No black screen observed.
+- No startup diagnostic/error screen appeared.
+- Search screen rendered.
+- Album Search worked for R.E.M., Beck, The Beatles, and related follow-up searches.
+- Results screen rendered and remained navigable.
+- Album Detail rendered for selected albums.
+- Selected edition and source details rendered.
+- Release Credits rendered, including no-credit empty states when appropriate for the selected release.
+- Tracklist rendered.
+- Expandable track credits worked.
+- Album Art & Liner Images loaded when public source records had images.
+- Full-screen artwork viewer opened and swiped between images.
+- Wikipedia album article links opened externally.
+- Producer Search worked for Butch Vig.
+- Producer Search results loaded and Load More worked.
+- Producer Search result cards opened Album Detail.
+- Back navigation from Producer Search result Album Detail returned to Producer Search.
+- No obvious crash observed.
+
+Follow-up found and addressed:
+
+- During Build 3 testing, Producer Search / Producer-opened Album Detail showed stale album-search context in the app header, for example `Browsing albums by The Beatles` while viewing Butch Vig producer results.
+- Follow-up fix `1b8833b` changed the header to route-aware Producer Search context.
+- The fix was verified in Simulator/dev with the header showing `Producer credits for Butch Vig` and the detail back action showing `Back to Producer Search`.
+- Because the fix landed after TestFlight build 3, a later TestFlight build will include it for real-device confirmation.
+
+Non-blocking follow-up:
+
+- Larger iPhone text size remains a real supported use case. The app is functional, but Help / Data Sources, dense credits, selected-edition details, and long technical links can still feel heavy. Keep this as an accessibility/Dynamic Type layout polish lane, not a blocker for the current internal beta.
+
 ## General Launch Notes
 
 1. Expo/simulator launch timed out once via `xcrun simctl openurl`.
