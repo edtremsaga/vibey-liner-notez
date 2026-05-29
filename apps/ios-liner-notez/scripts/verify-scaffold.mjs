@@ -7,6 +7,8 @@ const __dirname = path.dirname(__filename)
 const appRoot = path.resolve(__dirname, '..')
 
 const requiredFiles = [
+  'app.json',
+  'package.json',
   'index.js',
   'src/App.js',
   'src/services/musicbrainzAlbumDetail.js',
@@ -27,6 +29,8 @@ for (const rel of requiredFiles) {
   }
 }
 
+const appConfig = JSON.parse(readFileSync(path.join(appRoot, 'app.json'), 'utf8'))
+const packageConfig = JSON.parse(readFileSync(path.join(appRoot, 'package.json'), 'utf8'))
 const appSource = readFileSync(path.join(appRoot, 'src/App.js'), 'utf8')
 const musicDataErrorsSource = readFileSync(path.join(appRoot, 'src/services/musicDataErrors.js'), 'utf8')
 const formatMusicDataError = new Function(
@@ -62,6 +66,22 @@ if (
   !appSource.includes('<LinerNotezApp />')
 ) {
   throw new Error('App.js does not include the visible TestFlight startup diagnostic error boundary')
+}
+if (!packageConfig.dependencies?.['expo-splash-screen']) {
+  throw new Error('package.json does not explicitly include expo-splash-screen')
+}
+const splashPlugin = appConfig.expo?.plugins?.find((plugin) => Array.isArray(plugin) && plugin[0] === 'expo-splash-screen')
+if (!splashPlugin) {
+  throw new Error('app.json does not include the expo-splash-screen config plugin')
+}
+const splashPluginConfig = splashPlugin[1] ?? {}
+if (
+  splashPluginConfig.image !== './assets/splash.png' ||
+  splashPluginConfig.resizeMode !== 'contain' ||
+  splashPluginConfig.backgroundColor !== '#07090f' ||
+  splashPluginConfig.dark?.backgroundColor !== '#07090f'
+) {
+  throw new Error('expo-splash-screen plugin config does not preserve the current dark LN splash direction')
 }
 if (
   !appSource.includes('HEADER_FONT_MAX_MULTIPLIER') ||

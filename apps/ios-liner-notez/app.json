@@ -15,6 +15,20 @@
       "resizeMode": "contain",
       "backgroundColor": "#07090f"
     },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#07090f",
+          "dark": {
+            "image": "./assets/splash.png",
+            "backgroundColor": "#07090f"
+          }
+        }
+      ]
+    ],
     "ios": {
       "bundleIdentifier": "com.edtremblay.linernotez",
       "buildNumber": "2",
