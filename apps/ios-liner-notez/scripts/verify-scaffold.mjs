@@ -368,6 +368,14 @@ if (
 ) {
   throw new Error('ResultsScreen does not include the default-on Hide bootlegs filter')
 }
+if (
+  !resultsScreenSource.includes('getBootlegFilterLabel') ||
+  !resultsScreenSource.includes('☑') ||
+  !resultsScreenSource.includes('bootleg ${resultLabel} hidden · ${checkbox} Hide bootlegs') ||
+  !resultsScreenSource.includes('canFilterBootlegs && !showResults')
+) {
+  throw new Error('ResultsScreen does not render Hide bootlegs as a compact checkbox/filter row')
+}
 const producerSearchScreenSource = readFileSync(
   path.join(appRoot, 'src/screens/ProducerSearchScreen.js'),
   'utf8'

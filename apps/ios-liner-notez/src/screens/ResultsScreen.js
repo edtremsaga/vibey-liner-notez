@@ -57,6 +57,16 @@ function filterBootlegAlbums(albums, hideBootlegs) {
   return hideBootlegs ? albums.filter((album) => !album?.isBootleg) : albums
 }
 
+function getBootlegFilterLabel({ hiddenBootlegCount, hideBootlegs }) {
+  const checkbox = hideBootlegs ? '☑' : '☐'
+  if (hideBootlegs && hiddenBootlegCount > 0) {
+    const resultLabel = hiddenBootlegCount === 1 ? 'result' : 'results'
+    return `${hiddenBootlegCount} bootleg ${resultLabel} hidden · ${checkbox} Hide bootlegs`
+  }
+
+  return `${checkbox} Hide bootlegs`
+}
+
 function getDisambiguationLabel(disambiguation) {
   return String(disambiguation ?? '').trim().toLowerCase().startsWith('aka') ? 'Also known as' : 'Note'
 }
@@ -94,6 +104,7 @@ export function ResultsScreen({
   const showResults = !isLoading && !errorMessage && filteredAlbums.length > 0
   const canFilterBootlegs = !isLoading && !errorMessage && albums.length > 0
   const canSortResults = showResults && !albumTitle
+  const bootlegFilterLabel = getBootlegFilterLabel({ hiddenBootlegCount, hideBootlegs })
   const displayedAlbums = useMemo(
     () => (canSortResults ? sortAlbums(filteredAlbums, sortOption) : filteredAlbums),
     [filteredAlbums, canSortResults, sortOption]
@@ -143,10 +154,22 @@ export function ResultsScreen({
           <Text style={{ color: '#9ca3af' }}>
             {filteredAlbums.length} {filteredAlbums.length === 1 ? 'result' : 'results'} from MusicBrainz
           </Text>
-          {hideBootlegs && hiddenBootlegCount > 0 && (
-            <Text style={{ color: '#6b7280', marginTop: 4 }}>
-              {hiddenBootlegCount} bootleg {hiddenBootlegCount === 1 ? 'result is' : 'results are'} hidden.
-            </Text>
+          {canFilterBootlegs && (
+            <TouchableOpacity
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: hideBootlegs }}
+              accessibilityLabel="Hide bootlegs"
+              onPress={() => setHideBootlegs((current) => !current)}
+              style={{
+                alignSelf: 'flex-start',
+                marginTop: 4,
+                paddingVertical: 4
+              }}
+            >
+              <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontWeight: '600' }}>
+                {bootlegFilterLabel}
+              </Text>
+            </TouchableOpacity>
           )}
           <Text style={{ color: '#6b7280', marginTop: 4 }}>
             MusicBrainz may list several editions or similarly named releases. Choose the album that best matches.
@@ -185,31 +208,20 @@ export function ResultsScreen({
         </View>
       )}
 
-      {canFilterBootlegs && (
+      {canFilterBootlegs && !showResults && (
         <TouchableOpacity
           accessibilityRole="checkbox"
           accessibilityState={{ checked: hideBootlegs }}
           accessibilityLabel="Hide bootlegs"
           onPress={() => setHideBootlegs((current) => !current)}
           style={{
-            borderWidth: 1,
-            borderColor: hideBootlegs ? '#f3f4f6' : '#4b5563',
-            borderRadius: 8,
-            paddingVertical: 8,
-            paddingHorizontal: 10,
             alignSelf: 'flex-start',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 8,
             marginTop: 10,
-            backgroundColor: hideBootlegs ? '#1f2937' : 'transparent'
+            paddingVertical: 4
           }}
         >
-          <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '700' }}>
-            {hideBootlegs ? '✓' : ' '}
-          </Text>
-          <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>
-            Hide bootlegs
+          <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', fontWeight: '600' }}>
+            {bootlegFilterLabel}
           </Text>
         </TouchableOpacity>
       )}
