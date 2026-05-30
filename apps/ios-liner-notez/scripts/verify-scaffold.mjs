@@ -295,7 +295,7 @@ if (
   throw new Error('ResultsScreen does not default artist-only Studio Albums to Oldest first')
 }
 if (
-  !resultsScreenSource.includes('sortAlbums(albums, sortOption)') ||
+  !resultsScreenSource.includes('sortAlbums(filteredAlbums, sortOption)') ||
   !resultsScreenSource.includes('onSortOptionChange?.(option.value)')
 ) {
   throw new Error('ResultsScreen does not sort already-loaded results client-side')
@@ -360,11 +360,25 @@ if (
 ) {
   throw new Error('ResultsScreen does not include targeted Dynamic Type caps for headings and controls')
 }
-
+if (
+  !resultsScreenSource.includes('Hide bootlegs') ||
+  !resultsScreenSource.includes('const [hideBootlegs, setHideBootlegs] = useState(true)') ||
+  !resultsScreenSource.includes('filterBootlegAlbums') ||
+  !resultsScreenSource.includes('!album?.isBootleg')
+) {
+  throw new Error('ResultsScreen does not include the default-on Hide bootlegs filter')
+}
 const producerSearchScreenSource = readFileSync(
   path.join(appRoot, 'src/screens/ProducerSearchScreen.js'),
   'utf8'
 )
+if (
+  producerSearchScreenSource.includes('Hide bootlegs') ||
+  producerSearchScreenSource.includes('hideBootlegs') ||
+  producerSearchScreenSource.includes('isBootleg')
+) {
+  throw new Error('ProducerSearchScreen should not include the album-results Hide bootlegs filter')
+}
 if (!producerSearchScreenSource.includes('ScrollView') || !producerSearchScreenSource.includes('contentContainerStyle')) {
   throw new Error('ProducerSearchScreen is not scrollable for producer candidate content')
 }
@@ -1476,6 +1490,9 @@ if (!musicBrainzAlbumSearchSource.includes("inc: 'releases'")) {
 }
 if (!musicBrainzAlbumSearchSource.includes("BOOTLEG_STATUS_ID = '1156806e-d06a-38bd-83f0-cf2284a808b9'")) {
   throw new Error('iOS MusicBrainz album search adapter does not include React-parity bootleg status handling')
+}
+if (!musicBrainzAlbumSearchSource.includes('isBootleg')) {
+  throw new Error('iOS MusicBrainz album search adapter does not expose bootleg metadata for filtering')
 }
 if (!musicBrainzAlbumSearchSource.includes('function sortArtistOnlyResults') || !musicBrainzAlbumSearchSource.includes('return isArtistOnlySearch ? sortArtistOnlyResults(results) : results')) {
   throw new Error('iOS MusicBrainz album search adapter does not sort artist-only results like React')

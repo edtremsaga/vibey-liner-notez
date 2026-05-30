@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
 const RELEASE_TYPE_LABELS = {
@@ -53,6 +53,10 @@ function sortAlbums(albums, sortOption) {
   })
 }
 
+function filterBootlegAlbums(albums, hideBootlegs) {
+  return hideBootlegs ? albums.filter((album) => !album?.isBootleg) : albums
+}
+
 function getDisambiguationLabel(disambiguation) {
   return String(disambiguation ?? '').trim().toLowerCase().startsWith('aka') ? 'Also known as' : 'Note'
 }
@@ -78,14 +82,21 @@ export function ResultsScreen({
   onSelectAlbum,
   onSortOptionChange
 }) {
+  const [hideBootlegs, setHideBootlegs] = useState(true)
+  const filteredAlbums = useMemo(
+    () => filterBootlegAlbums(albums, hideBootlegs),
+    [albums, hideBootlegs]
+  )
+  const hiddenBootlegCount = albums.length - filteredAlbums.length
   const showLoading = isLoading
   const showError = !isLoading && !!errorMessage
-  const showEmpty = !isLoading && !errorMessage && artistName && albums.length === 0
-  const showResults = !isLoading && !errorMessage && albums.length > 0
+  const showEmpty = !isLoading && !errorMessage && artistName && filteredAlbums.length === 0
+  const showResults = !isLoading && !errorMessage && filteredAlbums.length > 0
+  const canFilterBootlegs = !isLoading && !errorMessage && albums.length > 0
   const canSortResults = showResults && !albumTitle
   const displayedAlbums = useMemo(
-    () => (canSortResults ? sortAlbums(albums, sortOption) : albums),
-    [albums, canSortResults, sortOption]
+    () => (canSortResults ? sortAlbums(filteredAlbums, sortOption) : filteredAlbums),
+    [filteredAlbums, canSortResults, sortOption]
   )
   const releaseTypeLabel = RELEASE_TYPE_LABELS[releaseType] ?? RELEASE_TYPE_LABELS.Album
   const resultsHeading = artistName
@@ -100,7 +111,9 @@ export function ResultsScreen({
     : 'Looking for MusicBrainz album results.'
   const emptyDetail = albumTitle
     ? 'Try another album title or search by artist only.'
-    : 'Try another artist name or choose a different release type.'
+    : hideBootlegs && albums.length > 0
+      ? 'Only bootleg results were found. Turn off Hide bootlegs to show them.'
+      : 'Try another artist name or choose a different release type.'
 
   return (
     <ScrollView
@@ -128,8 +141,13 @@ export function ResultsScreen({
       {showResults && (
         <View style={{ marginTop: 8 }}>
           <Text style={{ color: '#9ca3af' }}>
-            {albums.length} {albums.length === 1 ? 'result' : 'results'} from MusicBrainz
+            {filteredAlbums.length} {filteredAlbums.length === 1 ? 'result' : 'results'} from MusicBrainz
           </Text>
+          {hideBootlegs && hiddenBootlegCount > 0 && (
+            <Text style={{ color: '#6b7280', marginTop: 4 }}>
+              {hiddenBootlegCount} bootleg {hiddenBootlegCount === 1 ? 'result is' : 'results are'} hidden.
+            </Text>
+          )}
           <Text style={{ color: '#6b7280', marginTop: 4 }}>
             MusicBrainz may list several editions or similarly named releases. Choose the album that best matches.
           </Text>
@@ -165,6 +183,35 @@ export function ResultsScreen({
             })}
           </View>
         </View>
+      )}
+
+      {canFilterBootlegs && (
+        <TouchableOpacity
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: hideBootlegs }}
+          accessibilityLabel="Hide bootlegs"
+          onPress={() => setHideBootlegs((current) => !current)}
+          style={{
+            borderWidth: 1,
+            borderColor: hideBootlegs ? '#f3f4f6' : '#4b5563',
+            borderRadius: 8,
+            paddingVertical: 8,
+            paddingHorizontal: 10,
+            alignSelf: 'flex-start',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            marginTop: 10,
+            backgroundColor: hideBootlegs ? '#1f2937' : 'transparent'
+          }}
+        >
+          <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '700' }}>
+            {hideBootlegs ? '✓' : ' '}
+          </Text>
+          <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>
+            Hide bootlegs
+          </Text>
+        </TouchableOpacity>
       )}
 
       {showLoading && (
