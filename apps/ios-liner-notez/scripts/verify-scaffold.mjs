@@ -92,8 +92,18 @@ if (
 if (!appSource.includes('Liner Notez') || appSource.includes('liner notez (iOS scaffold)')) {
   throw new Error('App visible title still uses scaffold/dev copy')
 }
-if (!appSource.includes('Browsing albums by') || appSource.includes('Artist search:')) {
+if (appSource.includes('Artist search:')) {
   throw new Error('App search context copy still reads like internal state')
+}
+if (
+  !appSource.includes('function getReleaseTypeHeaderPhrase') ||
+  !appSource.includes("Album: 'albums'") ||
+  !appSource.includes("Single: 'singles'") ||
+  !appSource.includes("EP: 'EPs'") ||
+  !appSource.includes('albumSearchReleaseType') ||
+  !appSource.includes('Browsing ${releaseTypePhrase} by ${albumSearchArtistName}')
+) {
+  throw new Error('App header does not use release-type-aware Album Search context copy')
 }
 if (
   !appSource.includes('function getHeaderSubtitle') ||

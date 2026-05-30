@@ -17,6 +17,15 @@ import { formatMusicDataError } from './services/musicDataErrors'
 
 const HEADER_FONT_MAX_MULTIPLIER = 1.3
 
+const HEADER_RELEASE_TYPE_PHRASES = {
+  Album: 'albums',
+  EP: 'EPs',
+  Single: 'singles',
+  Live: 'live albums',
+  Compilation: 'compilations',
+  Soundtrack: 'soundtracks'
+}
+
 const INITIAL_PRODUCER_SEARCH_STATE = {
   producerName: '',
   showValidation: false,
@@ -32,9 +41,14 @@ const INITIAL_PRODUCER_SEARCH_STATE = {
   errorMessage: ''
 }
 
+function getReleaseTypeHeaderPhrase(releaseType) {
+  return HEADER_RELEASE_TYPE_PHRASES[releaseType] ?? HEADER_RELEASE_TYPE_PHRASES.Album
+}
+
 function getHeaderSubtitle({
   albumSearchAlbumTitle,
   albumSearchArtistName,
+  albumSearchReleaseType,
   detailReturnRoute,
   producerSearchState,
   route
@@ -44,8 +58,12 @@ function getHeaderSubtitle({
     return producerName ? `Producer credits for ${producerName}` : 'Producer Search'
   }
 
+  const releaseTypePhrase = albumSearchAlbumTitle
+    ? HEADER_RELEASE_TYPE_PHRASES.Album
+    : getReleaseTypeHeaderPhrase(albumSearchReleaseType)
+
   return albumSearchArtistName
-    ? `Browsing albums by ${albumSearchArtistName}${albumSearchAlbumTitle ? ` matching ${albumSearchAlbumTitle}` : ''}`
+    ? `Browsing ${releaseTypePhrase} by ${albumSearchArtistName}${albumSearchAlbumTitle ? ` matching ${albumSearchAlbumTitle}` : ''}`
     : ''
 }
 
@@ -473,6 +491,7 @@ function LinerNotezApp() {
   const headerSubtitle = getHeaderSubtitle({
     albumSearchAlbumTitle,
     albumSearchArtistName,
+    albumSearchReleaseType,
     detailReturnRoute,
     producerSearchState,
     route
