@@ -60,8 +60,8 @@ function filterBootlegAlbums(albums, hideBootlegs) {
 function getBootlegFilterLabel({ hiddenBootlegCount, hideBootlegs }) {
   const checkbox = hideBootlegs ? '☑' : '☐'
   if (hideBootlegs && hiddenBootlegCount > 0) {
-    const resultLabel = hiddenBootlegCount === 1 ? 'result' : 'results'
-    return `${hiddenBootlegCount} bootleg ${resultLabel} hidden · ${checkbox} Hide bootlegs`
+    const bootlegLabel = hiddenBootlegCount === 1 ? 'bootleg' : 'bootlegs'
+    return `${hiddenBootlegCount} ${bootlegLabel} hidden · ${checkbox} Hide`
   }
 
   return `${checkbox} Hide bootlegs`

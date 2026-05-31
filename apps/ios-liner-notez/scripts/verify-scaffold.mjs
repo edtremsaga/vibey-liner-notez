@@ -371,7 +371,8 @@ if (
 if (
   !resultsScreenSource.includes('getBootlegFilterLabel') ||
   !resultsScreenSource.includes('☑') ||
-  !resultsScreenSource.includes('bootleg ${resultLabel} hidden · ${checkbox} Hide bootlegs') ||
+  !resultsScreenSource.includes('${bootlegLabel} hidden · ${checkbox} Hide') ||
+  !resultsScreenSource.includes('${checkbox} Hide bootlegs') ||
   !resultsScreenSource.includes('canFilterBootlegs && !showResults')
 ) {
   throw new Error('ResultsScreen does not render Hide bootlegs as a compact checkbox/filter row')
