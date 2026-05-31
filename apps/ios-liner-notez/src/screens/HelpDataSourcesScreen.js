@@ -31,24 +31,27 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>What Liner Notez helps you do</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Search for an artist, browse releases, open an album, and dig into the details that make records feel alive.
+        Search for an artist, browse releases, open a release, and dig into credits, artwork, editions, and source links.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Liner Notez shows documented public data. It does not guess or invent credits.
+        Liner Notez shows documented public data.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Liner Notez is for album information and discovery. It does not play, stream, download, or provide music audio.
       </Text>
 
-      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Get better album results</Text>
+      <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Get better album search results</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Start with the artist name. Add an album title when you want a closer match, or leave the title blank to browse albums, singles, EPs, live releases, compilations, or soundtracks.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        For example, search for an artist like David Bowie, then add an album title like Aladdin Sane when you want a closer match.
+        For example, search for a list of albums by an artist like David Bowie. Add an album title like Aladdin Sane when you want a closer match.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Open the result that best matches the album or release edition you want. Different countries, reissues, formats, and release dates can have different artwork, credits, labels, and source links.
+        Use Hide bootlegs to reduce unofficial or bootleg releases when MusicBrainz identifies them.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Open the search result that best matches the album or release edition you want. Different countries, reissues, formats, and release dates can have different artwork, credits, labels, and source links.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Explore an album</Text>
@@ -64,7 +67,7 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
         Producer Search helps you discover releases connected by documented release-level producer credits.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        If a name is ambiguous, choose the correct person from the candidate results. Producer searches can take a moment while Liner Notez checks MusicBrainz credit data.
+        If a producer name is ambiguous, choose the correct person from the candidate results. Producer searches can take a moment while Liner Notez checks MusicBrainz credit data.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Producer Search is a discovery tool, not a complete career discography. It may miss albums where producer credits are not documented at the release level.
@@ -75,7 +78,7 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
         Music credits can vary by release edition. Older albums, reissues, imports, compilations, and different countries' editions may have different levels of detail.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        When a credit is missing, it usually means the public source record does not document it for the selected release. Liner Notez shows that as not documented rather than filling in guesses.
+        When a credit is missing, it usually means the public source record does not document it for the selected release. Liner Notez shows that as not documented.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Data sources</Text>
@@ -100,7 +103,7 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Important notes about the data</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Public music data is useful, but it is not always complete or consistent. Credits, artwork, dates, labels, and editions can differ across sources and releases.
+        Public music data is not always complete or consistent. Credits, artwork, dates, labels, and editions can differ across sources and releases.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Liner Notez is for music discovery and reference. For legal, royalty, licensing, publishing, or official credit questions, check official sources.

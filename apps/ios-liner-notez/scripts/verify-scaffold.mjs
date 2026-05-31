@@ -597,18 +597,21 @@ if (helpDataSourcesScreenSource.includes('Placeholder screen for help, attributi
 if (
   !helpDataSourcesScreenSource.includes('What Liner Notez helps you do') ||
   !helpDataSourcesScreenSource.includes('explore albums the way liner notes used to') ||
-  !helpDataSourcesScreenSource.includes('Search for an artist, browse releases, open an album') ||
-  !helpDataSourcesScreenSource.includes('does not guess or invent credits') ||
+  !helpDataSourcesScreenSource.includes('Search for an artist, browse releases, open a release') ||
+  !helpDataSourcesScreenSource.includes('credits, artwork, editions, and source links') ||
+  !helpDataSourcesScreenSource.includes('Liner Notez shows documented public data') ||
   !helpDataSourcesScreenSource.includes('does not play, stream, download, or provide music audio')
 ) {
   throw new Error('HelpDataSourcesScreen does not explain the product value in user-facing language')
 }
 if (
-  !helpDataSourcesScreenSource.includes('Get better album results') ||
+  !helpDataSourcesScreenSource.includes('Get better album search results') ||
   !helpDataSourcesScreenSource.includes('Start with the artist name') ||
   !helpDataSourcesScreenSource.includes('Add an album title when you want a closer match') ||
   !helpDataSourcesScreenSource.includes('David Bowie') ||
   !helpDataSourcesScreenSource.includes('Aladdin Sane') ||
+  !helpDataSourcesScreenSource.includes('Use Hide bootlegs to reduce unofficial or bootleg releases') ||
+  !helpDataSourcesScreenSource.includes('Open the search result') ||
   !helpDataSourcesScreenSource.includes('leave the title blank to browse albums, singles, EPs') ||
   !helpDataSourcesScreenSource.includes('Different countries, reissues, formats, and release dates')
 ) {
@@ -633,6 +636,7 @@ if (
 if (
   !helpDataSourcesScreenSource.includes('Follow producer connections') ||
   !helpDataSourcesScreenSource.includes('discover releases connected by documented release-level producer credits') ||
+  !helpDataSourcesScreenSource.includes('If a producer name is ambiguous') ||
   !helpDataSourcesScreenSource.includes('choose the correct person from the candidate results') ||
   !helpDataSourcesScreenSource.includes('Producer searches can take a moment') ||
   !helpDataSourcesScreenSource.includes('not a complete career discography') ||
@@ -645,8 +649,8 @@ for (const source of ['MusicBrainz', 'Cover Art Archive', 'Wikidata', 'Wikipedia
     throw new Error(`HelpDataSourcesScreen is missing planned real source: ${source}`)
   }
 }
-if (!helpDataSourcesScreenSource.includes('does not guess or invent credits')) {
-  throw new Error('HelpDataSourcesScreen does not include no-invented-credits trust rule')
+if (helpDataSourcesScreenSource.includes('does not guess or invent credits')) {
+  throw new Error('HelpDataSourcesScreen still contains removed no-invented-credits sentence')
 }
 if (
   !helpDataSourcesScreenSource.includes('Data sources') ||
@@ -664,7 +668,7 @@ if (
   !helpDataSourcesScreenSource.includes('Music credits can vary by release edition') ||
   !helpDataSourcesScreenSource.includes("different countries' editions") ||
   !helpDataSourcesScreenSource.includes('public source record does not document it for the selected release') ||
-  !helpDataSourcesScreenSource.includes('not documented rather than filling in guesses')
+  !helpDataSourcesScreenSource.includes('Liner Notez shows that as not documented')
 ) {
   throw new Error('HelpDataSourcesScreen does not explain missing-credit limitations')
 }
@@ -676,6 +680,13 @@ if (
   !helpDataSourcesScreenSource.includes('legal, royalty, licensing, publishing, or official credit questions')
 ) {
   throw new Error('HelpDataSourcesScreen does not include clear source and accuracy disclaimer copy')
+}
+if (
+  helpDataSourcesScreenSource.includes('filling in guesses') ||
+  helpDataSourcesScreenSource.includes('rather than filling in the guesses') ||
+  helpDataSourcesScreenSource.includes('metadata')
+) {
+  throw new Error('HelpDataSourcesScreen contains removed or too-technical Help wording')
 }
 if (
   !helpDataSourcesScreenSource.includes('vibeycraft@gmail.com') ||
@@ -690,10 +701,7 @@ if (
 ) {
   throw new Error('HelpDataSourcesScreen does not include support, privacy, and source disclaimer copy')
 }
-if (
-  !helpDataSourcesScreenSource.includes('does not guess or invent credits') ||
-  !helpDataSourcesScreenSource.includes('When a credit is missing')
-) {
+if (!helpDataSourcesScreenSource.includes('When a credit is missing')) {
   throw new Error('HelpDataSourcesScreen does not include missing-data trust rule')
 }
 
