@@ -343,8 +343,12 @@ if (!resultsScreenSource.includes('${releaseTypeLabel} by ${artistName}')) {
 if (!resultsScreenSource.includes('MusicBrainz may list several editions or similarly named releases. Choose the album that best matches.')) {
   throw new Error('ResultsScreen does not explain why similar MusicBrainz results may appear')
 }
-if (!resultsScreenSource.includes('Open details')) {
-  throw new Error('ResultsScreen does not include row details affordance text')
+if (
+  !resultsScreenSource.includes("accessibilityLabel={`Open details for ${album.title}`}") ||
+  !resultsScreenSource.includes('DETAIL_CHEVRON') ||
+  resultsScreenSource.includes('>Open details</Text>')
+) {
+  throw new Error('ResultsScreen does not expose album detail cards with chevron affordance and accessibility label')
 }
 if (resultsScreenSource.includes('Open preview') || resultsScreenSource.includes('current preview')) {
   throw new Error('ResultsScreen still uses preview/dev copy for real album detail flow')
@@ -506,10 +510,11 @@ if (
 }
 if (
   !producerSearchScreenSource.includes('mapProducerResultToAlbumResult') ||
-  !producerSearchScreenSource.includes('Open details') ||
   !producerSearchScreenSource.includes('formatProducerResultTitle') ||
   !producerSearchScreenSource.includes("onSelectAlbum?.(releaseGroupId, mapProducerResultToAlbumResult(result), 'Producer Search')") ||
   !producerSearchScreenSource.includes("accessibilityLabel={`Open details for ${displayTitle}`}") ||
+  !producerSearchScreenSource.includes('DETAIL_CHEVRON') ||
+  producerSearchScreenSource.includes('>Open details</Text>') ||
   !producerSearchScreenSource.includes("replace(/^\\s*\\d+\\.\\s*/, '')")
 ) {
   throw new Error('ProducerSearchScreen does not open producer results with the existing Album Detail flow')

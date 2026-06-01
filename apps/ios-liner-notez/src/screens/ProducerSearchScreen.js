@@ -8,6 +8,7 @@ import { formatMusicDataError } from '../services/musicDataErrors'
 
 const PRODUCER_RELEASE_LOOKUP_LIMIT = 10
 const MAX_VISIBLE_ALIASES = 3
+const DETAIL_CHEVRON = '›'
 const DEEMPHASIZED_SECONDARY_TYPES = new Set([
   'compilation',
   'live',
@@ -191,24 +192,33 @@ function ProducerResultCard({ onOpenAlbumDetail, result }) {
         backgroundColor: '#111827'
       }}
     >
-      <Text style={{ color: '#e5e7eb', fontWeight: '700', fontSize: 16 }}>{displayTitle}</Text>
-      <Text style={{ color: '#9ca3af', marginTop: 2 }}>
-        {result.releaseGroupArtistCredit}{result.firstReleaseDate ? ` · ${result.firstReleaseDate}` : ''}
-      </Text>
-      {(result.primaryType || secondaryTypes) ? (
-        <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 12 }}>
-          {[result.primaryType, secondaryTypes].filter(Boolean).join(' · ')}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: '#e5e7eb', fontWeight: '700', fontSize: 16 }}>{displayTitle}</Text>
+          <Text style={{ color: '#9ca3af', marginTop: 2 }}>
+            {result.releaseGroupArtistCredit}{result.firstReleaseDate ? ` · ${result.firstReleaseDate}` : ''}
+          </Text>
+          {(result.primaryType || secondaryTypes) ? (
+            <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 12 }}>
+              {[result.primaryType, secondaryTypes].filter(Boolean).join(' · ')}
+            </Text>
+          ) : null}
+          <Text style={{ color: '#a7f3d0', marginTop: 6, fontSize: 13 }}>
+            {evidence.evidenceLabel}
+          </Text>
+          {attributes ? (
+            <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 12 }}>
+              Producer credit detail: {attributes}
+            </Text>
+          ) : null}
+        </View>
+        <Text
+          maxFontSizeMultiplier={1.3}
+          style={{ color: '#9ca3af', fontSize: 22, fontWeight: '700' }}
+        >
+          {DETAIL_CHEVRON}
         </Text>
-      ) : null}
-      <Text style={{ color: '#a7f3d0', marginTop: 6, fontSize: 13 }}>
-        {evidence.evidenceLabel}
-      </Text>
-      {attributes ? (
-        <Text style={{ color: '#9ca3af', marginTop: 3, fontSize: 12 }}>
-          Producer credit detail: {attributes}
-        </Text>
-      ) : null}
-      <Text style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open details</Text>
+      </View>
     </TouchableOpacity>
   )
 }

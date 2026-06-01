@@ -17,6 +17,7 @@ const SORT_OPTIONS = [
 
 const DISPLAY_FONT_MAX_MULTIPLIER = 1.25
 const CONTROL_FONT_MAX_MULTIPLIER = 1.3
+const DETAIL_CHEVRON = '›'
 
 export function getDefaultSortOption({ albumTitle, releaseType }) {
   return !albumTitle && releaseType === 'Album' ? 'oldest' : 'newest'
@@ -294,6 +295,7 @@ export function ResultsScreen({
             <TouchableOpacity
               key={albumId}
               accessibilityRole="button"
+              accessibilityLabel={`Open details for ${album.title}`}
               onPress={() => onSelectAlbum(albumId, album)}
               style={{
                 marginTop: 12,
@@ -304,22 +306,31 @@ export function ResultsScreen({
                 backgroundColor: '#181a1f'
               }}
             >
-              <Text style={{ color: '#f9fafb', fontWeight: '700', fontSize: 18 }}>{album.title}</Text>
-              {!!(album.artistCredit ?? album.artistName) && (
-                <Text style={{ color: '#d1d5db', marginTop: 6 }}>{album.artistCredit ?? album.artistName}</Text>
-              )}
-              {!!releaseDate && (
-                <Text style={{ color: '#9ca3af', marginTop: 6 }}>First released: {releaseDate}</Text>
-              )}
-              {!!album.disambiguation && (
-                <Text style={{ color: '#9ca3af', marginTop: 6 }}>
-                  {getDisambiguationLabel(album.disambiguation)}: {album.disambiguation}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#f9fafb', fontWeight: '700', fontSize: 18 }}>{album.title}</Text>
+                  {!!(album.artistCredit ?? album.artistName) && (
+                    <Text style={{ color: '#d1d5db', marginTop: 6 }}>{album.artistCredit ?? album.artistName}</Text>
+                  )}
+                  {!!releaseDate && (
+                    <Text style={{ color: '#9ca3af', marginTop: 6 }}>First released: {releaseDate}</Text>
+                  )}
+                  {!!album.disambiguation && (
+                    <Text style={{ color: '#9ca3af', marginTop: 6 }}>
+                      {getDisambiguationLabel(album.disambiguation)}: {album.disambiguation}
+                    </Text>
+                  )}
+                  {!!editionContext && (
+                    <Text style={{ color: '#6b7280', marginTop: 6 }}>{editionContext}</Text>
+                  )}
+                </View>
+                <Text
+                  maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER}
+                  style={{ color: '#9ca3af', fontSize: 24, fontWeight: '700' }}
+                >
+                  {DETAIL_CHEVRON}
                 </Text>
-              )}
-              {!!editionContext && (
-                <Text style={{ color: '#6b7280', marginTop: 6 }}>{editionContext}</Text>
-              )}
-              <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#93c5fd', fontWeight: '600', marginTop: 10 }}>Open details</Text>
+              </View>
             </TouchableOpacity>
           )
         })}
