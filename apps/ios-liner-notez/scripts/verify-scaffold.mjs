@@ -664,6 +664,8 @@ if (
   !helpDataSourcesScreenSource.includes('Cover Art Archive — artwork and release images when available') ||
   !helpDataSourcesScreenSource.includes('Wikidata and Wikipedia — background links when available through public source records') ||
   !helpDataSourcesScreenSource.includes('Source links are shown when possible') ||
+  !helpDataSourcesScreenSource.includes('External links such as Wikipedia and source pages open in an in-app browser') ||
+  !helpDataSourcesScreenSource.includes('Tap the checkmark at the top left to close the browser and return to Liner Notez') ||
   !helpDataSourcesScreenSource.includes('Artwork, background links, and summaries appear only when they are available')
 ) {
   throw new Error('HelpDataSourcesScreen does not explain source-backed Wikidata/Wikipedia behavior')
@@ -1050,6 +1052,8 @@ if (
   !albumDetailScreenSource.includes('Wikipedia article') ||
   !albumDetailScreenSource.includes('Read album article on Wikipedia') ||
   !albumDetailScreenSource.includes('Background, release history, reception, and legacy.') ||
+  !albumDetailScreenSource.includes('Opens in browser — tap ✓ to return') ||
+  !albumDetailScreenSource.includes('Source links open in browser — tap ✓ to return') ||
   !albumDetailScreenSource.includes('externalLinks.wikidataUrl')
 ) {
   throw new Error('AlbumDetailScreen does not include external link labels in Editions & Sources')

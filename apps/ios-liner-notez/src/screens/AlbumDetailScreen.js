@@ -564,11 +564,14 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
 	              <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#93c5fd', fontSize: 16, fontWeight: '700' }}>
 	                Read album article on Wikipedia
 	              </Text>
-	              <Text style={{ color: '#9ca3af', marginTop: 5, fontSize: 14 }}>
-	                Background, release history, reception, and legacy.
-	              </Text>
-	            </TouchableOpacity>
-	          ) : null}
+                <Text style={{ color: '#9ca3af', marginTop: 5, fontSize: 14 }}>
+                  Background, release history, reception, and legacy.
+                </Text>
+                <Text style={{ color: '#6b7280', marginTop: 6, fontSize: 13 }}>
+                  Opens in browser — tap ✓ to return
+                </Text>
+              </TouchableOpacity>
+            ) : null}
 
 	          {hasArtworkGallery ? (
 	            <View
@@ -967,14 +970,19 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                         onPress={() => openExternalLink(album.wikipediaArticle.url)}
                         style={{ marginTop: 8 }}
                       >
-                        <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#93c5fd', fontSize: 14, fontWeight: '600' }}>
-                          Read album article on Wikipedia
-                        </Text>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-                ) : (
-                  <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>Source attribution unavailable</Text>
+                <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#93c5fd', fontSize: 14, fontWeight: '600' }}>
+                  Read album article on Wikipedia
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+            {album?.wikipediaArticle?.url || externalLinkRows.length > 0 ? (
+              <Text style={{ color: '#6b7280', marginTop: 6, fontSize: 13 }}>
+                Source links open in browser — tap ✓ to return
+              </Text>
+            ) : null}
+          </View>
+        ) : (
+          <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>Source attribution unavailable</Text>
                 )}
                 {selectedEditionTechnicalRows.length > 0 || externalLinkRows.length > 0 ? (
                   <View style={{ marginTop: 8 }}>

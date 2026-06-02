@@ -98,6 +98,9 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
         Source links are shown when possible so you can inspect the underlying records.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        External links such as Wikipedia and source pages open in an in-app browser. Tap the checkmark at the top left to close the browser and return to Liner Notez.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Artwork, background links, and summaries appear only when they are available from the connected public source records.
       </Text>
 
