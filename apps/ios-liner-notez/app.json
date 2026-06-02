@@ -27,7 +27,8 @@
             "backgroundColor": "#07090f"
           }
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "ios": {
       "bundleIdentifier": "com.edtremblay.linernotez",

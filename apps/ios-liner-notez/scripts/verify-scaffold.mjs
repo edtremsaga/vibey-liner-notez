@@ -1050,10 +1050,17 @@ if (
   !albumDetailScreenSource.includes('Wikipedia article') ||
   !albumDetailScreenSource.includes('Read album article on Wikipedia') ||
   !albumDetailScreenSource.includes('Background, release history, reception, and legacy.') ||
-  !albumDetailScreenSource.includes('Linking.openURL(album.wikipediaArticle.url)') ||
   !albumDetailScreenSource.includes('externalLinks.wikidataUrl')
 ) {
   throw new Error('AlbumDetailScreen does not include external link labels in Editions & Sources')
+}
+if (
+  !albumDetailScreenSource.includes("'expo-web-browser'") ||
+  !albumDetailScreenSource.includes('WebBrowser.openBrowserAsync') ||
+  !albumDetailScreenSource.includes('openExternalLink(album.wikipediaArticle.url)') ||
+  albumDetailScreenSource.includes('Linking.openURL(album.wikipediaArticle.url)')
+) {
+  throw new Error('AlbumDetailScreen does not open Wikipedia links in an in-app browser')
 }
 if (!albumDetailScreenSource.includes('Album unavailable')) {
   throw new Error('AlbumDetailScreen does not include not-found/unavailable state')

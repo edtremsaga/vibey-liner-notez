@@ -1,9 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ActivityIndicator, Image, Linking, Modal, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import { ActivityIndicator, Image, Modal, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import * as WebBrowser from 'expo-web-browser'
 
 const SECTION_FONT_MAX_MULTIPLIER = 1.3
 const CONTROL_FONT_MAX_MULTIPLIER = 1.25
 const DENSE_LABEL_FONT_MAX_MULTIPLIER = 1.25
+
+async function openExternalLink(url) {
+  if (!url) {
+    return
+  }
+
+  try {
+    await WebBrowser.openBrowserAsync(url)
+  } catch (error) {
+    console.warn('Unable to open external link', error)
+  }
+}
 
 function formatDuration(durationMs) {
   if (!durationMs || Number.isNaN(durationMs)) {
@@ -538,7 +551,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
 	            <TouchableOpacity
 	              accessibilityRole="link"
 	              accessibilityLabel="Read album article on Wikipedia"
-	              onPress={() => Linking.openURL(album.wikipediaArticle.url)}
+	              onPress={() => openExternalLink(album.wikipediaArticle.url)}
 	              style={{
 	                marginTop: 12,
 	                borderWidth: 1,
@@ -951,7 +964,7 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
                       <TouchableOpacity
                         accessibilityRole="link"
                         accessibilityLabel="Read album article on Wikipedia"
-                        onPress={() => Linking.openURL(album.wikipediaArticle.url)}
+                        onPress={() => openExternalLink(album.wikipediaArticle.url)}
                         style={{ marginTop: 8 }}
                       >
                         <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#93c5fd', fontSize: 14, fontWeight: '600' }}>
