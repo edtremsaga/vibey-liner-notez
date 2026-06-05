@@ -3,6 +3,7 @@ import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import { fetchAlbumData, fetchAlbumBasicInfo, searchReleaseGroups, searchByProducer, fetchCoverArt, fetchAllAlbumArt, fetchWikipediaContentFromMusicBrainz, clearProducerSeenRgIds } from '../services/musicbrainz'
 import { formatDuration } from '../utils/formatDuration'
 import { getCachedAlbum, setCachedAlbum } from '../utils/albumCache'
+import { formatMusicDataError } from '../utils/musicDataErrors'
 import { debugLog, debugWarn } from '../utils/debug'
 import Help from '../components/Help'
 import { useHelp } from '../contexts/HelpContext'
@@ -32,7 +33,7 @@ function AlbumPage() {
   const [sortOption, setSortOption] = useState('newest') // 'newest', 'oldest', 'title-az', 'title-za'
   const [loadingPage, setLoadingPage] = useState(false) // Loading state for pagination
   const [fetchedCount, setFetchedCount] = useState(0) // Track how many results have been fetched from API
-  const [hideBootlegs, setHideBootlegs] = useState(false) // Filter to hide bootleg records
+  const [hideBootlegs, setHideBootlegs] = useState(true) // Filter to hide bootleg records
   const [albumPlaceholder, setAlbumPlaceholder] = useState('e.g., Aladdin Sane (leave blank to see all albums)')
   const RESULTS_PER_PAGE = 20
   
@@ -348,6 +349,10 @@ function AlbumPage() {
   }
   
   // Sort results based on selected sort option
+  function getDefaultSortOption(albumName, selectedReleaseType) {
+    return !albumName && selectedReleaseType === 'Album' ? 'oldest' : 'newest'
+  }
+  
   function sortResults(results, sortOption) {
     const sorted = [...results] // Create a copy to avoid mutating original
     
@@ -399,8 +404,8 @@ function AlbumPage() {
   }
   
   // Filter results to exclude bootlegs if hideBootlegs is enabled
-  function filterBootlegs(results) {
-    if (!hideBootlegs) return results
+  function filterBootlegs(results, shouldHideBootlegs = hideBootlegs) {
+    if (!shouldHideBootlegs) return results
     return results.filter(result => !result.isBootleg)
   }
   
@@ -421,11 +426,12 @@ function AlbumPage() {
   // Handle bootleg filter toggle
   function handleBootlegFilterChange() {
     setSearchError(null) // Clear any previous errors
-    setHideBootlegs(!hideBootlegs)
+    const nextHideBootlegs = !hideBootlegs
+    setHideBootlegs(nextHideBootlegs)
     if (searchResults) {
       // Re-apply sorting and filtering
       const sorted = sortResults(searchResults, sortOption)
-      const filtered = filterBootlegs(sorted)
+      const filtered = filterBootlegs(sorted, nextHideBootlegs)
       setResultsPage(1)
       setDisplayedResults(filtered.slice(0, RESULTS_PER_PAGE))
     }
@@ -560,6 +566,7 @@ function AlbumPage() {
     setSearchError(null)
     setSearchResults(null)
     setSearchMeta(null)
+    setHideBootlegs(false)
     
     // Reset prefetch state for new search
     prefetchTriggeredRef.current = false
@@ -637,7 +644,7 @@ function AlbumPage() {
         setFetchedCount(results.length) // Total albums found so far
         
         // Apply bootleg filter and show first page of results
-        const filteredResults = filterBootlegs(sortedResults)
+        const filteredResults = filterBootlegs(sortedResults, false)
         setDisplayedResults(filteredResults.slice(0, RESULTS_PER_PAGE))
         
         // Push new history state for search results
@@ -722,6 +729,7 @@ function AlbumPage() {
     setSearching(true)
     setSearchError(null)
     setMultipleProducerMatches(null)
+    setHideBootlegs(false)
     setSearchProgress({ current: 0, total: 50 }) // Reset progress (50 max for initial search)
     
     // Reset prefetch state for new producer selection
@@ -783,7 +791,7 @@ function AlbumPage() {
         setSearchMeta(newSearchMeta)
         setFetchedCount(results.length) // Total albums found so far
         // Apply bootleg filter and show first page of results
-        const filteredResults = filterBootlegs(sortedResults)
+        const filteredResults = filterBootlegs(sortedResults, false)
         setDisplayedResults(filteredResults.slice(0, RESULTS_PER_PAGE))
         
         // Push new history state for search results (pagination)
@@ -903,11 +911,14 @@ function AlbumPage() {
     setResultsPage(1)
     setFetchedCount(0)
     setLoadingPage(false)
+    setHideBootlegs(true)
     
     try {
       const albumName = searchAlbum.trim() || null
       // Only use release type filter for artist-only searches (when album name is not provided)
       const typeFilter = albumName ? null : releaseType
+      const defaultSortOption = getDefaultSortOption(albumName, typeFilter || 'Album')
+      setSortOption(defaultSortOption)
       const searchResponse = await searchReleaseGroups(searchArtist.trim(), albumName, typeFilter, 0)
       
       const { results, totalCount, isArtistOnly } = searchResponse
@@ -937,7 +948,7 @@ function AlbumPage() {
         await loadAlbum(result.releaseGroupId)
       } else {
         // Multiple results - sort and show list with pagination
-        const sortedResults = sortResults(results, sortOption)
+        const sortedResults = sortResults(results, defaultSortOption)
         setSearchResults(sortedResults)
         setSearchMeta({ totalCount, isArtistOnly, releaseType: typeFilter || 'Album' })
         setFetchedCount(results.length) // Track how many we've fetched
@@ -978,7 +989,7 @@ function AlbumPage() {
       }
     } catch (err) {
       console.error('Error searching albums:', err)
-      setSearchError(err.message || 'Failed to search albums. Please try again.')
+      setSearchError(formatMusicDataError(err))
     } finally {
       setSearching(false)
     }
@@ -1775,7 +1786,9 @@ function AlbumPage() {
         }
       } catch (err) {
         console.error('Error loading page:', err)
-        setSearchError(err.message || 'Failed to load page. Please try again.')
+        setSearchError(searchMeta?.isProducerSearch
+          ? err.message || 'Failed to load page. Please try again.'
+          : formatMusicDataError(err))
       } finally {
         setLoadingPage(false)
       }
@@ -2004,7 +2017,7 @@ function AlbumPage() {
       setCachedAlbum(releaseGroupId, albumData)
     } catch (err) {
       console.error('Error fetching album data:', err)
-      setAlbumError(err.message || 'Failed to load album data from MusicBrainz')
+      setAlbumError(formatMusicDataError(err))
     } finally {
       setLoadingAlbum(false)
       setLoadingBasicInfo(false)
@@ -2230,6 +2243,7 @@ function AlbumPage() {
       debugLog('[History] Pushed search page state from New Search button')
     }
     setSortOption('newest') // Reset to default sort
+    setHideBootlegs(true)
     setExpandedTracks(new Set())
     setEditionsExpanded(false)
     setAlbumCreditsExpanded(true) // Reset album credits to expanded
@@ -2476,6 +2490,7 @@ function AlbumPage() {
               setAlbumError(null)
               setSearchResults(null)
               setSearchMeta(null)
+              setHideBootlegs(true)
               setDisplayedResults([])
               return
             }
@@ -3028,6 +3043,30 @@ function AlbumPage() {
   if (showHelp) {
     return <Help onClose={handleCloseHelp} />
   }
+
+  // Show album error
+  if (albumError) {
+    return (
+      <div className="album-page">
+        <div className="album-container">
+          <div className="error">
+            <h2>Error Loading Album</h2>
+            <p>{albumError}</p>
+            <p>Please check your internet connection and try again.</p>
+            {/* Hide "Back to Search Results" on desktop - browser back button is sufficient */}
+            {(isMobile || !searchResults || searchResults.length === 0) && (
+              <button 
+                className="new-search-button"
+                onClick={handleNewSearch}
+              >
+                {searchResults && searchResults.length > 0 ? 'Back to Search Results' : 'New Search'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
   
   // Show search form (initial state or after "New Search")
   if (!album && !searchResults && !loadingAlbum) {
@@ -3431,30 +3470,6 @@ function AlbumPage() {
         </div>
       </div>
   )
-  }
-  
-  // Show album error
-  if (albumError) {
-    return (
-      <div className="album-page">
-        <div className="album-container">
-          <div className="error">
-            <h2>Error Loading Album</h2>
-            <p>{albumError}</p>
-            <p>Please check your internet connection and try again.</p>
-            {/* Hide "Back to Search Results" on desktop - browser back button is sufficient */}
-            {(isMobile || !searchResults || searchResults.length === 0) && (
-              <button 
-                className="new-search-button"
-                onClick={handleNewSearch}
-              >
-                {searchResults && searchResults.length > 0 ? 'Back to Search Results' : 'New Search'}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    )
   }
   
   // Show album (full details)
