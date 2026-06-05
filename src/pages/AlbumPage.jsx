@@ -41,28 +41,6 @@ function isArtworkCredit(credit) {
   )
 }
 
-function getCreditHighlightCategory(role) {
-  const normalizedRole = role?.toLowerCase() ?? ''
-
-  if (normalizedRole.includes('producer')) {
-    return 'Producers'
-  }
-
-  if (
-    normalizedRole.includes('engineer') ||
-    normalizedRole.includes('mix') ||
-    normalizedRole.includes('mastering')
-  ) {
-    return 'Engineers / Mixers / Mastering'
-  }
-
-  if (isPerformerCredit({ role })) {
-    return 'Performers & Instruments'
-  }
-
-  return null
-}
-
 function groupAlbumCredits(credits) {
   const production = credits.filter(isProductionCredit)
   const performers = credits.filter(isPerformerCredit)
@@ -79,74 +57,6 @@ function groupAlbumCredits(credits) {
     ['Artwork, Design & Photography', artwork],
     ['Additional Credits', additional]
   ].filter(([, groupedCredits]) => groupedCredits.length > 0)
-}
-
-function addCreditHighlight(categoryMap, category, personName, role, trackId = null) {
-  if (!category || !personName) return
-
-  const roleLabel = role || category
-  const key = `${category}|${personName}|${roleLabel}`
-  const existing = categoryMap.get(key)
-
-  if (existing) {
-    if (trackId) existing.trackIds.add(trackId)
-    return
-  }
-
-  categoryMap.set(key, {
-    personName,
-    role: roleLabel,
-    trackIds: trackId ? new Set([trackId]) : new Set()
-  })
-}
-
-function buildCreditHighlights(albumCredits, tracks, trackCreditsByTrackId) {
-  const categoryMaps = {
-    Producers: new Map(),
-    'Engineers / Mixers / Mastering': new Map(),
-    'Performers & Instruments': new Map(),
-    Songwriting: new Map(),
-    Publishing: new Map()
-  }
-
-  for (const credit of albumCredits) {
-    const category = getCreditHighlightCategory(credit?.role)
-    addCreditHighlight(categoryMaps[category], category, credit?.personName, credit?.role)
-  }
-
-  for (const track of tracks || []) {
-    const trackId = track?.trackId
-    if (!trackId) continue
-
-    const trackCredits = Array.isArray(trackCreditsByTrackId?.[trackId]) ? trackCreditsByTrackId[trackId] : []
-    for (const credit of trackCredits) {
-      const category = getCreditHighlightCategory(credit?.role)
-      addCreditHighlight(categoryMaps[category], category, credit?.personName, credit?.role, trackId)
-    }
-
-    for (const personName of track.songwriting?.writers ?? []) {
-      addCreditHighlight(categoryMaps.Songwriting, 'Songwriting', personName, 'Writer', trackId)
-    }
-    for (const personName of track.songwriting?.composers ?? []) {
-      addCreditHighlight(categoryMaps.Songwriting, 'Songwriting', personName, 'Composer', trackId)
-    }
-    for (const personName of track.songwriting?.lyricists ?? []) {
-      addCreditHighlight(categoryMaps.Songwriting, 'Songwriting', personName, 'Lyricist', trackId)
-    }
-    for (const publisherName of track.publishing?.publishers ?? []) {
-      addCreditHighlight(categoryMaps.Publishing, 'Publishing', publisherName, 'Publisher', trackId)
-    }
-  }
-
-  return Object.entries(categoryMaps)
-    .map(([category, contributorMap]) => [
-      category,
-      Array.from(contributorMap.values()).sort((a, b) => {
-        const trackCountDifference = b.trackIds.size - a.trackIds.size
-        return trackCountDifference || a.personName.localeCompare(b.personName)
-      })
-    ])
-    .filter(([, contributors]) => contributors.length > 0)
 }
 
 function hasItems(value) {
@@ -237,6 +147,7 @@ function AlbumPage() {
   const [loadingCredits, setLoadingCredits] = useState(false)
   
   // Editions collapse state
+  const [editionsSourcesExpanded, setEditionsSourcesExpanded] = useState(false)
   const [editionsExpanded, setEditionsExpanded] = useState(false)
   
   // Track credits collapse state (Set of track IDs that are expanded)
@@ -244,7 +155,6 @@ function AlbumPage() {
   
   // Release credits disclosure state (default collapsed to match iOS)
   const [albumCreditsExpanded, setAlbumCreditsExpanded] = useState(false)
-  const [creditHighlightsExpanded, setCreditHighlightsExpanded] = useState(false)
   
   // Album art gallery state
   const [galleryImages, setGalleryImages] = useState([])
@@ -2056,9 +1966,9 @@ function AlbumPage() {
     }
     
     // Don't clear searchResults - we need it for "Back to Search Results" button
+    setEditionsSourcesExpanded(false)
     setEditionsExpanded(false) // Reset editions collapse state when loading new album
     setAlbumCreditsExpanded(false) // Reset release credits to collapsed when loading new album
-    setCreditHighlightsExpanded(false)
     setLoadingBasicInfo(false) // Basic info already shown from search results
     setLoadingTracklist(true)
     setLoadingCredits(false)
@@ -2413,9 +2323,9 @@ function AlbumPage() {
     setSortOption('newest') // Reset to default sort
     setHideBootlegs(true)
     setExpandedTracks(new Set())
+    setEditionsSourcesExpanded(false)
     setEditionsExpanded(false)
     setAlbumCreditsExpanded(false) // Reset release credits to collapsed
-    setCreditHighlightsExpanded(false)
     setGalleryExpanded(false) // Reset gallery to collapsed
     setSelectedImage(null) // Clear selected image
     setCurrentImageIndex(null) // Clear image index
@@ -2906,10 +2816,6 @@ function AlbumPage() {
   // Toggle release credits expanded state
   function toggleAlbumCreditsExpanded() {
     setAlbumCreditsExpanded(prev => !prev)
-  }
-  
-  function toggleCreditHighlightsExpanded() {
-    setCreditHighlightsExpanded(prev => !prev)
   }
   
   // Retry gallery fetch
@@ -3668,7 +3574,35 @@ function AlbumPage() {
   const albumCredits = album.credits?.albumCredits || []
   const trackCredits = album.credits?.trackCredits || {}
   const groupedAlbumCredits = groupAlbumCredits(albumCredits)
-  const creditHighlights = buildCreditHighlights(albumCredits, [], {})
+  const hasEditions = Array.isArray(album.editions) && album.editions.length > 0
+  const hasSources = Array.isArray(album.sources) && album.sources.length > 0
+  const selectedEdition = hasEditions ? album.editions[0] : null
+  const selectedEditionSummary = selectedEdition
+    ? [selectedEdition.date, selectedEdition.country, selectedEdition.status].filter(Boolean).join(' · ')
+    : null
+  const selectedEditionDetailSummary = selectedEdition
+    ? [selectedEdition.formatSummary, selectedEdition.label, selectedEdition.catalogNumber].filter(Boolean).join(' · ')
+    : null
+  const selectedEditionRows = selectedEdition
+    ? [
+        ['Country', selectedEdition.country],
+        ['Date', selectedEdition.date],
+        ['Status', selectedEdition.status],
+        ['Format', selectedEdition.formatSummary],
+        ['Packaging', selectedEdition.packaging],
+        ['Label', selectedEdition.label],
+        ['Catalog #', selectedEdition.catalogNumber],
+        ['Barcode', selectedEdition.barcode]
+      ].filter(([, value]) => !!value)
+    : []
+  const editionRows = hasEditions ? album.editions.slice(0, 8) : []
+  const editionsSourcesSummary = selectedEdition && hasSources
+    ? 'Selected edition and sources'
+    : hasEditions
+      ? `${album.editions.length} ${album.editions.length === 1 ? 'edition' : 'editions'}`
+      : hasSources
+        ? 'Sources available'
+        : null
   
   // Debug: Log album credits to console
   debugLog('Album credits data:', albumCredits)
@@ -4054,69 +3988,6 @@ function AlbumPage() {
           </div>
         )}
 
-        {/* Editions */}
-        {album.editions && album.editions.length > 0 && (
-          <section className="editions-section">
-            <h2>Editions</h2>
-            <div className="editions-list">
-              {(editionsExpanded ? album.editions : album.editions.slice(0, 1)).map((edition) => (
-                <div key={edition.editionId} className="edition-info">
-                  <div className="edition-details">
-                    {edition.date && (
-                      <span className="edition-date">{edition.date.substring(0, 4)}</span>
-                    )}
-                    {edition.country && (
-                      <span className="edition-country">{edition.country}</span>
-                    )}
-                    {edition.formatSummary && (
-                      <span className="edition-format">{edition.formatSummary}</span>
-                    )}
-                    {edition.status && (
-                      <span className="edition-status">{edition.status}</span>
-                    )}
-                    {edition.label && (
-                      <span className="edition-label">{edition.label}</span>
-                    )}
-                    {edition.catalogNumber && (
-                      <span className="edition-catalog">{edition.catalogNumber}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            {album.editions.length > 1 && (
-              <button
-                className="editions-toggle"
-                onClick={() => setEditionsExpanded(!editionsExpanded)}
-                aria-expanded={editionsExpanded}
-              >
-                <span className="editions-toggle-text">
-                  {editionsExpanded 
-                    ? 'Show less' 
-                    : `Show all ${album.editions.length} editions`}
-                </span>
-                <svg
-                  className={`editions-toggle-icon ${editionsExpanded ? 'expanded' : ''}`}
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M4 6L8 10L12 6"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            )}
-          </section>
-        )}
-
         {/* Credits */}
         <section className="credits-section">
           <h2>
@@ -4155,53 +4026,6 @@ function AlbumPage() {
           {/* Album-level release credits */}
           {albumCreditsExpanded && albumCredits.length > 0 && (
             <div className="credits-group">
-              {creditHighlights.length > 0 && (
-                <div className="credit-category">
-                  <button
-                    className="track-credit-title-button album-credit-title-button"
-                    onClick={toggleCreditHighlightsExpanded}
-                    aria-expanded={creditHighlightsExpanded}
-                  >
-                    <span className="track-credit-title-text">Credit Highlights</span>
-                    <svg
-                      className={`track-credit-chevron ${creditHighlightsExpanded ? 'expanded' : ''}`}
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M4 6L8 10L12 6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                  {creditHighlightsExpanded && creditHighlights.map(([category, contributors]) => (
-                        <div key={`credit-highlight-${category}`} className="credit-category">
-                          <span className="category-label">{category}</span>
-                          <ul className="credits-list">
-                            {contributors.slice(0, 8).map((contributor, idx) => {
-                              const trackCount = contributor.trackIds.size
-                              return (
-                                <li key={`${category}-${contributor.personName}-${contributor.role}-${idx}`} className="credit-item">
-                                  <span className="credit-name">{contributor.personName}</span>
-                                  <span className="credit-role">
-                                    {contributor.role}
-                                    {trackCount > 0 ? ` (${trackCount} ${trackCount === 1 ? 'track' : 'tracks'})` : ''}
-                                  </span>
-                                </li>
-                              )
-                            })}
-                          </ul>
-                        </div>
-                      ))}
-                </div>
-              )}
               {groupedAlbumCredits.map(([groupLabel, credits]) => (
                 <div key={`album-${groupLabel}`} className="credit-category">
                   <span className="category-label">{groupLabel}</span>
@@ -4391,6 +4215,123 @@ function AlbumPage() {
             </>
           )}
         </section>
+
+        {(hasEditions || hasSources) && (
+          <section className="editions-section">
+            <h2>
+              <button
+                className="track-credit-title-button album-credit-title-button"
+                onClick={() => setEditionsSourcesExpanded(prev => !prev)}
+                aria-expanded={editionsSourcesExpanded}
+              >
+                <span>
+                  <span className="track-credit-title-text">Editions & Sources</span>
+                  {editionsSourcesSummary && (
+                    <span className="editions-sources-summary">{editionsSourcesSummary}</span>
+                  )}
+                </span>
+                <svg
+                  className={`track-credit-chevron ${editionsSourcesExpanded ? 'expanded' : ''}`}
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M4 6L8 10L12 6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </h2>
+
+            {editionsSourcesExpanded && (
+              <div className="editions-sources-content">
+                {selectedEdition ? (
+                  <div className="edition-info">
+                    <span className="category-label">Selected Edition</span>
+                    {selectedEditionSummary && (
+                      <div className="edition-summary">{selectedEditionSummary}</div>
+                    )}
+                    {selectedEditionDetailSummary && (
+                      <div className="edition-detail-summary">{selectedEditionDetailSummary}</div>
+                    )}
+                    {selectedEditionRows.map(([label, value]) => (
+                      <div key={`selected-edition-${label}`} className="edition-field">
+                        {label}: {value}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="edition-detail-summary">
+                    Editions are not available for this album.
+                  </div>
+                )}
+
+                {editionRows.length > 0 && (
+                  <div className="edition-info">
+                    <button
+                      className="track-credit-title-button album-credit-title-button"
+                      onClick={() => setEditionsExpanded(prev => !prev)}
+                      aria-expanded={editionsExpanded}
+                    >
+                      <span className="track-credit-title-text">Release-group editions</span>
+                      <svg
+                        className={`track-credit-chevron ${editionsExpanded ? 'expanded' : ''}`}
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M4 6L8 10L12 6"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                    {editionsExpanded && (
+                      <div className="editions-list editions-list-stacked">
+                        {editionRows.map((edition, index) => {
+                          const editionSummary = [edition.date, edition.country, edition.status].filter(Boolean).join(' - ')
+                          return (
+                            <div key={`release-group-edition-${edition.editionId || editionSummary || index}`} className="edition-field">
+                              {editionSummary || edition.editionId}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {hasSources ? (
+                  <div className="edition-info">
+                    <span className="category-label">Sources</span>
+                    <div className="editions-list editions-list-stacked">
+                      {album.sources.map((source, index) => (
+                        <div key={`source-${source.sourceName || 'unknown'}-${index}`} className="edition-field">
+                          {source.sourceName}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="edition-detail-summary">Source attribution unavailable</div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
         <div className="help-link-container">
           <button className="help-link" onClick={handleOpenHelp}>
             Help

@@ -1056,6 +1056,35 @@
   gap: 0.75rem;
 }
 
+.editions-list-stacked {
+  display: block;
+}
+
+.editions-sources-summary {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 300;
+}
+
+.editions-sources-content {
+  display: grid;
+  gap: 1rem;
+}
+
+.edition-summary {
+  margin-top: 0.35rem;
+  color: var(--text);
+}
+
+.edition-detail-summary,
+.edition-field {
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
 .editions-toggle {
   margin-top: 1rem;
   padding: 0.5rem 0;

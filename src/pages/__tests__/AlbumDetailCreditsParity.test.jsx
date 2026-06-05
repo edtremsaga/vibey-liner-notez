@@ -70,7 +70,30 @@ describe('Album detail credits parity', () => {
       releaseYear: 1983,
       albumType: 'album',
       coverArtUrl: null,
-      editions: [],
+      editions: [
+        {
+          editionId: 'murmur-release',
+          date: '1983-04-12',
+          country: 'US',
+          status: 'Official',
+          formatSummary: '12" Vinyl',
+          packaging: null,
+          label: 'I.R.S. Records',
+          catalogNumber: 'SP 70604',
+          barcode: '123456789'
+        },
+        {
+          editionId: 'murmur-uk-release',
+          date: '1983',
+          country: 'GB',
+          status: 'Official',
+          formatSummary: null,
+          packaging: null,
+          label: null,
+          catalogNumber: null,
+          barcode: null
+        }
+      ],
       tracks: [
         {
           trackId: 'radio-free-europe',
@@ -123,7 +146,10 @@ describe('Album detail credits parity', () => {
       },
       recordingInfo: null,
       externalLinks: null,
-      sources: [],
+      sources: [
+        { sourceName: 'MusicBrainz', license: 'CC0', retrievedAt: '2026-06-05T00:00:00.000Z' },
+        { sourceName: 'Cover Art Archive', license: 'CC0', retrievedAt: '2026-06-05T00:00:00.000Z' }
+      ],
       dataNotes: null
     })
 
@@ -143,8 +169,7 @@ describe('Album detail credits parity', () => {
     await user.click(releaseCreditsButton)
 
     expect(releaseCreditsButton).toHaveAttribute('aria-expanded', 'true')
-    const creditHighlightsButton = within(releaseCreditsSection).getByRole('button', { name: /^Credit Highlights$/i })
-    expect(creditHighlightsButton).toHaveAttribute('aria-expanded', 'false')
+    expect(within(releaseCreditsSection).queryByText('Credit Highlights')).not.toBeInTheDocument()
     expect(within(releaseCreditsSection).queryByText('Producers')).not.toBeInTheDocument()
     expect(screen.getAllByText('Production & Technical').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Performers & Instruments').length).toBeGreaterThan(0)
@@ -154,10 +179,30 @@ describe('Album detail credits parity', () => {
     expect(within(releaseCreditsSection).getAllByText('percussion').length).toBeGreaterThan(0)
     expect(within(releaseCreditsSection).getAllByText('organ').length).toBeGreaterThan(0)
 
-    await user.click(creditHighlightsButton)
+    const editionsSourcesButton = screen.getByRole('button', { name: /Editions & Sources/i })
+    expect(editionsSourcesButton).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('heading', { name: /^Editions$/i })).not.toBeInTheDocument()
+    expect(screen.queryByText('Selected Edition')).not.toBeInTheDocument()
+    expect(screen.getByText('Selected edition and sources')).toBeInTheDocument()
 
-    expect(creditHighlightsButton).toHaveAttribute('aria-expanded', 'true')
-    expect(within(releaseCreditsSection).getByText('Producers')).toBeInTheDocument()
+    const releaseCreditsHeading = screen.getByRole('heading', { name: 'Release Credits' })
+    const editionsSourcesHeading = screen.getByRole('heading', { name: /Editions & Sources/i })
+    expect(releaseCreditsHeading.compareDocumentPosition(editionsSourcesHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    await user.click(editionsSourcesButton)
+
+    expect(editionsSourcesButton).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByText('Selected Edition')).toBeInTheDocument()
+    expect(screen.getByText('1983-04-12 · US · Official')).toBeInTheDocument()
+    expect(screen.getByText('12" Vinyl · I.R.S. Records · SP 70604')).toBeInTheDocument()
+    expect(screen.getByText('Release-group editions')).toBeInTheDocument()
+    expect(screen.queryByText('1983 - GB - Official')).not.toBeInTheDocument()
+    expect(screen.getByText('Sources')).toBeInTheDocument()
+    expect(screen.getByText('MusicBrainz')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /^Release-group editions$/i }))
+
+    expect(screen.getByText('1983 - GB - Official')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /Radio Free Europe/i }))
 
