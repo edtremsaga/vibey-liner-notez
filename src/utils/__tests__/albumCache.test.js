@@ -54,6 +54,27 @@ describe('albumCache', () => {
       expect(result).toBeNull()
     })
 
+    it('should return null for stale cache schema entries', () => {
+      const releaseGroupId = 'test-id-123'
+      const key = `album_cache_${releaseGroupId}`
+      localStorage.setItem(key, JSON.stringify({
+        albumData: {
+          albumId: releaseGroupId,
+          title: 'Old Cached Album'
+        },
+        cachedAt: new Date().toISOString(),
+        lastAccessed: new Date().toISOString(),
+        version: 1
+      }))
+      localStorage.setItem('album_cache_index', JSON.stringify([releaseGroupId]))
+
+      const result = getCachedAlbum(releaseGroupId)
+
+      expect(result).toBeNull()
+      expect(localStorage.getItem(key)).toBeNull()
+      expect(getCachedAlbums()).not.toContain(releaseGroupId)
+    })
+
     it('should update lastAccessed when retrieving from cache', () => {
       const releaseGroupId = 'test-id-123'
       const albumData = { albumId: releaseGroupId, title: 'Test' }
@@ -188,4 +209,3 @@ describe('albumCache', () => {
     })
   })
 })
-

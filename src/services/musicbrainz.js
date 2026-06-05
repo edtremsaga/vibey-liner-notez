@@ -1140,9 +1140,9 @@ async function fetchReleaseGroup(releaseGroupId, signal = null) {
 
 // Fetch release by MBID with full details
 async function fetchRelease(releaseId) {
-  // Use recording-level-rels to get relations at recording level
+  // Use recording/work rels to get track performer and songwriting detail.
   // Note: place-rels may require individual recording fetches
-  const url = `${MB_API_BASE}/release/${releaseId}?inc=recordings+artist-credits+recording-level-rels+release-rels+labels+artist-rels&fmt=json`
+  const url = `${MB_API_BASE}/release/${releaseId}?inc=recordings+artist-credits+recording-level-rels+work-rels+work-level-rels+release-rels+labels+artist-rels&fmt=json`
   
   const response = await rateLimitedFetch(url, {
     headers: {
@@ -1415,36 +1415,49 @@ export async function fetchAllAlbumArt(releaseGroupId, signal = null) {
 function extractSongwriting(recording) {
   if (!recording.relations) return null
   
-  const writers = []
-  const composers = []
-  const lyricists = []
+  const writers = new Set()
+  const composers = new Set()
+  const lyricists = new Set()
   
-  for (const relation of recording.relations) {
-    if (relation['target-type'] !== 'artist') continue
+  function addSongwritingRelation(relation) {
+    if (relation['target-type'] !== 'artist') return
     
     const role = (relation.type || '').toLowerCase()
     const name = relation.artist?.name || relation['target-credit'] || null
     
-    if (!name) continue
+    if (!name) return
     
     if (role.includes('lyricist')) {
-      lyricists.push(name)
+      lyricists.add(name)
     } else if (role.includes('composer')) {
-      composers.push(name)
+      composers.add(name)
     } else if (role.includes('writer') || role.includes('songwriter')) {
-      writers.push(name)
+      writers.add(name)
+    }
+  }
+  
+  for (const relation of recording.relations) {
+    addSongwritingRelation(relation)
+    
+    if (relation['target-type'] !== 'work') {
+      continue
+    }
+    
+    const workRelations = Array.isArray(relation.work?.relations) ? relation.work.relations : []
+    for (const workRelation of workRelations) {
+      addSongwritingRelation(workRelation)
     }
   }
   
   // Only return if we have at least one
-  if (writers.length === 0 && composers.length === 0 && lyricists.length === 0) {
+  if (writers.size === 0 && composers.size === 0 && lyricists.size === 0) {
     return null
   }
   
   return {
-    writers: writers.length > 0 ? writers : null,
-    composers: composers.length > 0 ? composers : null,
-    lyricists: lyricists.length > 0 ? lyricists : null
+    writers: writers.size > 0 ? Array.from(writers) : null,
+    composers: composers.size > 0 ? Array.from(composers) : null,
+    lyricists: lyricists.size > 0 ? Array.from(lyricists) : null
   }
 }
 
@@ -1509,6 +1522,29 @@ function extractTrackCredits(recording) {
         
         const name = relation.artist?.name || relation['target-credit'] || null
         if (!name) continue
+        const attributes = Array.isArray(relation.attributes) ? relation.attributes.filter(Boolean) : []
+        
+        if (lowerRole === 'instrument' && attributes.length > 0) {
+          for (const instrument of attributes) {
+            credits.push({
+              personName: name,
+              role: instrument,
+              instrument: null,
+              notes: null
+            })
+          }
+          continue
+        }
+        
+        if (lowerRole === 'vocal') {
+          credits.push({
+            personName: name,
+            role: attributes[0] || 'Vocals',
+            instrument: null,
+            notes: null
+          })
+          continue
+        }
         
         credits.push({
           personName: name,

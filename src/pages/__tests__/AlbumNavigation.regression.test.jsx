@@ -113,7 +113,7 @@ describe('Album Navigation Regression', () => {
 
     await waitFor(() => {
       expect(screen.getByText('← Back')).toBeInTheDocument()
-      expect(screen.getByRole('heading', { name: 'Credits' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Release Credits' })).toBeInTheDocument()
     })
 
     window.history.replaceState(
@@ -134,7 +134,7 @@ describe('Album Navigation Regression', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Studio Albums Found')).toBeInTheDocument()
-      expect(screen.queryByRole('heading', { name: 'Credits' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: 'Release Credits' })).not.toBeInTheDocument()
     })
   })
 })

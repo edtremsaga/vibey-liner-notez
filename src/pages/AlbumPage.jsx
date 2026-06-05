@@ -9,6 +9,172 @@ import Help from '../components/Help'
 import { useHelp } from '../contexts/HelpContext'
 import './AlbumPage.css'
 
+function isPerformerCredit(credit) {
+  const role = credit?.role?.toLowerCase() ?? ''
+  return (
+    role === 'performer' ||
+    role.includes('vocal') ||
+    role.includes('guitar') ||
+    role.includes('bass') ||
+    role.includes('drum') ||
+    role.includes('piano') ||
+    role.includes('keyboard')
+  )
+}
+
+function isProductionCredit(credit) {
+  const role = credit?.role?.toLowerCase() ?? ''
+  return role.includes('producer') || role.includes('engineer') || role.includes('mix') || role.includes('mastering')
+}
+
+function isArtworkCredit(credit) {
+  const role = credit?.role?.toLowerCase() ?? ''
+  return (
+    role.includes('design') ||
+    role.includes('illustration') ||
+    role.includes('photography') ||
+    role.includes('photographer') ||
+    role.includes('artwork') ||
+    role.includes('art direction') ||
+    role.includes('cover art') ||
+    role.includes('sleeve')
+  )
+}
+
+function getCreditHighlightCategory(role) {
+  const normalizedRole = role?.toLowerCase() ?? ''
+
+  if (normalizedRole.includes('producer')) {
+    return 'Producers'
+  }
+
+  if (
+    normalizedRole.includes('engineer') ||
+    normalizedRole.includes('mix') ||
+    normalizedRole.includes('mastering')
+  ) {
+    return 'Engineers / Mixers / Mastering'
+  }
+
+  if (isPerformerCredit({ role })) {
+    return 'Performers & Instruments'
+  }
+
+  return null
+}
+
+function groupAlbumCredits(credits) {
+  const production = credits.filter(isProductionCredit)
+  const performers = credits.filter(isPerformerCredit)
+  const artwork = credits.filter(isArtworkCredit)
+  const additional = credits.filter(credit =>
+    !isProductionCredit(credit) &&
+    !isPerformerCredit(credit) &&
+    !isArtworkCredit(credit)
+  )
+
+  return [
+    ['Production & Technical', production],
+    ['Performers & Instruments', performers],
+    ['Artwork, Design & Photography', artwork],
+    ['Additional Credits', additional]
+  ].filter(([, groupedCredits]) => groupedCredits.length > 0)
+}
+
+function addCreditHighlight(categoryMap, category, personName, role, trackId = null) {
+  if (!category || !personName) return
+
+  const roleLabel = role || category
+  const key = `${category}|${personName}|${roleLabel}`
+  const existing = categoryMap.get(key)
+
+  if (existing) {
+    if (trackId) existing.trackIds.add(trackId)
+    return
+  }
+
+  categoryMap.set(key, {
+    personName,
+    role: roleLabel,
+    trackIds: trackId ? new Set([trackId]) : new Set()
+  })
+}
+
+function buildCreditHighlights(albumCredits, tracks, trackCreditsByTrackId) {
+  const categoryMaps = {
+    Producers: new Map(),
+    'Engineers / Mixers / Mastering': new Map(),
+    'Performers & Instruments': new Map(),
+    Songwriting: new Map(),
+    Publishing: new Map()
+  }
+
+  for (const credit of albumCredits) {
+    const category = getCreditHighlightCategory(credit?.role)
+    addCreditHighlight(categoryMaps[category], category, credit?.personName, credit?.role)
+  }
+
+  for (const track of tracks || []) {
+    const trackId = track?.trackId
+    if (!trackId) continue
+
+    const trackCredits = Array.isArray(trackCreditsByTrackId?.[trackId]) ? trackCreditsByTrackId[trackId] : []
+    for (const credit of trackCredits) {
+      const category = getCreditHighlightCategory(credit?.role)
+      addCreditHighlight(categoryMaps[category], category, credit?.personName, credit?.role, trackId)
+    }
+
+    for (const personName of track.songwriting?.writers ?? []) {
+      addCreditHighlight(categoryMaps.Songwriting, 'Songwriting', personName, 'Writer', trackId)
+    }
+    for (const personName of track.songwriting?.composers ?? []) {
+      addCreditHighlight(categoryMaps.Songwriting, 'Songwriting', personName, 'Composer', trackId)
+    }
+    for (const personName of track.songwriting?.lyricists ?? []) {
+      addCreditHighlight(categoryMaps.Songwriting, 'Songwriting', personName, 'Lyricist', trackId)
+    }
+    for (const publisherName of track.publishing?.publishers ?? []) {
+      addCreditHighlight(categoryMaps.Publishing, 'Publishing', publisherName, 'Publisher', trackId)
+    }
+  }
+
+  return Object.entries(categoryMaps)
+    .map(([category, contributorMap]) => [
+      category,
+      Array.from(contributorMap.values()).sort((a, b) => {
+        const trackCountDifference = b.trackIds.size - a.trackIds.size
+        return trackCountDifference || a.personName.localeCompare(b.personName)
+      })
+    ])
+    .filter(([, contributors]) => contributors.length > 0)
+}
+
+function hasItems(value) {
+  return Array.isArray(value) && value.length > 0
+}
+
+function hasTrackSongwriting(track) {
+  return (
+    hasItems(track?.songwriting?.writers) ||
+    hasItems(track?.songwriting?.composers) ||
+    hasItems(track?.songwriting?.lyricists)
+  )
+}
+
+function hasTrackPublishing(track) {
+  return hasItems(track?.publishing?.publishers)
+}
+
+function hasTrackDetails(track, trackCreditsByTrackId) {
+  if (!track?.trackId) return false
+
+  const credits = Array.isArray(trackCreditsByTrackId?.[track.trackId])
+    ? trackCreditsByTrackId[track.trackId]
+    : []
+
+  return credits.length > 0 || hasTrackSongwriting(track) || hasTrackPublishing(track)
+}
+
 function AlbumPage() {
   // Search type state: 'album' or 'producer'
   const [searchType, setSearchType] = useState('album') // 'album' or 'producer'
@@ -3494,6 +3660,8 @@ function AlbumPage() {
   
   const albumCredits = album.credits?.albumCredits || []
   const trackCredits = album.credits?.trackCredits || {}
+  const groupedAlbumCredits = groupAlbumCredits(albumCredits)
+  const creditHighlights = buildCreditHighlights(albumCredits, album.tracks || [], trackCredits)
   
   // Debug: Log album credits to console
   debugLog('Album credits data:', albumCredits)
@@ -3944,7 +4112,7 @@ function AlbumPage() {
 
         {/* Credits */}
         <section className="credits-section">
-          <h2>Credits</h2>
+          <h2>Release Credits</h2>
           
           {loadingCredits && (
             <div className="loading">Loading credits...</div>
@@ -3952,7 +4120,7 @@ function AlbumPage() {
           
           {!loadingCredits && (
             <>
-          {/* Album-level credits */}
+          {/* Album-level release credits */}
           {albumCredits.length > 0 && (
             <div className="credits-group">
               <button
@@ -3960,7 +4128,7 @@ function AlbumPage() {
                 onClick={toggleAlbumCreditsExpanded}
                 aria-expanded={albumCreditsExpanded}
               >
-                <span className="track-credit-title-text">Album</span>
+                <span className="track-credit-title-text">Credit Details</span>
                 <svg
                   className={`track-credit-chevron ${albumCreditsExpanded ? 'expanded' : ''}`}
                   width="16"
@@ -3981,45 +4149,63 @@ function AlbumPage() {
               </button>
               
               {albumCreditsExpanded && (
-                <ul className="credits-list">
-                  {albumCredits.map((credit, idx) => (
-                    <li key={idx} className="credit-item">
-                      <span className="credit-name">{credit.personName}</span>
-                      <span className="credit-role">{credit.role}</span>
-                    </li>
+                <>
+                  {creditHighlights.length > 0 && (
+                    <div className="credit-category">
+                      <span className="category-label">Credit Highlights</span>
+                      {creditHighlights.map(([category, contributors]) => (
+                        <div key={`credit-highlight-${category}`} className="credit-category">
+                          <span className="category-label">{category}</span>
+                          <ul className="credits-list">
+                            {contributors.slice(0, 8).map((contributor, idx) => {
+                              const trackCount = contributor.trackIds.size
+                              return (
+                                <li key={`${category}-${contributor.personName}-${contributor.role}-${idx}`} className="credit-item">
+                                  <span className="credit-name">{contributor.personName}</span>
+                                  <span className="credit-role">
+                                    {contributor.role}
+                                    {trackCount > 0 ? ` (${trackCount} ${trackCount === 1 ? 'track' : 'tracks'})` : ''}
+                                  </span>
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {groupedAlbumCredits.map(([groupLabel, credits]) => (
+                    <div key={`album-${groupLabel}`} className="credit-category">
+                      <span className="category-label">{groupLabel}</span>
+                      <ul className="credits-list">
+                        {credits.map((credit, idx) => (
+                          <li key={`${groupLabel}-${credit.personName}-${credit.role}-${idx}`} className="credit-item">
+                            <span className="credit-name">{credit.personName}</span>
+                            <span className="credit-role">{credit.role}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </>
               )}
             </div>
           )}
 
           {/* Track-level credits */}
-          {album.tracks && album.tracks.length > 0 && album.tracks.some(t => t && t.trackId && trackCredits[t.trackId] && trackCredits[t.trackId].length > 0) && (
+          {album.tracks && album.tracks.length > 0 && album.tracks.some(t => hasTrackDetails(t, trackCredits)) && (
             <div className="credits-group track-credits-group">
               <h3 className="track-credits-header">Tracks</h3>
               {album.tracks.map((track) => {
                 if (!track || !track.trackId) return null
-                const credits = trackCredits[track.trackId]
-                if (!credits || credits.length === 0) return null
+                const credits = Array.isArray(trackCredits[track.trackId]) ? trackCredits[track.trackId] : []
+                if (!hasTrackDetails(track, trackCredits)) return null
                 const trackNumber = track.position || null
                 const trackDuration = track.durationMs ? formatDuration(track.durationMs) : null
                 
                 // Group credits by role type
-                const performers = credits.filter(c => 
-                  c.role === 'Performer' || 
-                  c.role.toLowerCase().includes('vocals') ||
-                  c.role.toLowerCase().includes('guitar') ||
-                  c.role.toLowerCase().includes('bass') ||
-                  c.role.toLowerCase().includes('drums') ||
-                  c.role.toLowerCase().includes('piano') ||
-                  c.role.toLowerCase().includes('keyboard')
-                )
-                const production = credits.filter(c => 
-                  c.role.toLowerCase().includes('producer') ||
-                  c.role.toLowerCase().includes('engineer') ||
-                  c.role.toLowerCase().includes('mix') ||
-                  c.role.toLowerCase().includes('mastering')
-                )
+                const performers = credits.filter(isPerformerCredit)
+                const production = credits.filter(isProductionCredit)
                 const other = credits.filter(c => 
                   !performers.includes(c) && 
                   !production.includes(c)
@@ -4171,7 +4357,7 @@ function AlbumPage() {
           )}
 
           {albumCredits.length === 0 && 
-           (!album.tracks || !album.tracks.some(t => trackCredits[t.trackId] && trackCredits[t.trackId].length > 0)) && (
+           (!album.tracks || !album.tracks.some(t => hasTrackDetails(t, trackCredits))) && (
             <div className="no-credits">
               Credits not documented for this album.
             </div>

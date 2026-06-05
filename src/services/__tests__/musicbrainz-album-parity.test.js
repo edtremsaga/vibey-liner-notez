@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   fetchCoverArt,
+  fetchAlbumData,
   searchReleaseGroups,
   sortReleasesForSelectedRelease
 } from '../musicbrainz'
@@ -227,5 +228,144 @@ describe('MusicBrainz album parity helpers', () => {
     expect(mockFetch.mock.calls[0][0]).toBe('https://coverartarchive.org/release/release-1')
     expect(mockFetch.mock.calls[1][0]).toBe('https://coverartarchive.org/release-group/rg-1')
     expect(coverArtUrl).toBe('https://images.example/rg-front.jpg')
+  })
+  
+  it('uses specific track relationship attributes for instrument and vocal credits', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({
+      id: 'release-1',
+      media: [{
+        tracks: [{
+          number: '1',
+          position: 1,
+          recording: {
+            id: 'recording-1',
+            title: 'Radio Free Europe',
+            relations: [
+              {
+                type: 'instrument',
+                'target-type': 'artist',
+                attributes: ['drums', 'guitar'],
+                artist: { name: 'Bill Berry' }
+              },
+              {
+                type: 'vocal',
+                'target-type': 'artist',
+                attributes: ['lead vocals'],
+                artist: { name: 'Michael Stipe' }
+              },
+              {
+                type: 'vocal',
+                'target-type': 'artist',
+                artist: { name: 'Backing Singer' }
+              },
+              {
+                type: 'producer',
+                'target-type': 'artist',
+                artist: { name: 'Mitch Easter' }
+              },
+              {
+                type: 'engineer',
+                'target-type': 'artist',
+                artist: { name: 'Don Dixon' }
+              },
+              {
+                type: 'writer',
+                'target-type': 'artist',
+                artist: { name: 'Songwriter' }
+              },
+              {
+                type: 'performance',
+                'target-type': 'work',
+                work: {
+                  relations: [
+                    {
+                      type: 'composer',
+                      'target-type': 'artist',
+                      artist: { name: 'Bill Berry' }
+                    },
+                    {
+                      type: 'composer',
+                      'target-type': 'artist',
+                      artist: { name: 'Peter Buck' }
+                    },
+                    {
+                      type: 'composer',
+                      'target-type': 'artist',
+                      artist: { name: 'Mike Mills' }
+                    },
+                    {
+                      type: 'composer',
+                      'target-type': 'artist',
+                      artist: { name: 'Michael Stipe' }
+                    },
+                    {
+                      type: 'lyricist',
+                      'target-type': 'artist',
+                      artist: { name: 'Bill Berry' }
+                    },
+                    {
+                      type: 'lyricist',
+                      'target-type': 'artist',
+                      artist: { name: 'Peter Buck' }
+                    },
+                    {
+                      type: 'lyricist',
+                      'target-type': 'artist',
+                      artist: { name: 'Mike Mills' }
+                    },
+                    {
+                      type: 'lyricist',
+                      'target-type': 'artist',
+                      artist: { name: 'Michael Stipe' }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }]
+      }]
+    }))
+    
+    const album = await fetchAlbumData('rg-1', {
+      releaseGroup: {
+        id: 'rg-1',
+        title: 'Murmur',
+        'artist-credit': [{ name: 'R.E.M.' }],
+        'first-release-date': '1983-04-12'
+      },
+      releases: [{ id: 'release-1', status: 'Official', date: '1983-04-12', country: 'US' }],
+      sortedReleases: [{ id: 'release-1', status: 'Official', date: '1983-04-12', country: 'US' }],
+      selectedReleaseId: 'release-1',
+      basicInfo: {
+        albumId: 'rg-1',
+        title: 'Murmur',
+        artistName: 'R.E.M.',
+        releaseYear: 1983,
+        coverArtUrl: null
+      }
+    })
+    
+    expect(mockFetch.mock.calls[0][0]).toContain('work-rels+work-level-rels')
+    expect(album.tracks[0].songwriting).toEqual({
+      writers: ['Songwriter'],
+      composers: ['Bill Berry', 'Peter Buck', 'Mike Mills', 'Michael Stipe'],
+      lyricists: ['Bill Berry', 'Peter Buck', 'Mike Mills', 'Michael Stipe']
+    })
+    expect(album.credits.trackCredits['recording-1']).toEqual([
+      { personName: 'Bill Berry', role: 'drums', instrument: null, notes: null },
+      { personName: 'Bill Berry', role: 'guitar', instrument: null, notes: null },
+      { personName: 'Michael Stipe', role: 'lead vocals', instrument: null, notes: null },
+      { personName: 'Backing Singer', role: 'Vocals', instrument: null, notes: null },
+      { personName: 'Mitch Easter', role: 'producer', instrument: null, notes: null },
+      { personName: 'Don Dixon', role: 'engineer', instrument: null, notes: null }
+    ])
+    expect(album.credits.trackCredits['recording-1']).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ role: 'instrument' }),
+        expect.objectContaining({ role: 'vocal' }),
+        expect.objectContaining({ role: 'writer' })
+      ])
+    )
   })
 })

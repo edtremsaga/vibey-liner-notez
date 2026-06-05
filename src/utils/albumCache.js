@@ -10,6 +10,7 @@ const MAX_SIZE_MB = 5
 const CLEANUP_THRESHOLD_MB = 4
 const MIN_ALBUMS_TO_KEEP = 10
 const BUFFER_KB = 500
+const CACHE_VERSION = 2
 
 // Convert days to milliseconds
 const CACHE_TTL_MS = CACHE_TTL_DAYS * 24 * 60 * 60 * 1000
@@ -125,6 +126,11 @@ export function getCachedAlbum(releaseGroupId) {
     }
     
     const data = JSON.parse(cached)
+    
+    if (data.version !== CACHE_VERSION) {
+      removeCachedAlbum(releaseGroupId)
+      return null
+    }
     
     // Check if expired
     if (isExpired(data.cachedAt)) {
@@ -267,7 +273,7 @@ export function setCachedAlbum(releaseGroupId, albumData) {
       albumData,
       cachedAt: now,
       lastAccessed: now,
-      version: 1
+      version: CACHE_VERSION
     }
     
     const key = getCacheKey(releaseGroupId)
@@ -348,4 +354,3 @@ export function getCacheStats() {
 export function getCachedAlbums() {
   return getCachedAlbumIds()
 }
-
