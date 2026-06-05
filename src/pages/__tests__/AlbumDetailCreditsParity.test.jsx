@@ -156,6 +156,10 @@ describe('Album detail credits parity', () => {
     renderAlbumPage()
 
     expect(await screen.findByRole('heading', { name: 'Release Credits' })).toBeInTheDocument()
+    const tracksHeading = screen.getByRole('heading', { name: 'Tracks' })
+    const releaseCreditsHeading = screen.getByRole('heading', { name: 'Release Credits' })
+    expect(tracksHeading.compareDocumentPosition(releaseCreditsHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
     const releaseCreditsButton = screen.getByRole('button', { name: /^Release Credits$/i })
     expect(releaseCreditsButton).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByText('Credit Details')).not.toBeInTheDocument()
@@ -185,7 +189,6 @@ describe('Album detail credits parity', () => {
     expect(screen.queryByText('Selected Edition')).not.toBeInTheDocument()
     expect(screen.getByText('Selected edition and sources')).toBeInTheDocument()
 
-    const releaseCreditsHeading = screen.getByRole('heading', { name: 'Release Credits' })
     const editionsSourcesHeading = screen.getByRole('heading', { name: /Editions & Sources/i })
     expect(releaseCreditsHeading.compareDocumentPosition(editionsSourcesHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 

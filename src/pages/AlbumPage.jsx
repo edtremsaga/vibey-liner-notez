@@ -3990,58 +3990,12 @@ function AlbumPage() {
 
         {/* Credits */}
         <section className="credits-section">
-          <h2>
-            <button
-              className="track-credit-title-button album-credit-title-button"
-              onClick={toggleAlbumCreditsExpanded}
-              aria-expanded={albumCreditsExpanded}
-            >
-              <span className="track-credit-title-text">Release Credits</span>
-              <svg
-                className={`track-credit-chevron ${albumCreditsExpanded ? 'expanded' : ''}`}
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <path
-                  d="M4 6L8 10L12 6"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </h2>
-          
           {loadingCredits && (
             <div className="loading">Loading credits...</div>
           )}
           
           {!loadingCredits && (
             <>
-          {/* Album-level release credits */}
-          {albumCreditsExpanded && albumCredits.length > 0 && (
-            <div className="credits-group">
-              {groupedAlbumCredits.map(([groupLabel, credits]) => (
-                <div key={`album-${groupLabel}`} className="credit-category">
-                  <span className="category-label">{groupLabel}</span>
-                  <ul className="credits-list">
-                    {credits.map((credit, idx) => (
-                      <li key={`${groupLabel}-${credit.personName}-${credit.role}-${idx}`} className="credit-item">
-                        <span className="credit-name">{credit.personName}</span>
-                        <span className="credit-role">{credit.role}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
-
           {/* Track-level credits */}
           {album.tracks && album.tracks.length > 0 && album.tracks.some(t => hasTrackDetails(t, trackCredits)) && (
             <div className="credits-group track-credits-group">
@@ -4203,6 +4157,52 @@ function AlbumPage() {
                   </div>
                 )
               })}
+            </div>
+          )}
+
+          <h2>
+            <button
+              className="track-credit-title-button album-credit-title-button"
+              onClick={toggleAlbumCreditsExpanded}
+              aria-expanded={albumCreditsExpanded}
+            >
+              <span className="track-credit-title-text">Release Credits</span>
+              <svg
+                className={`track-credit-chevron ${albumCreditsExpanded ? 'expanded' : ''}`}
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 6L8 10L12 6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </h2>
+
+          {/* Album-level release credits */}
+          {albumCreditsExpanded && albumCredits.length > 0 && (
+            <div className="credits-group">
+              {groupedAlbumCredits.map(([groupLabel, credits]) => (
+                <div key={`album-${groupLabel}`} className="credit-category">
+                  <span className="category-label">{groupLabel}</span>
+                  <ul className="credits-list">
+                    {credits.map((credit, idx) => (
+                      <li key={`${groupLabel}-${credit.personName}-${credit.role}-${idx}`} className="credit-item">
+                        <span className="credit-name">{credit.personName}</span>
+                        <span className="credit-role">{credit.role}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           )}
 
