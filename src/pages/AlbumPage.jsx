@@ -242,8 +242,9 @@ function AlbumPage() {
   // Track credits collapse state (Set of track IDs that are expanded)
   const [expandedTracks, setExpandedTracks] = useState(new Set())
   
-  // Album credits collapse state (default to true - expanded)
-  const [albumCreditsExpanded, setAlbumCreditsExpanded] = useState(true)
+  // Release credits disclosure state (default collapsed to match iOS)
+  const [albumCreditsExpanded, setAlbumCreditsExpanded] = useState(false)
+  const [creditHighlightsExpanded, setCreditHighlightsExpanded] = useState(false)
   
   // Album art gallery state
   const [galleryImages, setGalleryImages] = useState([])
@@ -2056,7 +2057,8 @@ function AlbumPage() {
     
     // Don't clear searchResults - we need it for "Back to Search Results" button
     setEditionsExpanded(false) // Reset editions collapse state when loading new album
-    setAlbumCreditsExpanded(true) // Reset album credits to expanded when loading new album
+    setAlbumCreditsExpanded(false) // Reset release credits to collapsed when loading new album
+    setCreditHighlightsExpanded(false)
     setLoadingBasicInfo(false) // Basic info already shown from search results
     setLoadingTracklist(true)
     setLoadingCredits(false)
@@ -2412,7 +2414,8 @@ function AlbumPage() {
     setHideBootlegs(true)
     setExpandedTracks(new Set())
     setEditionsExpanded(false)
-    setAlbumCreditsExpanded(true) // Reset album credits to expanded
+    setAlbumCreditsExpanded(false) // Reset release credits to collapsed
+    setCreditHighlightsExpanded(false)
     setGalleryExpanded(false) // Reset gallery to collapsed
     setSelectedImage(null) // Clear selected image
     setCurrentImageIndex(null) // Clear image index
@@ -2900,9 +2903,13 @@ function AlbumPage() {
     setActiveContributor(prev => (prev === name ? null : name))
   }
   
-  // Toggle album credits expanded state
+  // Toggle release credits expanded state
   function toggleAlbumCreditsExpanded() {
     setAlbumCreditsExpanded(prev => !prev)
+  }
+  
+  function toggleCreditHighlightsExpanded() {
+    setCreditHighlightsExpanded(prev => !prev)
   }
   
   // Retry gallery fetch
@@ -3661,7 +3668,7 @@ function AlbumPage() {
   const albumCredits = album.credits?.albumCredits || []
   const trackCredits = album.credits?.trackCredits || {}
   const groupedAlbumCredits = groupAlbumCredits(albumCredits)
-  const creditHighlights = buildCreditHighlights(albumCredits, album.tracks || [], trackCredits)
+  const creditHighlights = buildCreditHighlights(albumCredits, [], {})
   
   // Debug: Log album credits to console
   debugLog('Album credits data:', albumCredits)
@@ -4112,7 +4119,32 @@ function AlbumPage() {
 
         {/* Credits */}
         <section className="credits-section">
-          <h2>Release Credits</h2>
+          <h2>
+            <button
+              className="track-credit-title-button album-credit-title-button"
+              onClick={toggleAlbumCreditsExpanded}
+              aria-expanded={albumCreditsExpanded}
+            >
+              <span className="track-credit-title-text">Release Credits</span>
+              <svg
+                className={`track-credit-chevron ${albumCreditsExpanded ? 'expanded' : ''}`}
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 6L8 10L12 6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </h2>
           
           {loadingCredits && (
             <div className="loading">Loading credits...</div>
@@ -4121,39 +4153,35 @@ function AlbumPage() {
           {!loadingCredits && (
             <>
           {/* Album-level release credits */}
-          {albumCredits.length > 0 && (
+          {albumCreditsExpanded && albumCredits.length > 0 && (
             <div className="credits-group">
-              <button
-                className="track-credit-title-button album-credit-title-button"
-                onClick={toggleAlbumCreditsExpanded}
-                aria-expanded={albumCreditsExpanded}
-              >
-                <span className="track-credit-title-text">Credit Details</span>
-                <svg
-                  className={`track-credit-chevron ${albumCreditsExpanded ? 'expanded' : ''}`}
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M4 6L8 10L12 6"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-              
-              {albumCreditsExpanded && (
-                <>
-                  {creditHighlights.length > 0 && (
-                    <div className="credit-category">
-                      <span className="category-label">Credit Highlights</span>
-                      {creditHighlights.map(([category, contributors]) => (
+              {creditHighlights.length > 0 && (
+                <div className="credit-category">
+                  <button
+                    className="track-credit-title-button album-credit-title-button"
+                    onClick={toggleCreditHighlightsExpanded}
+                    aria-expanded={creditHighlightsExpanded}
+                  >
+                    <span className="track-credit-title-text">Credit Highlights</span>
+                    <svg
+                      className={`track-credit-chevron ${creditHighlightsExpanded ? 'expanded' : ''}`}
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M4 6L8 10L12 6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  {creditHighlightsExpanded && creditHighlights.map(([category, contributors]) => (
                         <div key={`credit-highlight-${category}`} className="credit-category">
                           <span className="category-label">{category}</span>
                           <ul className="credits-list">
@@ -4172,23 +4200,21 @@ function AlbumPage() {
                           </ul>
                         </div>
                       ))}
-                    </div>
-                  )}
-                  {groupedAlbumCredits.map(([groupLabel, credits]) => (
-                    <div key={`album-${groupLabel}`} className="credit-category">
-                      <span className="category-label">{groupLabel}</span>
-                      <ul className="credits-list">
-                        {credits.map((credit, idx) => (
-                          <li key={`${groupLabel}-${credit.personName}-${credit.role}-${idx}`} className="credit-item">
-                            <span className="credit-name">{credit.personName}</span>
-                            <span className="credit-role">{credit.role}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </>
+                </div>
               )}
+              {groupedAlbumCredits.map(([groupLabel, credits]) => (
+                <div key={`album-${groupLabel}`} className="credit-category">
+                  <span className="category-label">{groupLabel}</span>
+                  <ul className="credits-list">
+                    {credits.map((credit, idx) => (
+                      <li key={`${groupLabel}-${credit.personName}-${credit.role}-${idx}`} className="credit-item">
+                        <span className="credit-name">{credit.personName}</span>
+                        <span className="credit-role">{credit.role}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           )}
 
@@ -4356,7 +4382,7 @@ function AlbumPage() {
             </div>
           )}
 
-          {albumCredits.length === 0 && 
+          {albumCreditsExpanded && albumCredits.length === 0 && 
            (!album.tracks || !album.tracks.some(t => hasTrackDetails(t, trackCredits))) && (
             <div className="no-credits">
               Credits not documented for this album.

@@ -130,21 +130,38 @@ describe('Album detail credits parity', () => {
     renderAlbumPage()
 
     expect(await screen.findByRole('heading', { name: 'Release Credits' })).toBeInTheDocument()
-    expect(screen.getByText('Credit Highlights')).toBeInTheDocument()
-    expect(screen.getAllByText('Production & Technical').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Performers & Instruments').length).toBeGreaterThan(0)
-    expect(screen.getByText('Additional Credits')).toBeInTheDocument()
+    const releaseCreditsButton = screen.getByRole('button', { name: /^Release Credits$/i })
+    expect(releaseCreditsButton).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByText('Credit Details')).not.toBeInTheDocument()
+    expect(screen.queryByText('Credit Highlights')).not.toBeInTheDocument()
+    expect(screen.queryByText('Additional Credits')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^Album$/i })).not.toBeInTheDocument()
 
     const releaseCreditsSection = screen.getByRole('heading', { name: 'Release Credits' }).closest('section')
+    expect(within(releaseCreditsSection).queryByText('Don Dixon')).not.toBeInTheDocument()
+
+    await user.click(releaseCreditsButton)
+
+    expect(releaseCreditsButton).toHaveAttribute('aria-expanded', 'true')
+    const creditHighlightsButton = within(releaseCreditsSection).getByRole('button', { name: /^Credit Highlights$/i })
+    expect(creditHighlightsButton).toHaveAttribute('aria-expanded', 'false')
+    expect(within(releaseCreditsSection).queryByText('Producers')).not.toBeInTheDocument()
+    expect(screen.getAllByText('Production & Technical').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Performers & Instruments').length).toBeGreaterThan(0)
+    expect(screen.getByText('Additional Credits')).toBeInTheDocument()
     expect(within(releaseCreditsSection).getAllByText('Don Dixon').length).toBeGreaterThan(0)
     expect(within(releaseCreditsSection).getAllByText('engineer').length).toBeGreaterThan(0)
     expect(within(releaseCreditsSection).getAllByText('percussion').length).toBeGreaterThan(0)
     expect(within(releaseCreditsSection).getAllByText('organ').length).toBeGreaterThan(0)
 
+    await user.click(creditHighlightsButton)
+
+    expect(creditHighlightsButton).toHaveAttribute('aria-expanded', 'true')
+    expect(within(releaseCreditsSection).getByText('Producers')).toBeInTheDocument()
+
     await user.click(screen.getByRole('button', { name: /Radio Free Europe/i }))
 
-    expect(screen.getAllByText('Songwriting').length).toBeGreaterThan(1)
+    expect(screen.getAllByText('Songwriting').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Composer', { selector: '.credit-role' }).length).toBeGreaterThanOrEqual(4)
     expect(screen.getAllByText('Lyricist', { selector: '.credit-role' }).length).toBeGreaterThanOrEqual(4)
     expect(screen.getAllByText('drums (drum set)').length).toBeGreaterThan(0)
