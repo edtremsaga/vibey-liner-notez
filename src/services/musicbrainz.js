@@ -6,6 +6,16 @@ import { debugLog, debugWarn } from '../utils/debug'
 
 const MB_API_BASE = 'https://musicbrainz.org/ws/2'
 const COVER_ART_BASE = 'https://coverartarchive.org'
+const BOOTLEG_STATUS_ID = '1156806e-d06a-38bd-83f0-cf2284a808b9'
+const STUDIO_ALBUM_EXCLUDED_SECONDARY_TYPES = new Set([
+  'live',
+  'compilation',
+  'soundtrack',
+  'demo',
+  'remix',
+  'interview',
+  'spokenword'
+])
 
 // Rate limiter: MusicBrainz requires max 1 request per second
 let lastRequestTime = 0
@@ -108,6 +118,154 @@ function extractArtistName(artistCredit) {
   return null
 }
 
+function normalizeArtistMatchValue(value) {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[.\s']/g, '')
+}
+
+function getArtistCandidateNames(artist) {
+  const aliases = Array.isArray(artist?.aliases) ? artist.aliases : []
+  return [
+    artist?.name,
+    artist?.['sort-name'],
+    ...aliases.flatMap(alias => [alias?.name, alias?.['sort-name']])
+  ].filter(Boolean)
+}
+
+function isConfidentArtistMatch(input, artist) {
+  const normalizedInput = normalizeArtistMatchValue(input)
+  if (!normalizedInput || !artist?.id) return false
+  return getArtistCandidateNames(artist).some(name => normalizeArtistMatchValue(name) === normalizedInput)
+}
+
+async function resolveMusicBrainzArtist(artistName) {
+  const trimmedArtist = artistName.trim()
+  const query = `artist:"${trimmedArtist}" OR alias:"${trimmedArtist}"`
+  const url = `${MB_API_BASE}/artist?query=${encodeURIComponent(query)}&limit=10&inc=aliases&fmt=json`
+  
+  try {
+    const response = await rateLimitedFetch(url, {
+      headers: {
+        'User-Agent': 'liner-notez/1.0 (https://github.com/yourusername/liner-notez)',
+        'Accept': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      return null
+    }
+    
+    const data = await response.json()
+    const artists = Array.isArray(data.artists) ? data.artists : []
+    const confidentMatches = artists
+      .filter(artist => isConfidentArtistMatch(trimmedArtist, artist))
+      .map(artist => ({
+        ...artist,
+        score: Number(artist.score ?? 0)
+      }))
+      .sort((a, b) => b.score - a.score)
+    
+    if (confidentMatches.length === 0) {
+      return null
+    }
+    
+    const [bestMatch, secondMatch] = confidentMatches
+    // Ambiguous tied matches intentionally fall back to the existing text search.
+    if (secondMatch && secondMatch.score === bestMatch.score && secondMatch.id !== bestMatch.id) {
+      return null
+    }
+    
+    return {
+      id: bestMatch.id,
+      name: bestMatch.name || trimmedArtist
+    }
+  } catch {
+    return null
+  }
+}
+
+function getReleaseStatus(release) {
+  return String(release?.status ?? '').toLowerCase()
+}
+
+function isBootlegRelease(release) {
+  return release?.['status-id'] === BOOTLEG_STATUS_ID || getReleaseStatus(release) === 'bootleg'
+}
+
+function hasOfficialRelease(releaseGroup) {
+  const releases = Array.isArray(releaseGroup?.releases) ? releaseGroup.releases : []
+  return releases.some(release => getReleaseStatus(release) === 'official')
+}
+
+function isAllBootlegReleaseGroup(releaseGroup) {
+  const releases = Array.isArray(releaseGroup?.releases) ? releaseGroup.releases : []
+  return releases.length > 0 && releases.every(isBootlegRelease)
+}
+
+function isStudioAlbumReleaseGroup(releaseGroup) {
+  const primaryType = String(releaseGroup?.['primary-type'] ?? '').toLowerCase()
+  const secondaryTypes = Array.isArray(releaseGroup?.['secondary-types'])
+    ? releaseGroup['secondary-types'].map(type => String(type).toLowerCase())
+    : []
+  
+  return (
+    primaryType === 'album' &&
+    !secondaryTypes.some(type => STUDIO_ALBUM_EXCLUDED_SECONDARY_TYPES.has(type)) &&
+    !isAllBootlegReleaseGroup(releaseGroup) &&
+    hasOfficialRelease(releaseGroup)
+  )
+}
+
+export function sortReleasesForSelectedRelease(releases) {
+  function getReleaseYear(release) {
+    const year = Number.parseInt(release?.date?.slice(0, 4), 10)
+    return Number.isNaN(year) ? 9999 : year
+  }
+  
+  function getReleaseDatePrecision(release) {
+    return release?.date ? release.date.split('-').length : 0
+  }
+  
+  function getExactDateCountryPreference(release) {
+    return release?.country === 'US' ? 0 : 1
+  }
+  
+  const sorted = [...releases].sort((a, b) => {
+    const yearDifference = getReleaseYear(a) - getReleaseYear(b)
+    if (yearDifference !== 0) {
+      return yearDifference
+    }
+    
+    const precisionDifference = getReleaseDatePrecision(b) - getReleaseDatePrecision(a)
+    if (precisionDifference !== 0) {
+      return precisionDifference
+    }
+    
+    const dateA = a?.date || '9999'
+    const dateB = b?.date || '9999'
+    const dateDifference = dateA.localeCompare(dateB)
+    if (dateDifference !== 0) {
+      return dateDifference
+    }
+    
+    if (
+      a?.status === 'Official' &&
+      b?.status === 'Official' &&
+      getReleaseDatePrecision(a) === 3 &&
+      getReleaseDatePrecision(b) === 3
+    ) {
+      return getExactDateCountryPreference(a) - getExactDateCountryPreference(b)
+    }
+    
+    return 0
+  })
+  const officialReleases = sorted.filter(release => release?.status === 'Official')
+  
+  return officialReleases.length > 0 ? officialReleases : sorted
+}
+
 // Helper to parse track position from track number and medium
 function parsePosition(track, medium) {
   if (!track.number) return null
@@ -124,7 +282,7 @@ function parsePosition(track, medium) {
 // If only artistName, returns releases by that artist (filtered by releaseType if provided)
 // releaseType: Album, EP, Single, Live, Compilation, Soundtrack, or null for all types
 export async function searchReleaseGroups(artistName, albumName = null, releaseType = null, offset = 0) {
-  if (!artistName) {
+  if (!artistName || !artistName.trim()) {
     throw new Error('Artist name is required')
   }
   
@@ -134,7 +292,7 @@ export async function searchReleaseGroups(artistName, albumName = null, releaseT
   // to get only studio albums
   function buildTypeQuery(releaseType) {
     const typeQueries = {
-      'Album': 'primarytype:album NOT secondarytype:live NOT secondarytype:compilation NOT secondarytype:soundtrack',
+      'Album': 'primarytype:album NOT secondarytype:live NOT secondarytype:compilation NOT secondarytype:soundtrack NOT secondarytype:demo NOT secondarytype:remix NOT secondarytype:interview NOT secondarytype:spokenword',
       'EP': 'primarytype:ep',
       'Single': 'primarytype:single',
       'Live': 'primarytype:album AND secondarytype:live',
@@ -146,23 +304,34 @@ export async function searchReleaseGroups(artistName, albumName = null, releaseT
   
   let query
   let limit = 20
+  const trimmedArtist = artistName.trim()
+  const trimmedAlbum = albumName?.trim() || null
+  const resolvedArtist = await resolveMusicBrainzArtist(trimmedArtist)
   
-  if (albumName) {
+  if (trimmedAlbum) {
     // Specific album search: artist:"name" AND release:"name"
-    query = `artist:"${artistName}" AND release:"${albumName}"`
+    query = resolvedArtist?.id
+      ? `arid:${resolvedArtist.id} AND release:"${trimmedAlbum}"`
+      : `artist:"${trimmedArtist}" AND release:"${trimmedAlbum}"`
   } else {
     // Artist-only search: filter by release type if specified
     if (releaseType) {
       const typeQuery = buildTypeQuery(releaseType)
       if (typeQuery) {
-        query = `artist:"${artistName}" AND ${typeQuery}`
+        query = resolvedArtist?.id
+          ? `arid:${resolvedArtist.id} AND ${typeQuery}`
+          : `artist:"${trimmedArtist}" AND ${typeQuery}`
       } else {
         // Fallback to primarytype if type not in mapping
-        query = `artist:"${artistName}" AND primarytype:${releaseType}`
+        query = resolvedArtist?.id
+          ? `arid:${resolvedArtist.id} AND primarytype:${releaseType}`
+          : `artist:"${trimmedArtist}" AND primarytype:${releaseType}`
       }
     } else {
       // No type filter - get all release types
-      query = `artist:"${artistName}"`
+      query = resolvedArtist?.id
+        ? `arid:${resolvedArtist.id}`
+        : `artist:"${trimmedArtist}"`
     }
     limit = 100 // Increase limit for artist-only searches
   }
@@ -184,24 +353,18 @@ export async function searchReleaseGroups(artistName, albumName = null, releaseT
     
     const data = await response.json()
     const releaseGroups = data['release-groups'] || []
-    const totalCount = data.count || releaseGroups.length
+    const isStudioAlbumArtistSearch = !trimmedAlbum && releaseType === 'Album'
+    const filteredReleaseGroups = isStudioAlbumArtistSearch
+      ? releaseGroups.filter(isStudioAlbumReleaseGroup)
+      : releaseGroups
+    const totalCount = data.count || filteredReleaseGroups.length
     
     // Transform to simple result format
-    let results = releaseGroups.map(rg => {
+    let results = filteredReleaseGroups.map(rg => {
       // Check if all releases are bootlegs
       // A release group is considered bootleg if ALL its releases are bootlegs
       const releases = rg.releases || []
-      let isBootleg = false
-      
-      if (releases.length > 0) {
-        // Check if all releases have bootleg status
-        // Bootleg status-id: 1156806e-d06a-38bd-83f0-cf2284a808b9
-        const bootlegStatusId = '1156806e-d06a-38bd-83f0-cf2284a808b9'
-        isBootleg = releases.every(release => {
-          const statusId = release['status-id']
-          return statusId === bootlegStatusId
-        })
-      }
+      const isBootleg = releases.length > 0 && releases.every(isBootlegRelease)
       // If no releases, default to false (not bootleg)
       
       return {
@@ -216,7 +379,7 @@ export async function searchReleaseGroups(artistName, albumName = null, releaseT
     })
     
     // For artist-only searches, sort by year (newest first), then by title
-    if (!albumName) {
+    if (!trimmedAlbum) {
       results.sort((a, b) => {
         // Sort by year (newest first), then by title
         if (a.releaseYear && b.releaseYear) {
@@ -236,7 +399,7 @@ export async function searchReleaseGroups(artistName, albumName = null, releaseT
     return {
       results,
       totalCount,
-      isArtistOnly: !albumName
+      isArtistOnly: !trimmedAlbum
     }
   } catch (error) {
     console.error('Error searching release groups:', error)
@@ -1054,46 +1217,7 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
     }
   }
   
-  // Try release group first (standard API approach)
-  try {
-    const releaseGroupUrl = `${COVER_ART_BASE}/release-group/${releaseGroupId}`
-    // Remove User-Agent header on Safari (iOS and desktop) - causes CORS error
-    // Same issue as mobile: "Request header field User-Agent is not allowed by Access-Control-Allow-Headers"
-    const shouldRemoveUserAgent = isMobile || isSafari
-    const headers = shouldRemoveUserAgent 
-      ? { 'Accept': 'application/json' }
-      : { 'User-Agent': 'liner-notez/1.0', 'Accept': 'application/json' }
-    
-    debugLog('[CoverArt Debug] Fetching release group cover art:', { 
-      url: releaseGroupUrl, 
-      headers, 
-      removedUserAgent: shouldRemoveUserAgent 
-    })
-    
-    const response = await rateLimitedFetch(releaseGroupUrl, {
-      headers
-    })
-    
-    if (response.ok) {
-      const contentType = response.headers.get('content-type') || ''
-      if (contentType.includes('application/json')) {
-        const data = await response.json()
-        const frontImage = data.images?.find(img => img.front === true)
-        if (frontImage && frontImage.image) {
-          return frontImage.image.replace('http://', 'https://')
-        }
-        // If no front image, try first image
-        if (data.images && data.images.length > 0 && data.images[0].image) {
-          return data.images[0].image.replace('http://', 'https://')
-        }
-      }
-    }
-  } catch (e) {
-    debugWarn('Error fetching cover art from release group:', e)
-    // Continue to try release-level
-  }
-  
-  // If release group doesn't have cover art, try the specific release
+  // Try the selected release first; it is the most specific artwork source.
   if (releaseId) {
     try {
       const releaseUrl = `${COVER_ART_BASE}/release/${releaseId}`
@@ -1129,6 +1253,44 @@ export async function fetchCoverArt(releaseGroupId, releaseId = null) {
       debugWarn('Error fetching cover art from release:', e)
       // Cover art is optional
     }
+  }
+  
+  // If release art is unavailable, fall back to the release group.
+  try {
+    const releaseGroupUrl = `${COVER_ART_BASE}/release-group/${releaseGroupId}`
+    // Remove User-Agent header on Safari (iOS and desktop) - causes CORS error
+    // Same issue as mobile: "Request header field User-Agent is not allowed by Access-Control-Allow-Headers"
+    const shouldRemoveUserAgent = isMobile || isSafari
+    const headers = shouldRemoveUserAgent 
+      ? { 'Accept': 'application/json' }
+      : { 'User-Agent': 'liner-notez/1.0', 'Accept': 'application/json' }
+    
+    debugLog('[CoverArt Debug] Fetching release group cover art:', { 
+      url: releaseGroupUrl, 
+      headers, 
+      removedUserAgent: shouldRemoveUserAgent 
+    })
+    
+    const response = await rateLimitedFetch(releaseGroupUrl, {
+      headers
+    })
+    
+    if (response.ok) {
+      const contentType = response.headers.get('content-type') || ''
+      if (contentType.includes('application/json')) {
+        const data = await response.json()
+        const frontImage = data.images?.find(img => img.front === true)
+        if (frontImage && frontImage.image) {
+          return frontImage.image.replace('http://', 'https://')
+        }
+        // If no front image, try first image
+        if (data.images && data.images.length > 0 && data.images[0].image) {
+          return data.images[0].image.replace('http://', 'https://')
+        }
+      }
+    }
+  } catch (e) {
+    debugWarn('Error fetching cover art from release group:', e)
   }
   
   return null // Cover art is optional
@@ -1682,19 +1844,7 @@ export async function fetchAlbumBasicInfo(releaseGroupId) {
   
   // Get selected release ID for cover art
   const releases = rg.releases || []
-  const officialReleases = releases.filter(r => r.status === 'Official')
-  const sortedReleases = officialReleases.length > 0 
-    ? officialReleases.sort((a, b) => {
-        const dateA = a.date || '9999'
-        const dateB = b.date || '9999'
-        return dateA.localeCompare(dateB)
-      })
-    : releases.sort((a, b) => {
-        const dateA = a.date || '9999'
-        const dateB = b.date || '9999'
-        return dateA.localeCompare(dateB)
-      })
-  
+  const sortedReleases = sortReleasesForSelectedRelease(releases)
   const selectedReleaseId = sortedReleases[0]?.id || releases[0]?.id
   
   // Don't fetch cover art here - it will be loaded in parallel (non-blocking)
@@ -1746,22 +1896,10 @@ export async function fetchAlbumData(releaseGroupId, basicData = null) {
     
     // Get selected release ID first (needed for cover art fallback)
     releases = rg.releases || []
-    const officialReleases = releases.filter(r => r.status === 'Official')
-    sortedReleases = officialReleases.length > 0 
-      ? officialReleases.sort((a, b) => {
-          const dateA = a.date || '9999'
-          const dateB = b.date || '9999'
-          return dateA.localeCompare(dateB)
-        })
-      : releases.sort((a, b) => {
-          const dateA = a.date || '9999'
-          const dateB = b.date || '9999'
-          return dateA.localeCompare(dateB)
-        })
-    
+    sortedReleases = sortReleasesForSelectedRelease(releases)
     selectedReleaseId = sortedReleases[0]?.id || releases[0]?.id
     
-    // Fetch cover art (try release group, then specific release)
+    // Fetch cover art (try selected release, then release group)
     coverArtUrl = await fetchCoverArt(releaseGroupId, selectedReleaseId)
   }
   
@@ -1916,4 +2054,3 @@ export async function fetchAlbumData(releaseGroupId, basicData = null) {
     dataNotes: null
   }
 }
-
