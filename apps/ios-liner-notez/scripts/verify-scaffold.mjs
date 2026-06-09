@@ -917,6 +917,19 @@ if (!albumDetailScreenSource.includes('track.position') || !albumDetailScreenSou
 if (!albumDetailScreenSource.includes('Release Credits')) {
   throw new Error('AlbumDetailScreen does not include Release Credits section label')
 }
+const albumDetailSectionOrder = [
+  '>My Library</Text>',
+  '>Tracklist</Text>',
+  '>Release Credits</Text>',
+  '>Album Art & Liner Images</Text>',
+  'Editions & Sources'
+].map((sectionLabel) => albumDetailScreenSource.indexOf(sectionLabel))
+if (
+  albumDetailSectionOrder.some((sectionIndex) => sectionIndex < 0) ||
+  albumDetailSectionOrder.some((sectionIndex, index) => index > 0 && sectionIndex <= albumDetailSectionOrder[index - 1])
+) {
+  throw new Error('AlbumDetailScreen does not preserve the research-first section order')
+}
 if (!albumDetailScreenSource.includes('showCredits, setShowCredits] = useState(false)')) {
   throw new Error('AlbumDetailScreen does not keep Credits collapsed by default')
 }

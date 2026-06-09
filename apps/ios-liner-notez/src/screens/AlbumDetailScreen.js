@@ -672,73 +672,6 @@ export function AlbumDetailScreen({
               ) : null}
             </View>
 
-	          {hasArtworkGallery ? (
-	            <View
-	              style={{
-                marginTop: 12,
-                borderWidth: 1,
-                borderColor: '#374151',
-                borderRadius: 10,
-                padding: 14,
-                backgroundColor: '#181a1f'
-              }}
-            >
-              <Text maxFontSizeMultiplier={SECTION_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Album Art & Liner Images</Text>
-              <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>
-                Browse cover, booklet, media, and other release images.
-              </Text>
-              <Text style={{ color: '#6b7280', marginTop: 4, fontSize: 13 }}>
-                {artworkImages.length} {artworkImages.length === 1 ? 'image' : 'images'} · Tap any image to view full screen.
-              </Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={{ marginTop: 12 }}
-              >
-                {artworkImages.map((image, index) => {
-                  const thumbnailUrl = getArtworkThumbnailUrl(image)
-                  if (!thumbnailUrl || failedArtworkUrls[thumbnailUrl]) {
-                    return null
-                  }
-
-                  return (
-                    <TouchableOpacity
-                      key={`artwork-${image.id ?? image.image ?? 'image'}-${index}`}
-                      accessibilityRole="imagebutton"
-                      accessibilityLabel={`Open ${getArtworkTypeLabel(image)} artwork image ${index + 1} of ${artworkImages.length}`}
-                      onPress={() => openArtworkViewer(index)}
-                      style={{ width: 104, marginRight: 10 }}
-                    >
-                      <Image
-                        source={{ uri: thumbnailUrl }}
-                        onError={() => {
-                          setFailedArtworkUrls((current) => ({
-                            ...current,
-                            [thumbnailUrl]: true
-                          }))
-                        }}
-                        style={{
-                          width: 104,
-                          height: 104,
-                          borderRadius: 8,
-                          backgroundColor: '#111827'
-                        }}
-                        resizeMode="cover"
-                      />
-                      <Text
-                        maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER}
-                        numberOfLines={1}
-                        style={{ color: '#9ca3af', marginTop: 5, fontSize: 12 }}
-                      >
-                        {getArtworkTypeLabel(image)}
-                      </Text>
-                    </TouchableOpacity>
-                  )
-                })}
-              </ScrollView>
-            </View>
-          ) : null}
-
           <View
             style={{
               marginTop: 12,
@@ -975,6 +908,73 @@ export function AlbumDetailScreen({
               </>
             ) : null}
           </View>
+
+          {hasArtworkGallery ? (
+            <View
+              style={{
+                marginTop: 12,
+                borderWidth: 1,
+                borderColor: '#374151',
+                borderRadius: 10,
+                padding: 14,
+                backgroundColor: '#181a1f'
+              }}
+            >
+              <Text maxFontSizeMultiplier={SECTION_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>Album Art & Liner Images</Text>
+              <Text style={{ color: '#9ca3af', marginTop: 6, fontSize: 14 }}>
+                Browse cover, booklet, media, and other release images.
+              </Text>
+              <Text style={{ color: '#6b7280', marginTop: 4, fontSize: 13 }}>
+                {artworkImages.length} {artworkImages.length === 1 ? 'image' : 'images'} · Tap any image to view full screen.
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ marginTop: 12 }}
+              >
+                {artworkImages.map((image, index) => {
+                  const thumbnailUrl = getArtworkThumbnailUrl(image)
+                  if (!thumbnailUrl || failedArtworkUrls[thumbnailUrl]) {
+                    return null
+                  }
+
+                  return (
+                    <TouchableOpacity
+                      key={`artwork-${image.id ?? image.image ?? 'image'}-${index}`}
+                      accessibilityRole="imagebutton"
+                      accessibilityLabel={`Open ${getArtworkTypeLabel(image)} artwork image ${index + 1} of ${artworkImages.length}`}
+                      onPress={() => openArtworkViewer(index)}
+                      style={{ width: 104, marginRight: 10 }}
+                    >
+                      <Image
+                        source={{ uri: thumbnailUrl }}
+                        onError={() => {
+                          setFailedArtworkUrls((current) => ({
+                            ...current,
+                            [thumbnailUrl]: true
+                          }))
+                        }}
+                        style={{
+                          width: 104,
+                          height: 104,
+                          borderRadius: 8,
+                          backgroundColor: '#111827'
+                        }}
+                        resizeMode="cover"
+                      />
+                      <Text
+                        maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER}
+                        numberOfLines={1}
+                        style={{ color: '#9ca3af', marginTop: 5, fontSize: 12 }}
+                      >
+                        {getArtworkTypeLabel(image)}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                })}
+              </ScrollView>
+            </View>
+          ) : null}
 
           <View
             style={{
