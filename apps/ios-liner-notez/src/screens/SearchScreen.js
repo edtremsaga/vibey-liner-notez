@@ -79,7 +79,7 @@ export function SearchScreen({
     >
       <Text maxFontSizeMultiplier={DISPLAY_FONT_MAX_MULTIPLIER} style={{ color: '#e5e7eb', fontSize: 24, fontWeight: '700' }}>Explore Album Liner Notes</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Search by artist to browse albums, credits, tracklists, editions, sources, and liner images.
+        Search by artist to browse albums, credits, tracklists, release editions, and your private notes.
       </Text>
 
       <Text maxFontSizeMultiplier={LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#d1d5db', marginTop: 16, marginBottom: 6 }}>Artist name</Text>

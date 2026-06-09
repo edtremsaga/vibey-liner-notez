@@ -248,7 +248,7 @@ if (
 ) {
   throw new Error('SearchScreen does not present Browse Albums as the clear full-width primary action')
 }
-if (!searchScreenSource.includes('Search by artist to browse albums, credits, tracklists, editions, sources, and liner images.')) {
+if (!searchScreenSource.includes('Search by artist to browse albums, credits, tracklists, release editions, and your private notes.')) {
   throw new Error('SearchScreen does not include user-facing artist-first helper copy')
 }
 if (!searchScreenSource.includes('Optional: narrow results to a specific album.')) {
