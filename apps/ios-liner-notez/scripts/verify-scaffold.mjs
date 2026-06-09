@@ -282,6 +282,13 @@ if (
   throw new Error('MyLibraryScreen does not include readable inline private-note editing controls')
 }
 if (
+  !myLibraryScreenSource.includes('numberOfLines={3}') ||
+  myLibraryScreenSource.includes('Show More') ||
+  myLibraryScreenSource.includes('Show Less')
+) {
+  throw new Error('MyLibraryScreen does not keep normal note previews capped at three lines without expansion controls')
+}
+if (
   myLibraryScreenSource.includes('Image') ||
   myLibraryScreenSource.includes('coverArt') ||
   myLibraryScreenSource.includes('artwork')
@@ -1150,12 +1157,18 @@ if (
   !albumDetailScreenSource.includes('Cover Art Archive') ||
   !albumDetailScreenSource.includes('Wikipedia article') ||
   !albumDetailScreenSource.includes('Read album article on Wikipedia') ||
-  !albumDetailScreenSource.includes('Background, release history, reception, and legacy.') ||
-  !albumDetailScreenSource.includes('Opens in browser — tap ✓ to return') ||
   !albumDetailScreenSource.includes('Source links open in browser — tap ✓ to return') ||
   !albumDetailScreenSource.includes('externalLinks.wikidataUrl')
 ) {
   throw new Error('AlbumDetailScreen does not include external link labels in Editions & Sources')
+}
+const wikipediaArticleLinkCount = albumDetailScreenSource.match(/Read album article on Wikipedia/g)?.length ?? 0
+if (
+  wikipediaArticleLinkCount !== 2 ||
+  albumDetailScreenSource.includes('Background, release history, reception, and legacy.') ||
+  albumDetailScreenSource.includes('Opens in browser — tap ✓ to return')
+) {
+  throw new Error('AlbumDetailScreen must keep Wikipedia supplemental inside Editions & Sources only')
 }
 if (
   !albumDetailScreenSource.includes("'expo-web-browser'") ||

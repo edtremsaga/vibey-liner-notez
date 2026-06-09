@@ -672,32 +672,6 @@ export function AlbumDetailScreen({
               ) : null}
             </View>
 
-	          {album?.wikipediaArticle?.url ? (
-	            <TouchableOpacity
-	              accessibilityRole="link"
-	              accessibilityLabel="Read album article on Wikipedia"
-	              onPress={() => openExternalLink(album.wikipediaArticle.url)}
-	              style={{
-	                marginTop: 12,
-	                borderWidth: 1,
-	                borderColor: '#374151',
-	                borderRadius: 10,
-	                padding: 14,
-	                backgroundColor: '#181a1f'
-	              }}
-	            >
-	              <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#93c5fd', fontSize: 16, fontWeight: '700' }}>
-	                Read album article on Wikipedia
-	              </Text>
-                <Text style={{ color: '#9ca3af', marginTop: 5, fontSize: 14 }}>
-                  Background, release history, reception, and legacy.
-                </Text>
-                <Text style={{ color: '#6b7280', marginTop: 6, fontSize: 13 }}>
-                  Opens in browser — tap ✓ to return
-                </Text>
-              </TouchableOpacity>
-            ) : null}
-
 	          {hasArtworkGallery ? (
 	            <View
 	              style={{
