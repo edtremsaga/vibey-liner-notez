@@ -243,6 +243,7 @@ function ScreenRouter({
             'My Library'
           )}
           onRemoveAlbum={onRemoveSavedAlbum}
+          onSaveNote={onSavePrivateNote}
         />
       )
     case 'Search':

@@ -27,15 +27,37 @@ export function MyLibraryScreen({
   isReady,
   onBackToSearch,
   onOpenAlbum,
-  onRemoveAlbum
+  onRemoveAlbum,
+  onSaveNote
 }) {
   const [query, setQuery] = useState('')
+  const [editingAlbumId, setEditingAlbumId] = useState(null)
+  const [noteDraft, setNoteDraft] = useState('')
   const filteredAlbums = useMemo(
     () => sortSavedAlbums(albums).filter((album) => matchesLibrarySearch(album, query)),
     [albums, query]
   )
   const hasAlbums = albums.length > 0
   const hasMatches = filteredAlbums.length > 0
+
+  function startEditingNote(album) {
+    setEditingAlbumId(album.releaseGroupId)
+    setNoteDraft(album.note ?? '')
+  }
+
+  function cancelEditingNote() {
+    setEditingAlbumId(null)
+    setNoteDraft('')
+  }
+
+  function saveEditingNote() {
+    if (!editingAlbumId) {
+      return
+    }
+
+    onSaveNote(editingAlbumId, noteDraft)
+    cancelEditingNote()
+  }
 
   return (
     <ScrollView
@@ -86,25 +108,28 @@ export function MyLibraryScreen({
       ) : null}
 
       {isReady && hasAlbums ? (
-        <TextInput
-          accessibilityLabel="Search saved albums and private notes"
-          autoCapitalize="none"
-          onChangeText={setQuery}
-          placeholder="Search albums, artists, or private notes"
-          placeholderTextColor="#6b7280"
-          returnKeyType="search"
-          style={{
-            marginTop: 14,
-            borderWidth: 1,
-            borderColor: '#4b5563',
-            borderRadius: 8,
-            paddingVertical: 10,
-            paddingHorizontal: 12,
-            color: '#f3f4f6',
-            width: '100%'
-          }}
-          value={query}
-        />
+        <>
+          <TextInput
+            accessibilityLabel="Search saved albums and private notes"
+            autoCapitalize="none"
+            onChangeText={setQuery}
+            placeholder="Search albums, artists, or private notes"
+            placeholderTextColor="#6b7280"
+            returnKeyType="search"
+            style={{
+              marginTop: 14,
+              borderWidth: 1,
+              borderColor: '#4b5563',
+              borderRadius: 8,
+              paddingVertical: 10,
+              paddingHorizontal: 12,
+              color: '#f3f4f6',
+              width: '100%'
+            }}
+            value={query}
+          />
+          <Text style={{ color: '#6b7280', marginTop: 5, fontSize: 13 }}>Most recently updated first.</Text>
+        </>
       ) : null}
 
       {isReady && !hasAlbums ? (
@@ -144,7 +169,9 @@ export function MyLibraryScreen({
       ) : null}
 
       {isReady && hasMatches
-        ? filteredAlbums.map((album) => (
+        ? filteredAlbums.map((album) => {
+          const isEditingNote = editingAlbumId === album.releaseGroupId
+          return (
             <View
               key={album.releaseGroupId}
               style={{
@@ -156,44 +183,124 @@ export function MyLibraryScreen({
                 backgroundColor: '#181a1f'
               }}
             >
-              <TouchableOpacity
-                accessibilityRole="button"
-                accessibilityLabel={`Open saved album ${album.title}`}
-                onPress={() => onOpenAlbum(album)}
-              >
-                <Text style={{ color: '#f9fafb', fontWeight: '700', fontSize: 18 }}>{album.title}</Text>
-                <Text style={{ color: '#d1d5db', marginTop: 5 }}>{album.artistName}</Text>
-                {!!(album.firstReleaseDate ?? album.releaseYear) ? (
-                  <Text style={{ color: '#9ca3af', marginTop: 5 }}>
-                    First released: {album.firstReleaseDate ?? album.releaseYear}
-                  </Text>
-                ) : null}
-                {!!album.note.trim() ? (
-                  <Text numberOfLines={3} style={{ color: '#9ca3af', marginTop: 8 }}>
-                    Private note: {album.note.trim()}
-                  </Text>
-                ) : (
-                  <Text style={{ color: '#6b7280', marginTop: 8 }}>No private note yet.</Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                accessibilityRole="button"
-                accessibilityLabel={`Remove ${album.title} from My Library`}
-                onPress={() => onRemoveAlbum(album.releaseGroupId)}
-                style={{
-                  marginTop: 10,
-                  borderWidth: 1,
-                  borderColor: '#7f1d1d',
-                  borderRadius: 8,
-                  paddingVertical: 7,
-                  paddingHorizontal: 9,
-                  alignSelf: 'flex-start'
-                }}
-              >
-                <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#fca5a5', fontWeight: '600' }}>Remove</Text>
-              </TouchableOpacity>
+              <Text style={{ color: '#f9fafb', fontWeight: '700', fontSize: 18 }}>{album.title}</Text>
+              <Text style={{ color: '#d1d5db', marginTop: 5 }}>{album.artistName}</Text>
+              {!!(album.firstReleaseDate ?? album.releaseYear) ? (
+                <Text style={{ color: '#9ca3af', marginTop: 5 }}>
+                  First released: {album.firstReleaseDate ?? album.releaseYear}
+                </Text>
+              ) : null}
+
+              {isEditingNote ? (
+                <View style={{ marginTop: 10 }}>
+                  <Text style={{ color: '#d1d5db', fontWeight: '700' }}>Private note</Text>
+                  <Text style={{ color: '#6b7280', marginTop: 3, fontSize: 13 }}>Stored on this device.</Text>
+                  <TextInput
+                    accessibilityLabel={`Edit private note for ${album.title}`}
+                    multiline
+                    onChangeText={setNoteDraft}
+                    placeholder="Add research notes about credits, editions, or people to revisit."
+                    placeholderTextColor="#6b7280"
+                    style={{
+                      marginTop: 7,
+                      minHeight: 96,
+                      borderWidth: 1,
+                      borderColor: '#4b5563',
+                      borderRadius: 8,
+                      paddingVertical: 10,
+                      paddingHorizontal: 12,
+                      color: '#f3f4f6',
+                      textAlignVertical: 'top'
+                    }}
+                    value={noteDraft}
+                  />
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 9 }}>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      onPress={saveEditingNote}
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#4b5563',
+                        borderRadius: 8,
+                        paddingVertical: 8,
+                        paddingHorizontal: 10
+                      }}
+                    >
+                      <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>Save Note</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      onPress={cancelEditingNote}
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#4b5563',
+                        borderRadius: 8,
+                        paddingVertical: 8,
+                        paddingHorizontal: 10
+                      }}
+                    >
+                      <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#d1d5db', fontWeight: '600' }}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <>
+                  {!!album.note.trim() ? (
+                    <Text numberOfLines={3} style={{ color: '#9ca3af', marginTop: 8 }}>
+                      Private note: {album.note.trim()}
+                    </Text>
+                  ) : (
+                    <Text style={{ color: '#6b7280', marginTop: 8 }}>No private note yet.</Text>
+                  )}
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={`Open saved album ${album.title}`}
+                      onPress={() => onOpenAlbum(album)}
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#4b5563',
+                        borderRadius: 8,
+                        paddingVertical: 8,
+                        paddingHorizontal: 10
+                      }}
+                    >
+                      <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>Open Album</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={`Edit private note for ${album.title}`}
+                      onPress={() => startEditingNote(album)}
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#4b5563',
+                        borderRadius: 8,
+                        paddingVertical: 8,
+                        paddingHorizontal: 10
+                      }}
+                    >
+                      <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>Edit Note</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove ${album.title} from My Library`}
+                      onPress={() => onRemoveAlbum(album.releaseGroupId)}
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#7f1d1d',
+                        borderRadius: 8,
+                        paddingVertical: 8,
+                        paddingHorizontal: 10
+                      }}
+                    >
+                      <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#fca5a5', fontWeight: '600' }}>Remove</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
             </View>
-          ))
+          )
+        })
         : null}
     </ScrollView>
   )

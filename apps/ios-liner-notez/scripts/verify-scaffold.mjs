@@ -263,9 +263,23 @@ if (
   !myLibraryScreenSource.includes('No saved albums yet') ||
   !myLibraryScreenSource.includes('No saved albums found') ||
   !myLibraryScreenSource.includes('onOpenAlbum') ||
-  !myLibraryScreenSource.includes('onRemoveAlbum')
+  !myLibraryScreenSource.includes('onRemoveAlbum') ||
+  !myLibraryScreenSource.includes('onSaveNote')
 ) {
-  throw new Error('MyLibraryScreen does not include text search, open/remove actions, and empty states')
+  throw new Error('MyLibraryScreen does not include text search, open/remove/note actions, and empty states')
+}
+if (
+  !myLibraryScreenSource.includes('Open Album') ||
+  !myLibraryScreenSource.includes('Edit Note') ||
+  !myLibraryScreenSource.includes('Save Note') ||
+  !myLibraryScreenSource.includes('Cancel') ||
+  !myLibraryScreenSource.includes('startEditingNote') ||
+  !myLibraryScreenSource.includes('cancelEditingNote') ||
+  !myLibraryScreenSource.includes('saveEditingNote') ||
+  !myLibraryScreenSource.includes("flexWrap: 'wrap'") ||
+  !myLibraryScreenSource.includes('Most recently updated first.')
+) {
+  throw new Error('MyLibraryScreen does not include readable inline private-note editing controls')
 }
 if (
   myLibraryScreenSource.includes('Image') ||
