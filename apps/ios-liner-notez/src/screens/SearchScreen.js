@@ -29,10 +29,12 @@ export function SearchScreen({
   onAlbumInputChange,
   onArtistInputChange,
   onOpenHelpDataSources,
+  onOpenMyLibrary,
   onOpenProducerSearch,
   onReleaseTypeChange,
   onSubmitArtistSearch,
-  releaseType = 'Album'
+  releaseType = 'Album',
+  savedAlbumCount = 0
 }) {
   const [showReleaseTypes, setShowReleaseTypes] = useState(false)
   const [validationMessage, setValidationMessage] = useState('')
@@ -269,6 +271,27 @@ export function SearchScreen({
           paddingTop: 14
         }}
       >
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={onOpenMyLibrary}
+          style={{
+            borderWidth: 1,
+            borderColor: '#4b5563',
+            borderRadius: 8,
+            paddingVertical: 10,
+            paddingHorizontal: 12,
+            alignSelf: 'flex-start',
+            marginBottom: 14
+          }}
+        >
+          <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '700' }}>
+            My Library · {savedAlbumCount} saved
+          </Text>
+          <Text style={{ color: '#9ca3af', marginTop: 4 }}>
+            Search your private album notes stored on this device.
+          </Text>
+        </TouchableOpacity>
+
         <Text maxFontSizeMultiplier={LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#9ca3af', marginBottom: 8 }}>Other tools</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           <TouchableOpacity

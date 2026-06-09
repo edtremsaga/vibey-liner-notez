@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SearchScreen } from './screens/SearchScreen'
 import { ResultsScreen, getDefaultSortOption } from './screens/ResultsScreen'
 import { AlbumDetailScreen } from './screens/AlbumDetailScreen'
 import { ProducerSearchScreen } from './screens/ProducerSearchScreen'
 import { HelpDataSourcesScreen } from './screens/HelpDataSourcesScreen'
+import { MyLibraryScreen } from './screens/MyLibraryScreen'
 import {
   fetchMusicBrainzAlbumBasicInfo,
   fetchMusicBrainzArtworkGallery,
@@ -14,6 +15,7 @@ import {
 } from './services/musicbrainzAlbumDetail'
 import { searchMusicBrainzAlbumsByArtist } from './services/musicbrainzAlbumSearch'
 import { formatMusicDataError } from './services/musicDataErrors'
+import { buildSavedAlbumSummary, loadMyLibrary, saveMyLibrary } from './services/myLibraryStorage'
 
 const HEADER_FONT_MAX_MULTIPLIER = 1.3
 
@@ -53,6 +55,10 @@ function getHeaderSubtitle({
   producerSearchState,
   route
 }) {
+  if (route === 'My Library' || (route === 'Album Detail' && detailReturnRoute === 'My Library')) {
+    return 'Private research notebook'
+  }
+
   if (route === 'Producer Search' || (route === 'Album Detail' && detailReturnRoute === 'Producer Search')) {
     const producerName = producerSearchState?.selectedProducer?.name ?? producerSearchState?.producerName?.trim()
     return producerName ? `Producer credits for ${producerName}` : 'Producer Search'
@@ -140,6 +146,7 @@ function ScreenRouter({
   onBackToAlbumSource,
   onOpenProducerSearch,
   onOpenHelpDataSources,
+  onOpenMyLibrary,
   onAlbumSearchSortOptionChange,
   onSearchFormAlbumTitleChange,
   onSearchFormArtistNameChange,
@@ -149,7 +156,14 @@ function ScreenRouter({
   searchFormArtistName,
   searchFormReleaseType,
   producerSearchState,
-  detailReturnRoute
+  detailReturnRoute,
+  savedAlbums,
+  libraryError,
+  libraryReady,
+  onSaveAlbum,
+  onRemoveSavedAlbum,
+  onSavePrivateNote,
+  onDeletePrivateNote
 }) {
   const selectedAlbum = selectedAlbumResult
     ? buildAlbumDetailFromResult(selectedAlbumId, selectedAlbumResult, selectedAlbumDetail)
@@ -172,15 +186,31 @@ function ScreenRouter({
         />
       )
     case 'Album Detail':
-      return (
-        <AlbumDetailScreen
-          album={selectedAlbum}
-          errorMessage={albumDetailError}
-          isLoading={albumDetailLoading}
-          onBackToResults={onBackToAlbumSource}
-          backLabel={detailReturnRoute === 'Producer Search' ? 'Back to Producer Search' : 'Back to Results'}
-        />
-      )
+      {
+        const savedAlbum = savedAlbums.find((album) => album.releaseGroupId === selectedAlbum?.albumId) ?? null
+        return (
+          <AlbumDetailScreen
+            album={selectedAlbum}
+            errorMessage={albumDetailError}
+            isLoading={albumDetailLoading}
+            onBackToResults={onBackToAlbumSource}
+            backLabel={
+              detailReturnRoute === 'Producer Search'
+                ? 'Back to Producer Search'
+                : detailReturnRoute === 'My Library'
+                  ? 'Back to My Library'
+                  : 'Back to Results'
+            }
+            isLibraryReady={libraryReady}
+            libraryErrorMessage={libraryError}
+            savedAlbum={savedAlbum}
+            onSaveAlbum={onSaveAlbum}
+            onRemoveSavedAlbum={onRemoveSavedAlbum}
+            onSavePrivateNote={onSavePrivateNote}
+            onDeletePrivateNote={onDeletePrivateNote}
+          />
+        )
+      }
     case 'Producer Search':
       return (
         <ProducerSearchScreen
@@ -192,6 +222,29 @@ function ScreenRouter({
       )
     case 'Help / Data Sources':
       return <HelpDataSourcesScreen onBackToSearch={onBackToSearch} />
+    case 'My Library':
+      return (
+        <MyLibraryScreen
+          albums={savedAlbums}
+          errorMessage={libraryError}
+          isReady={libraryReady}
+          onBackToSearch={onBackToSearch}
+          onOpenAlbum={(savedAlbum) => onSelectAlbum(
+            savedAlbum.releaseGroupId,
+            {
+              id: savedAlbum.releaseGroupId,
+              releaseGroupId: savedAlbum.releaseGroupId,
+              title: savedAlbum.title,
+              artistCredit: savedAlbum.artistName,
+              firstReleaseDate: savedAlbum.firstReleaseDate,
+              releaseYear: savedAlbum.releaseYear,
+              disambiguation: savedAlbum.disambiguation
+            },
+            'My Library'
+          )}
+          onRemoveAlbum={onRemoveSavedAlbum}
+        />
+      )
     case 'Search':
     default:
       return (
@@ -199,12 +252,14 @@ function ScreenRouter({
           albumInput={searchFormAlbumTitle}
           artistInput={searchFormArtistName}
           onOpenHelpDataSources={onOpenHelpDataSources}
+          onOpenMyLibrary={onOpenMyLibrary}
           onOpenProducerSearch={onOpenProducerSearch}
           onAlbumInputChange={onSearchFormAlbumTitleChange}
           onArtistInputChange={onSearchFormArtistNameChange}
           onReleaseTypeChange={onSearchFormReleaseTypeChange}
           onSubmitArtistSearch={onSubmitArtistSearch}
           releaseType={searchFormReleaseType}
+          savedAlbumCount={savedAlbums.length}
         />
       )
   }
@@ -270,8 +325,37 @@ function LinerNotezApp() {
   const [albumDetailError, setAlbumDetailError] = useState('')
   const [detailReturnRoute, setDetailReturnRoute] = useState('Results')
   const [producerSearchState, setProducerSearchState] = useState(INITIAL_PRODUCER_SEARCH_STATE)
+  const [savedAlbums, setSavedAlbums] = useState([])
+  const [libraryReady, setLibraryReady] = useState(false)
+  const [libraryError, setLibraryError] = useState('')
   const albumSearchRequestId = useRef(0)
   const [albumDetailOpenRequestId, setAlbumDetailOpenRequestId] = useState(0)
+
+  useEffect(() => {
+    let isCurrent = true
+
+    loadMyLibrary()
+      .then((albums) => {
+        if (!isCurrent) {
+          return
+        }
+        setSavedAlbums(albums)
+        setLibraryError('')
+        setLibraryReady(true)
+      })
+      .catch((error) => {
+        if (!isCurrent) {
+          return
+        }
+        console.warn('Unable to load My Library', error)
+        setLibraryError('Your saved albums could not be loaded. Reopen the app and try again.')
+        setLibraryReady(false)
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [])
 
   useEffect(() => {
     if (!selectedAlbumResult || !selectedAlbumId) {
@@ -488,6 +572,95 @@ function LinerNotezApp() {
     setRoute('Help / Data Sources')
   }
 
+  function handleOpenMyLibrary() {
+    setRoute('My Library')
+  }
+
+  async function persistLibrary(nextAlbums) {
+    if (!libraryReady) {
+      setLibraryError('My Library is still loading. Please wait and try again.')
+      return false
+    }
+
+    try {
+      const persistedAlbums = await saveMyLibrary(nextAlbums)
+      setSavedAlbums(persistedAlbums)
+      setLibraryError('')
+      return true
+    } catch (error) {
+      console.warn('Unable to save My Library', error)
+      setLibraryError('Your My Library changes could not be saved. Please try again.')
+      return false
+    }
+  }
+
+  async function handleSaveAlbum(album) {
+    const releaseGroupId = album?.albumId ?? album?.releaseGroupId ?? album?.id ?? null
+    const existingAlbum = savedAlbums.find((savedAlbum) => savedAlbum.releaseGroupId === releaseGroupId) ?? null
+    const savedAlbum = buildSavedAlbumSummary(album, existingAlbum)
+    if (!savedAlbum) {
+      setLibraryError('This album could not be saved because its album information is incomplete.')
+      return
+    }
+
+    const nextAlbums = [
+      ...savedAlbums.filter((candidate) => candidate.releaseGroupId !== savedAlbum.releaseGroupId),
+      savedAlbum
+    ]
+    await persistLibrary(nextAlbums)
+  }
+
+  async function handleSavePrivateNote(releaseGroupId, note) {
+    const existingAlbum = savedAlbums.find((album) => album.releaseGroupId === releaseGroupId)
+    if (!existingAlbum) {
+      setLibraryError('Save this album to My Library before adding a private note.')
+      return
+    }
+
+    const nextAlbums = savedAlbums.map((album) =>
+      album.releaseGroupId === releaseGroupId
+        ? { ...album, note, updatedAt: new Date().toISOString() }
+        : album
+    )
+    await persistLibrary(nextAlbums)
+  }
+
+  async function performRemoveSavedAlbum(releaseGroupId) {
+    const nextAlbums = savedAlbums.filter((album) => album.releaseGroupId !== releaseGroupId)
+    await persistLibrary(nextAlbums)
+  }
+
+  function handleRemoveSavedAlbum(releaseGroupId) {
+    const savedAlbum = savedAlbums.find((album) => album.releaseGroupId === releaseGroupId)
+    if (!savedAlbum) {
+      return
+    }
+
+    if (savedAlbum.note.trim()) {
+      Alert.alert(
+        'Remove saved album?',
+        'Removing this album will also delete its private note from this device.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Remove',
+            style: 'destructive',
+            onPress: () => {
+              performRemoveSavedAlbum(releaseGroupId)
+            }
+          }
+        ]
+      )
+      return
+    }
+
+    performRemoveSavedAlbum(releaseGroupId)
+  }
+
+  function handleDeletePrivateNote(releaseGroupId) {
+    handleSavePrivateNote(releaseGroupId, '')
+  }
+
   const headerSubtitle = getHeaderSubtitle({
     albumSearchAlbumTitle,
     albumSearchArtistName,
@@ -528,6 +701,7 @@ function LinerNotezApp() {
           onBackToAlbumSource={handleBackToAlbumSource}
           onOpenProducerSearch={handleOpenProducerSearch}
           onOpenHelpDataSources={handleOpenHelpDataSources}
+          onOpenMyLibrary={handleOpenMyLibrary}
           onAlbumSearchSortOptionChange={setAlbumSearchSortOption}
           onSearchFormAlbumTitleChange={setSearchFormAlbumTitle}
           onSearchFormArtistNameChange={setSearchFormArtistName}
@@ -538,6 +712,13 @@ function LinerNotezApp() {
           searchFormReleaseType={searchFormReleaseType}
           producerSearchState={producerSearchState}
           detailReturnRoute={detailReturnRoute}
+          savedAlbums={savedAlbums}
+          libraryError={libraryError}
+          libraryReady={libraryReady}
+          onSaveAlbum={handleSaveAlbum}
+          onRemoveSavedAlbum={handleRemoveSavedAlbum}
+          onSavePrivateNote={handleSavePrivateNote}
+          onDeletePrivateNote={handleDeletePrivateNote}
         />
       </View>
     </SafeAreaView>

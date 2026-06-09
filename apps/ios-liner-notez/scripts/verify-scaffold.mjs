@@ -14,12 +14,14 @@ const requiredFiles = [
   'src/services/musicbrainzAlbumDetail.js',
   'src/services/musicbrainzAlbumSearch.js',
   'src/services/musicDataErrors.js',
+  'src/services/myLibraryStorage.js',
   'src/services/musicbrainzProducerSearch.js',
   'src/screens/SearchScreen.js',
   'src/screens/ResultsScreen.js',
   'src/screens/AlbumDetailScreen.js',
   'src/screens/ProducerSearchScreen.js',
-  'src/screens/HelpDataSourcesScreen.js'
+  'src/screens/HelpDataSourcesScreen.js',
+  'src/screens/MyLibraryScreen.js'
 ]
 
 for (const rel of requiredFiles) {
@@ -36,7 +38,7 @@ const musicDataErrorsSource = readFileSync(path.join(appRoot, 'src/services/musi
 const formatMusicDataError = new Function(
   `${musicDataErrorsSource.replace('export function formatMusicDataError', 'function formatMusicDataError')}\nreturn formatMusicDataError;`
 )()
-const requiredRoutes = ['Search', 'Results', 'Album Detail', 'Producer Search', 'Help / Data Sources']
+const requiredRoutes = ['Search', 'Results', 'Album Detail', 'Producer Search', 'Help / Data Sources', 'My Library']
 for (const route of requiredRoutes) {
   if (!appSource.includes(route)) {
     throw new Error(`Route not found in App.js: ${route}`)
@@ -69,6 +71,9 @@ if (
 }
 if (!packageConfig.dependencies?.['expo-splash-screen']) {
   throw new Error('package.json does not explicitly include expo-splash-screen')
+}
+if (!packageConfig.dependencies?.['@react-native-async-storage/async-storage']) {
+  throw new Error('package.json does not explicitly include AsyncStorage for My Library')
 }
 const splashPlugin = appConfig.expo?.plugins?.find((plugin) => Array.isArray(plugin) && plugin[0] === 'expo-splash-screen')
 if (!splashPlugin) {
@@ -141,6 +146,25 @@ if (
   !appSource.includes("setRoute('Help / Data Sources')")
 ) {
   throw new Error('App.js does not expose contextual navigation actions from Search')
+}
+if (
+  !appSource.includes("import { MyLibraryScreen } from './screens/MyLibraryScreen'") ||
+  !appSource.includes("import { buildSavedAlbumSummary, loadMyLibrary, saveMyLibrary } from './services/myLibraryStorage'") ||
+  !appSource.includes("case 'My Library':") ||
+  !appSource.includes("setRoute('My Library')") ||
+  !appSource.includes("'Back to My Library'") ||
+  !appSource.includes("'My Library'")
+) {
+  throw new Error('App.js does not wire the contextual My Library route and Album Detail return path')
+}
+if (
+  !appSource.includes('const [libraryReady, setLibraryReady] = useState(false)') ||
+  !appSource.includes('loadMyLibrary()') ||
+  !appSource.includes('if (!libraryReady)') ||
+  !appSource.includes('await saveMyLibrary(nextAlbums)') ||
+  !appSource.includes('Removing this album will also delete its private note from this device.')
+) {
+  throw new Error('App.js does not hydrate My Library before writes or confirm removal of saved notes')
 }
 if (
   !appSource.includes("const [searchFormArtistName, setSearchFormArtistName] = useState('')") ||
@@ -224,6 +248,55 @@ if (!searchScreenSource.includes('Choose what kind of releases to browse.')) {
 }
 if (!searchScreenSource.includes('Other tools')) {
   throw new Error('SearchScreen does not use polished secondary tools label')
+}
+if (
+  !searchScreenSource.includes('onOpenMyLibrary') ||
+  !searchScreenSource.includes('My Library · {savedAlbumCount} saved') ||
+  !searchScreenSource.includes('Search your private album notes stored on this device.')
+) {
+  throw new Error('SearchScreen does not expose the on-device My Library workflow')
+}
+
+const myLibraryScreenSource = readFileSync(path.join(appRoot, 'src/screens/MyLibraryScreen.js'), 'utf8')
+if (
+  !myLibraryScreenSource.includes('Search saved albums and private notes') ||
+  !myLibraryScreenSource.includes('No saved albums yet') ||
+  !myLibraryScreenSource.includes('No saved albums found') ||
+  !myLibraryScreenSource.includes('onOpenAlbum') ||
+  !myLibraryScreenSource.includes('onRemoveAlbum')
+) {
+  throw new Error('MyLibraryScreen does not include text search, open/remove actions, and empty states')
+}
+if (
+  myLibraryScreenSource.includes('Image') ||
+  myLibraryScreenSource.includes('coverArt') ||
+  myLibraryScreenSource.includes('artwork')
+) {
+  throw new Error('MyLibraryScreen must remain text-first and must not render album artwork')
+}
+if (
+  !myLibraryScreenSource.includes('stored on this device') ||
+  myLibraryScreenSource.includes('encrypted') ||
+  myLibraryScreenSource.includes('secure')
+) {
+  throw new Error('MyLibraryScreen does not accurately describe on-device private notes')
+}
+
+const myLibraryStorageSource = readFileSync(path.join(appRoot, 'src/services/myLibraryStorage.js'), 'utf8')
+if (
+  !myLibraryStorageSource.includes("import AsyncStorage from '@react-native-async-storage/async-storage'") ||
+  !myLibraryStorageSource.includes("@liner-notez/my-library/v1") ||
+  !myLibraryStorageSource.includes('MY_LIBRARY_SCHEMA_VERSION = 1') ||
+  !myLibraryStorageSource.includes('loadMyLibrary') ||
+  !myLibraryStorageSource.includes('saveMyLibrary') ||
+  !myLibraryStorageSource.includes('buildSavedAlbumSummary')
+) {
+  throw new Error('My Library storage service does not include the expected versioned AsyncStorage workflow')
+}
+for (const prohibitedStoredField of ['coverArtUrl', 'artworkImages', 'externalLinks', 'credits', 'sources']) {
+  if (myLibraryStorageSource.includes(prohibitedStoredField)) {
+    throw new Error(`My Library storage service must not persist fetched detail field: ${prohibitedStoredField}`)
+  }
 }
 if (
   !searchScreenSource.includes('onOpenProducerSearch') ||
@@ -717,6 +790,16 @@ if (!albumDetailScreenSource.includes('ScrollView') || !albumDetailScreenSource.
   throw new Error('AlbumDetailScreen is not scrollable for long album detail content')
 }
 if (
+  !albumDetailScreenSource.includes('Save to My Library') ||
+  !albumDetailScreenSource.includes('Remove from My Library') ||
+  !albumDetailScreenSource.includes('Private note') ||
+  !albumDetailScreenSource.includes('Save Note') ||
+  !albumDetailScreenSource.includes('Delete Note') ||
+  !albumDetailScreenSource.includes('stored on this device')
+) {
+  throw new Error('AlbumDetailScreen does not expose the on-device saved album and private-note workflow')
+}
+if (
   !albumDetailScreenSource.includes('SECTION_FONT_MAX_MULTIPLIER') ||
   !albumDetailScreenSource.includes('CONTROL_FONT_MAX_MULTIPLIER') ||
   !albumDetailScreenSource.includes('DENSE_LABEL_FONT_MAX_MULTIPLIER') ||
@@ -757,7 +840,9 @@ for (const textDisclosure of [
 }
 if (
   !albumDetailScreenSource.includes("backLabel = 'Back to Results'") ||
-  !appSource.includes("backLabel={detailReturnRoute === 'Producer Search' ? 'Back to Producer Search' : 'Back to Results'}") ||
+  !appSource.includes("'Back to Producer Search'") ||
+  !appSource.includes("'Back to My Library'") ||
+  !appSource.includes("'Back to Results'") ||
   !albumDetailScreenSource.includes('marginBottom: 14')
 ) {
   throw new Error('AlbumDetailScreen does not include top contextual back action label')

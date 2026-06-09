@@ -8,6 +8,7 @@
     "verify": "node scripts/verify-scaffold.mjs"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "2.1.2",
     "core-liner-notez": "file:../../packages/core-liner-notez",
     "expo": "~53.0.0",
     "expo-asset": "~11.1.7",

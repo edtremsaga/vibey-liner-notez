@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ActivityIndicator, Image, Modal, ScrollView, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import { ActivityIndicator, Image, Modal, ScrollView, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import * as WebBrowser from 'expo-web-browser'
 
 const SECTION_FONT_MAX_MULTIPLIER = 1.3
@@ -231,7 +231,20 @@ function getArtworkViewerUrl(image) {
     null
 }
 
-export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorMessage, isLoading, onBackToResults }) {
+export function AlbumDetailScreen({
+  album,
+  backLabel = 'Back to Results',
+  errorMessage,
+  isLibraryReady,
+  isLoading,
+  libraryErrorMessage,
+  onBackToResults,
+  onDeletePrivateNote,
+  onRemoveSavedAlbum,
+  onSaveAlbum,
+  onSavePrivateNote,
+  savedAlbum
+}) {
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions()
   const artworkViewerScrollRef = useRef(null)
   const [showLoading, setShowLoading] = useState(false)
@@ -248,8 +261,11 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
   const [loadedViewerImageUrls, setLoadedViewerImageUrls] = useState({})
   const [selectedArtworkIndex, setSelectedArtworkIndex] = useState(0)
   const [isArtworkViewerOpen, setIsArtworkViewerOpen] = useState(false)
+  const [privateNoteDraft, setPrivateNoteDraft] = useState(savedAlbum?.note ?? '')
 
   const hasAlbum = !!album
+  const releaseGroupId = album?.albumId ?? album?.releaseGroupId ?? album?.id ?? null
+  const isSavedAlbum = !!savedAlbum
   const isRealMusicBrainzDetail = hasAlbum && album.isRealMusicBrainzDetail
   const hasTracks = hasAlbum && Array.isArray(album.tracks) && album.tracks.length > 0
   const hasAlbumCredits =
@@ -339,6 +355,10 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
   const viewerImages = hasArtworkGallery ? artworkImages : fallbackCoverArtwork
   const selectedArtwork = isArtworkViewerOpen ? viewerImages[selectedArtworkIndex] ?? null : null
   const viewerImageCount = viewerImages.length
+
+  useEffect(() => {
+    setPrivateNoteDraft(savedAlbum?.note ?? '')
+  }, [releaseGroupId, savedAlbum?.note])
 
   useEffect(() => {
     if (!isArtworkViewerOpen || viewerImageCount === 0) {
@@ -546,6 +566,111 @@ export function AlbumDetailScreen({ album, backLabel = 'Back to Results', errorM
               </Text>
             )}
 	          </View>
+
+            <View
+              style={{
+                marginTop: 12,
+                borderWidth: 1,
+                borderColor: '#374151',
+                borderRadius: 10,
+                padding: 14,
+                backgroundColor: '#181a1f'
+              }}
+            >
+              <Text maxFontSizeMultiplier={SECTION_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>My Library</Text>
+              <Text style={{ color: '#9ca3af', marginTop: 5, fontSize: 14 }}>
+                Save this album and keep one private note stored on this device.
+              </Text>
+
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={isSavedAlbum ? `Remove ${album.title} from My Library` : `Save ${album.title} to My Library`}
+                disabled={!isLibraryReady}
+                onPress={() => {
+                  if (isSavedAlbum) {
+                    onRemoveSavedAlbum?.(releaseGroupId)
+                  } else {
+                    onSaveAlbum?.(album)
+                  }
+                }}
+                style={{
+                  marginTop: 10,
+                  borderWidth: 1,
+                  borderColor: isSavedAlbum ? '#7f1d1d' : '#4b5563',
+                  borderRadius: 8,
+                  paddingVertical: 8,
+                  paddingHorizontal: 10,
+                  alignSelf: 'flex-start',
+                  opacity: isLibraryReady ? 1 : 0.55
+                }}
+              >
+                <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: isSavedAlbum ? '#fca5a5' : '#f3f4f6', fontWeight: '600' }}>
+                  {isSavedAlbum ? 'Remove from My Library' : isLibraryReady ? 'Save to My Library' : 'Loading My Library...'}
+                </Text>
+              </TouchableOpacity>
+
+              {isSavedAlbum ? (
+                <View style={{ marginTop: 12 }}>
+                  <Text maxFontSizeMultiplier={DENSE_LABEL_FONT_MAX_MULTIPLIER} style={{ color: '#d1d5db', fontWeight: '700', fontSize: 15 }}>Private note</Text>
+                  <TextInput
+                    accessibilityLabel={`Private note for ${album.title}`}
+                    multiline
+                    onChangeText={setPrivateNoteDraft}
+                    placeholder="Add research notes about credits, editions, or people to revisit."
+                    placeholderTextColor="#6b7280"
+                    style={{
+                      marginTop: 7,
+                      minHeight: 96,
+                      borderWidth: 1,
+                      borderColor: '#4b5563',
+                      borderRadius: 8,
+                      paddingVertical: 10,
+                      paddingHorizontal: 12,
+                      color: '#f3f4f6',
+                      textAlignVertical: 'top'
+                    }}
+                    value={privateNoteDraft}
+                  />
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 9 }}>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      onPress={() => onSavePrivateNote?.(releaseGroupId, privateNoteDraft)}
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#4b5563',
+                        borderRadius: 8,
+                        paddingVertical: 8,
+                        paddingHorizontal: 10
+                      }}
+                    >
+                      <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>Save Note</Text>
+                    </TouchableOpacity>
+                    {!!savedAlbum.note.trim() ? (
+                      <TouchableOpacity
+                        accessibilityRole="button"
+                        onPress={() => {
+                          setPrivateNoteDraft('')
+                          onDeletePrivateNote?.(releaseGroupId)
+                        }}
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#7f1d1d',
+                          borderRadius: 8,
+                          paddingVertical: 8,
+                          paddingHorizontal: 10
+                        }}
+                      >
+                        <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#fca5a5', fontWeight: '600' }}>Delete Note</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                </View>
+              ) : null}
+
+              {!!libraryErrorMessage ? (
+                <Text style={{ color: '#fca5a5', marginTop: 9, fontSize: 14 }}>{libraryErrorMessage}</Text>
+              ) : null}
+            </View>
 
 	          {album?.wikipediaArticle?.url ? (
 	            <TouchableOpacity
