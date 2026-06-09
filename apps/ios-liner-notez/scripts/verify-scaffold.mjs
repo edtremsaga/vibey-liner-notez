@@ -277,9 +277,11 @@ if (
   !myLibraryScreenSource.includes('cancelEditingNote') ||
   !myLibraryScreenSource.includes('saveEditingNote') ||
   !myLibraryScreenSource.includes("flexWrap: 'wrap'") ||
-  !myLibraryScreenSource.includes('Most recently updated first.')
+  !myLibraryScreenSource.includes("String(b?.savedAt ?? '').localeCompare(String(a?.savedAt ?? ''))") ||
+  !myLibraryScreenSource.includes('Most recently saved first.') ||
+  myLibraryScreenSource.includes('Most recently updated first.')
 ) {
-  throw new Error('MyLibraryScreen does not include readable inline private-note editing controls')
+  throw new Error('MyLibraryScreen does not include stable saved-date ordering and readable inline private-note editing controls')
 }
 if (
   !myLibraryScreenSource.includes('numberOfLines={3}') ||

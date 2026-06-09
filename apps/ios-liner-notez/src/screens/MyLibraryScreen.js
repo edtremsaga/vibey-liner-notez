@@ -16,8 +16,8 @@ function matchesLibrarySearch(album, query) {
 
 function sortSavedAlbums(albums) {
   return [...albums].sort((a, b) => {
-    const updatedDifference = String(b?.updatedAt ?? '').localeCompare(String(a?.updatedAt ?? ''))
-    return updatedDifference || String(a?.title ?? '').localeCompare(String(b?.title ?? ''))
+    const savedDifference = String(b?.savedAt ?? '').localeCompare(String(a?.savedAt ?? ''))
+    return savedDifference || String(a?.title ?? '').localeCompare(String(b?.title ?? ''))
   })
 }
 
@@ -128,7 +128,7 @@ export function MyLibraryScreen({
             }}
             value={query}
           />
-          <Text style={{ color: '#6b7280', marginTop: 5, fontSize: 13 }}>Most recently updated first.</Text>
+          <Text style={{ color: '#6b7280', marginTop: 5, fontSize: 13 }}>Most recently saved first.</Text>
         </>
       ) : null}
 
