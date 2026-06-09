@@ -55,6 +55,10 @@ function getHeaderSubtitle({
   producerSearchState,
   route
 }) {
+  if (route === 'Search') {
+    return ''
+  }
+
   if (route === 'My Library' || (route === 'Album Detail' && detailReturnRoute === 'My Library')) {
     return 'Private research notebook'
   }

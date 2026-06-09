@@ -110,6 +110,9 @@ if (
 ) {
   throw new Error('App header does not use release-type-aware Album Search context copy')
 }
+if (!appSource.includes("if (route === 'Search')") || !appSource.includes("return ''")) {
+  throw new Error('App header does not suppress stale result context on the Search route')
+}
 if (
   !appSource.includes('function getHeaderSubtitle') ||
   !appSource.includes("route === 'Producer Search'") ||
@@ -229,13 +232,21 @@ if (
 ) {
   throw new Error('SearchScreen clear controls are not presented as in-field trailing controls')
 }
-if (!searchScreenSource.includes('Explore Album Liner Notes') || !searchScreenSource.includes('Find Albums')) {
+if (!searchScreenSource.includes('Explore Album Liner Notes') || !searchScreenSource.includes('Browse Albums')) {
   throw new Error('SearchScreen does not include polished album search heading/action')
 }
-for (const searchButtonLabel of ['Find Albums', 'Find Singles', 'Find EPs', 'Find Live Albums', 'Find Compilations']) {
+for (const searchButtonLabel of ['Browse Albums', 'Browse Singles', 'Browse EPs', 'Browse Live Albums', 'Browse Compilations']) {
   if (!searchScreenSource.includes(searchButtonLabel)) {
     throw new Error(`SearchScreen is missing release-type-aware search button copy: ${searchButtonLabel}`)
   }
+}
+if (
+  !searchScreenSource.includes("backgroundColor: '#e5e7eb'") ||
+  !searchScreenSource.includes("width: '100%'") ||
+  !searchScreenSource.includes("alignItems: 'center'") ||
+  searchScreenSource.includes("'Find Albums'")
+) {
+  throw new Error('SearchScreen does not present Browse Albums as the clear full-width primary action')
 }
 if (!searchScreenSource.includes('Search by artist to browse albums, credits, tracklists, editions, sources, and liner images.')) {
   throw new Error('SearchScreen does not include user-facing artist-first helper copy')

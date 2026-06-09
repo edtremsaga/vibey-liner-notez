@@ -11,12 +11,12 @@ const RELEASE_TYPES = [
 ]
 
 const SEARCH_BUTTON_LABELS = {
-  Album: 'Find Albums',
-  EP: 'Find EPs',
-  Single: 'Find Singles',
-  Live: 'Find Live Albums',
-  Compilation: 'Find Compilations',
-  Soundtrack: 'Find Soundtracks'
+  Album: 'Browse Albums',
+  EP: 'Browse EPs',
+  Single: 'Browse Singles',
+  Live: 'Browse Live Albums',
+  Compilation: 'Browse Compilations',
+  Soundtrack: 'Browse Soundtracks'
 }
 
 const DISPLAY_FONT_MAX_MULTIPLIER = 1.25
@@ -252,15 +252,15 @@ export function SearchScreen({
         onPress={handleSearchPress}
         style={{
           marginTop: 16,
-          borderWidth: 1,
-          borderColor: '#4b5563',
+          backgroundColor: '#e5e7eb',
           borderRadius: 8,
-          paddingVertical: 10,
+          paddingVertical: 12,
           paddingHorizontal: 12,
-          alignSelf: 'flex-start'
+          width: '100%',
+          alignItems: 'center'
         }}
       >
-        <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>{searchButtonLabel}</Text>
+        <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#101114', fontWeight: '700' }}>{searchButtonLabel}</Text>
       </TouchableOpacity>
 
       <View
