@@ -710,23 +710,24 @@ if (
   !helpDataSourcesScreenSource.includes('What Liner Notez helps you do') ||
   !helpDataSourcesScreenSource.includes('music-credit research notebook') ||
   !helpDataSourcesScreenSource.includes('album credits, tracklists, release editions, and documented contributors') ||
-  !helpDataSourcesScreenSource.includes('documented songwriters, producers, performers, publishers, instruments, and other contributors') ||
-  !helpDataSourcesScreenSource.includes('Save albums to My Library') ||
-  !helpDataSourcesScreenSource.includes('private notes stored on this device') ||
-  !helpDataSourcesScreenSource.includes('search your saved albums and notes locally') ||
+  !helpDataSourcesScreenSource.includes('explore documented credits for songwriters, producers, performers, publishers, and instruments') ||
+  !helpDataSourcesScreenSource.includes('Add album releases to My Library for later research') ||
+  !helpDataSourcesScreenSource.includes('write private notes about them') ||
+  !helpDataSourcesScreenSource.includes('search your saved library entries and notes locally') ||
   !helpDataSourcesScreenSource.includes('Producer Search helps you follow documented producer connections') ||
+  !helpDataSourcesScreenSource.includes('album credit research') ||
   !helpDataSourcesScreenSource.includes('does not play, stream, download, or provide music audio')
 ) {
   throw new Error('HelpDataSourcesScreen does not explain the Build 11 research-notebook value in user-facing language')
 }
 if (
-  !helpDataSourcesScreenSource.includes('Get better album search results') ||
+  !helpDataSourcesScreenSource.includes('Find the right album or release') ||
   !helpDataSourcesScreenSource.includes('Start with the artist name') ||
   !helpDataSourcesScreenSource.includes('Add an album title when you want a closer match') ||
   !helpDataSourcesScreenSource.includes('David Bowie') ||
   !helpDataSourcesScreenSource.includes('Aladdin Sane') ||
   !helpDataSourcesScreenSource.includes('Use Hide bootlegs to reduce unofficial or bootleg releases') ||
-  !helpDataSourcesScreenSource.includes('Open the search result') ||
+  !helpDataSourcesScreenSource.includes('Tap to open the search result') ||
   !helpDataSourcesScreenSource.includes('leave the title blank to browse albums, singles, EPs') ||
   !helpDataSourcesScreenSource.includes('Different countries, reissues, formats, and release dates')
 ) {
@@ -734,11 +735,10 @@ if (
 }
 if (
   !helpDataSourcesScreenSource.includes('Explore an album') ||
-  !helpDataSourcesScreenSource.includes('save research to My Library') ||
-  !helpDataSourcesScreenSource.includes('add a private note') ||
+  !helpDataSourcesScreenSource.includes('add an album release to My Library') ||
+  !helpDataSourcesScreenSource.includes('write a private note about the album release') ||
   !helpDataSourcesScreenSource.includes('expand tracks for song-level credits') ||
   !helpDataSourcesScreenSource.includes('review Release Credits') ||
-  !helpDataSourcesScreenSource.includes('Album art remains available when documented') ||
   !helpDataSourcesScreenSource.includes('supplemental source links')
 ) {
   throw new Error('HelpDataSourcesScreen does not explain Album Detail exploration')
@@ -755,6 +755,7 @@ if (
   !helpDataSourcesScreenSource.includes('If a producer name is ambiguous') ||
   !helpDataSourcesScreenSource.includes('choose the correct person from the candidate results') ||
   !helpDataSourcesScreenSource.includes('Producer searches can take a moment') ||
+  !helpDataSourcesScreenSource.includes('checks documented producer credits') ||
   !helpDataSourcesScreenSource.includes('not a complete career discography') ||
   !helpDataSourcesScreenSource.includes('not documented at the release level')
 ) {
@@ -771,20 +772,20 @@ if (helpDataSourcesScreenSource.includes('does not guess or invent credits')) {
 if (
   !helpDataSourcesScreenSource.includes('Data sources') ||
   !helpDataSourcesScreenSource.includes('Liner Notez uses public music data from:') ||
-  !helpDataSourcesScreenSource.includes('MusicBrainz — album, release, track, credit, and relationship data') ||
-  !helpDataSourcesScreenSource.includes('Cover Art Archive — artwork and release images when available') ||
-  !helpDataSourcesScreenSource.includes('Wikidata and Wikipedia — background links when available through public source records') ||
+  !helpDataSourcesScreenSource.includes('• MusicBrainz: album, release, track, credit, and relationship data') ||
+  !helpDataSourcesScreenSource.includes('• Cover Art Archive: artwork and release images when available') ||
+  !helpDataSourcesScreenSource.includes('• Wikidata and Wikipedia: background links when available through public source records') ||
   !helpDataSourcesScreenSource.includes('Source links are shown when possible') ||
-  !helpDataSourcesScreenSource.includes('External links such as Wikipedia and source pages open in an in-app browser') ||
-  !helpDataSourcesScreenSource.includes('Tap the checkmark at the top left to close the browser and return to Liner Notez') ||
-  !helpDataSourcesScreenSource.includes('Artwork, background links, and summaries appear only when they are available')
+  !helpDataSourcesScreenSource.includes('External links such as Wikipedia and source pages open in a browser view') ||
+  !helpDataSourcesScreenSource.includes('Tap the checkmark at the top left to return to Liner Notez') ||
+  !helpDataSourcesScreenSource.includes('Artwork and source links appear only when they are available from connected public source records')
 ) {
   throw new Error('HelpDataSourcesScreen does not explain source-backed Wikidata/Wikipedia behavior')
 }
 if (
   !helpDataSourcesScreenSource.includes('Why credits may be missing') ||
   !helpDataSourcesScreenSource.includes('Music credits can vary by release edition') ||
-  !helpDataSourcesScreenSource.includes("different countries' editions") ||
+  !helpDataSourcesScreenSource.includes('different countries’ editions') ||
   !helpDataSourcesScreenSource.includes('public source record does not document it for the selected release') ||
   !helpDataSourcesScreenSource.includes('Liner Notez shows that as not documented')
 ) {
@@ -809,8 +810,8 @@ if (
 if (
   !helpDataSourcesScreenSource.includes('vibeycraft@gmail.com') ||
   !helpDataSourcesScreenSource.includes('does not require an account or login') ||
-  !helpDataSourcesScreenSource.includes('Saved albums and private notes are stored locally on this device') ||
-  !helpDataSourcesScreenSource.includes('They are not synced to an account') ||
+  !helpDataSourcesScreenSource.includes('My Library entries and private notes are stored locally on your device') ||
+  !helpDataSourcesScreenSource.includes('They are not synced to an account or shared with Liner Notez') ||
   !helpDataSourcesScreenSource.includes('Searches and album lookups are sent to public music data services') ||
   !helpDataSourcesScreenSource.includes('needs an internet connection to search and load music data') ||
   !helpDataSourcesScreenSource.includes('Independent app') ||
