@@ -26,15 +26,18 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 20 }}>Help / Data Sources</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Liner Notez helps you explore albums the way liner notes used to: credits, musicians, producers, artwork, release editions, and source links — using public music data.
+        Liner Notez is a music-credit research notebook for exploring album credits, tracklists, release editions, and documented contributors.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>What Liner Notez helps you do</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Search for an artist, browse releases, open a release, and dig into credits, artwork, editions, and source links.
+        Search for an artist, browse releases, and investigate documented songwriters, producers, performers, publishers, instruments, and other contributors.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Liner Notez shows documented public data.
+        Save albums to My Library, add private notes stored on this device, and search your saved albums and notes locally.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Producer Search helps you follow documented producer connections across releases.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Liner Notez is for album information and discovery. It does not play, stream, download, or provide music audio.
@@ -56,10 +59,10 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Explore an album</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        On Album Detail, check the selected release, open artwork when available, expand tracks for song-level credits, and review Release Credits when they are documented.
+        On Album Detail, save research to My Library, add a private note, expand tracks for song-level credits, and review Release Credits when they are documented.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Editions & Sources keeps release details and source links available when you want to inspect where the data came from.
+        Album art remains available when documented. Editions & Sources keeps release details, attribution, and supplemental source links available when you want to inspect where the data came from.
       </Text>
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Follow producer connections</Text>
@@ -124,7 +127,10 @@ export function HelpDataSourcesScreen({ onBackToSearch }) {
 
       <Text style={{ color: '#e5e7eb', fontSize: 18, marginTop: 16 }}>Privacy and network use</Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
-        Liner Notez does not require an account.
+        Liner Notez does not require an account or login.
+      </Text>
+      <Text style={{ color: '#9ca3af', marginTop: 8 }}>
+        Saved albums and private notes are stored locally on this device. They are not synced to an account.
       </Text>
       <Text style={{ color: '#9ca3af', marginTop: 8 }}>
         Searches and album lookups are sent to public music data services so the app can return results. The app needs an internet connection to search and load music data.

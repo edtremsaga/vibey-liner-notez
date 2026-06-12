@@ -708,13 +708,16 @@ if (helpDataSourcesScreenSource.includes('Placeholder screen for help, attributi
 }
 if (
   !helpDataSourcesScreenSource.includes('What Liner Notez helps you do') ||
-  !helpDataSourcesScreenSource.includes('explore albums the way liner notes used to') ||
-  !helpDataSourcesScreenSource.includes('Search for an artist, browse releases, open a release') ||
-  !helpDataSourcesScreenSource.includes('credits, artwork, editions, and source links') ||
-  !helpDataSourcesScreenSource.includes('Liner Notez shows documented public data') ||
+  !helpDataSourcesScreenSource.includes('music-credit research notebook') ||
+  !helpDataSourcesScreenSource.includes('album credits, tracklists, release editions, and documented contributors') ||
+  !helpDataSourcesScreenSource.includes('documented songwriters, producers, performers, publishers, instruments, and other contributors') ||
+  !helpDataSourcesScreenSource.includes('Save albums to My Library') ||
+  !helpDataSourcesScreenSource.includes('private notes stored on this device') ||
+  !helpDataSourcesScreenSource.includes('search your saved albums and notes locally') ||
+  !helpDataSourcesScreenSource.includes('Producer Search helps you follow documented producer connections') ||
   !helpDataSourcesScreenSource.includes('does not play, stream, download, or provide music audio')
 ) {
-  throw new Error('HelpDataSourcesScreen does not explain the product value in user-facing language')
+  throw new Error('HelpDataSourcesScreen does not explain the Build 11 research-notebook value in user-facing language')
 }
 if (
   !helpDataSourcesScreenSource.includes('Get better album search results') ||
@@ -731,11 +734,12 @@ if (
 }
 if (
   !helpDataSourcesScreenSource.includes('Explore an album') ||
-  !helpDataSourcesScreenSource.includes('check the selected release') ||
-  !helpDataSourcesScreenSource.includes('open artwork when available') ||
+  !helpDataSourcesScreenSource.includes('save research to My Library') ||
+  !helpDataSourcesScreenSource.includes('add a private note') ||
   !helpDataSourcesScreenSource.includes('expand tracks for song-level credits') ||
   !helpDataSourcesScreenSource.includes('review Release Credits') ||
-  !helpDataSourcesScreenSource.includes('Editions & Sources keeps release details and source links')
+  !helpDataSourcesScreenSource.includes('Album art remains available when documented') ||
+  !helpDataSourcesScreenSource.includes('supplemental source links')
 ) {
   throw new Error('HelpDataSourcesScreen does not explain Album Detail exploration')
 }
@@ -804,7 +808,9 @@ if (
 }
 if (
   !helpDataSourcesScreenSource.includes('vibeycraft@gmail.com') ||
-  !helpDataSourcesScreenSource.includes('does not require an account') ||
+  !helpDataSourcesScreenSource.includes('does not require an account or login') ||
+  !helpDataSourcesScreenSource.includes('Saved albums and private notes are stored locally on this device') ||
+  !helpDataSourcesScreenSource.includes('They are not synced to an account') ||
   !helpDataSourcesScreenSource.includes('Searches and album lookups are sent to public music data services') ||
   !helpDataSourcesScreenSource.includes('needs an internet connection to search and load music data') ||
   !helpDataSourcesScreenSource.includes('Independent app') ||
