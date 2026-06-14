@@ -3,7 +3,7 @@
     "name": "Liner Notez",
     "slug": "liner-notez",
     "scheme": "linernotez",
-    "version": "0.1.0",
+    "version": "1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "platforms": [
@@ -32,7 +32,7 @@
     ],
     "ios": {
       "bundleIdentifier": "com.edtremblay.linernotez",
-      "buildNumber": "10",
+      "buildNumber": "11",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
