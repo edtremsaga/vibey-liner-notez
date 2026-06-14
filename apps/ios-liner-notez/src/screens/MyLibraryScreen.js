@@ -265,7 +265,7 @@ export function MyLibraryScreen({
                         paddingHorizontal: 10
                       }}
                     >
-                      <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>Open Album</Text>
+                      <Text maxFontSizeMultiplier={CONTROL_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '600' }}>View Details</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       accessibilityRole="button"

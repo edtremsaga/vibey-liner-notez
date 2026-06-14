@@ -579,7 +579,7 @@ export function AlbumDetailScreen({
             >
               <Text maxFontSizeMultiplier={SECTION_FONT_MAX_MULTIPLIER} style={{ color: '#f3f4f6', fontWeight: '700', fontSize: 17 }}>My Library</Text>
               <Text style={{ color: '#9ca3af', marginTop: 5, fontSize: 14 }}>
-                Save this album and keep one private note stored on this device.
+                Add this album’s details to My Library and store a private note about this album on this device.
               </Text>
 
               <TouchableOpacity

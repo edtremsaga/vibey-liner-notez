@@ -280,7 +280,7 @@ if (
   throw new Error('MyLibraryScreen does not include text search, open/remove/note actions, and empty states')
 }
 if (
-  !myLibraryScreenSource.includes('Open Album') ||
+  !myLibraryScreenSource.includes('View Details') ||
   !myLibraryScreenSource.includes('Edit Note') ||
   !myLibraryScreenSource.includes('Save Note') ||
   !myLibraryScreenSource.includes('Cancel') ||
@@ -836,7 +836,7 @@ if (
   !albumDetailScreenSource.includes('Private note') ||
   !albumDetailScreenSource.includes('Save Note') ||
   !albumDetailScreenSource.includes('Delete Note') ||
-  !albumDetailScreenSource.includes('stored on this device')
+  !albumDetailScreenSource.includes('Add this album’s details to My Library and store a private note about this album on this device.')
 ) {
   throw new Error('AlbumDetailScreen does not expose the on-device saved album and private-note workflow')
 }
