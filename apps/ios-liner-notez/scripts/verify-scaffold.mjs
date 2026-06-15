@@ -165,9 +165,12 @@ if (
   !appSource.includes('loadMyLibrary()') ||
   !appSource.includes('if (!libraryReady)') ||
   !appSource.includes('await saveMyLibrary(nextAlbums)') ||
-  !appSource.includes('Removing this album will also delete its private note from this device.')
+  !appSource.includes("'Remove from My Library?'") ||
+  !appSource.includes('This removes the album details and private note stored on this device.') ||
+  !appSource.includes("{ text: 'Cancel', style: 'cancel' }") ||
+  !appSource.includes("style: 'destructive'")
 ) {
-  throw new Error('App.js does not hydrate My Library before writes or confirm removal of saved notes')
+  throw new Error('App.js does not hydrate My Library before writes or confirm every saved-album removal')
 }
 if (
   !appSource.includes("const [searchFormArtistName, setSearchFormArtistName] = useState('')") ||

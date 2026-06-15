@@ -641,25 +641,20 @@ function LinerNotezApp() {
       return
     }
 
-    if (savedAlbum.note.trim()) {
-      Alert.alert(
-        'Remove saved album?',
-        'Removing this album will also delete its private note from this device.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Remove',
-            style: 'destructive',
-            onPress: () => {
-              performRemoveSavedAlbum(releaseGroupId)
-            }
+    Alert.alert(
+      'Remove from My Library?',
+      'This removes the album details and private note stored on this device.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            performRemoveSavedAlbum(releaseGroupId)
           }
-        ]
-      )
-      return
-    }
-
-    performRemoveSavedAlbum(releaseGroupId)
+        }
+      ]
+    )
   }
 
   function handleDeletePrivateNote(releaseGroupId) {
