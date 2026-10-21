@@ -1,3 +1,5 @@
+import { fetchMusicBrainzRequest } from './musicbrainzRequest'
+
 const MUSICBRAINZ_API_BASE = 'https://musicbrainz.org/ws/2'
 const MUSICBRAINZ_USER_AGENT = 'liner-notez-ios/0.0.1 (https://github.com/edtremsaga/vibey-liner-notez)'
 const HIGH_CONFIDENCE_SCORE = 95
@@ -5,25 +7,11 @@ const MIN_PLAUSIBLE_SCORE = 50
 const MAX_CANDIDATES = 10
 const MAX_ALIASES = 4
 const DEFAULT_PRODUCER_RELEASE_LOOKUP_LIMIT = 10
-const MIN_MUSICBRAINZ_REQUEST_INTERVAL_MS = 1100
 const PRODUCER_RELATION_TYPE_IDS = new Set([
   '8bf377ba-8d71-4ecc-97f2-7bb2d8a2a75f'
 ])
 
-let lastMusicBrainzRequestAt = 0
-
-function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms)
-  })
-}
-
 async function fetchMusicBrainzJson(path, params, metrics = null) {
-  const elapsedSinceLastRequest = Date.now() - lastMusicBrainzRequestAt
-  if (lastMusicBrainzRequestAt > 0 && elapsedSinceLastRequest < MIN_MUSICBRAINZ_REQUEST_INTERVAL_MS) {
-    await sleep(MIN_MUSICBRAINZ_REQUEST_INTERVAL_MS - elapsedSinceLastRequest)
-  }
-
   const url = new URL(`${MUSICBRAINZ_API_BASE}${path}`)
   for (const [key, value] of Object.entries(params ?? {})) {
     if (value !== undefined && value !== null) {
@@ -31,12 +19,11 @@ async function fetchMusicBrainzJson(path, params, metrics = null) {
     }
   }
 
-  lastMusicBrainzRequestAt = Date.now()
   if (metrics) {
     metrics.requestCount += 1
   }
 
-  const response = await fetch(url, {
+  const response = await fetchMusicBrainzRequest(url, {
     headers: {
       Accept: 'application/json',
       'User-Agent': MUSICBRAINZ_USER_AGENT

@@ -1,3 +1,5 @@
+import { fetchMusicBrainzRequest } from './musicbrainzRequest'
+
 const MUSICBRAINZ_API_BASE = 'https://musicbrainz.org/ws/2'
 const MUSICBRAINZ_USER_AGENT = 'liner-notez-ios/0.0.1 (https://github.com/edtremsaga/vibey-liner-notez)'
 
@@ -57,7 +59,7 @@ async function resolveMusicBrainzArtist(artistName) {
   const url = `${MUSICBRAINZ_API_BASE}/artist?${params.toString()}`
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchMusicBrainzRequest(url, {
       headers: {
         Accept: 'application/json',
         'User-Agent': MUSICBRAINZ_USER_AGENT
@@ -229,7 +231,7 @@ export async function searchMusicBrainzAlbumsByArtist({ artistName, albumTitle =
   })
   const url = `${MUSICBRAINZ_API_BASE}/release-group?${params.toString()}`
 
-  const response = await fetch(url, {
+  const response = await fetchMusicBrainzRequest(url, {
     headers: {
       Accept: 'application/json',
       'User-Agent': MUSICBRAINZ_USER_AGENT

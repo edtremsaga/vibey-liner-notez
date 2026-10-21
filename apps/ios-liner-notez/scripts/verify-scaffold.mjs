@@ -13,6 +13,7 @@ const requiredFiles = [
   'src/App.js',
   'src/services/musicbrainzAlbumDetail.js',
   'src/services/musicbrainzAlbumSearch.js',
+  'src/services/musicbrainzRequest.js',
   'src/services/musicDataErrors.js',
   'src/services/myLibraryStorage.js',
   'src/services/musicbrainzProducerSearch.js',

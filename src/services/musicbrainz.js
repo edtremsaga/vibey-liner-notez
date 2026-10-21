@@ -3,6 +3,7 @@
 // No data invention - only uses values from MusicBrainz API responses
 
 import { debugLog, debugWarn } from '../utils/debug'
+import { fetchMusicBrainzRequest } from './musicbrainzRequest'
 
 const MB_API_BASE = 'https://musicbrainz.org/ws/2'
 const COVER_ART_BASE = 'https://coverartarchive.org'
@@ -17,71 +18,40 @@ const STUDIO_ALBUM_EXCLUDED_SECONDARY_TYPES = new Set([
   'spokenword'
 ])
 
-// Rate limiter: MusicBrainz requires max 1 request per second
-let lastRequestTime = 0
-async function rateLimitedFetch(url, options = {}) {
-  const now = Date.now()
-  const timeSinceLastRequest = now - lastRequestTime
-  
-  // Add timeout for iOS compatibility (15 seconds)
+async function fetchWithTimeout(url, options = {}) {
   const timeoutMs = 15000
   const controller = new AbortController()
+  const externalSignal = options.signal
+  const handleExternalAbort = () => controller.abort()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
-  
-  // Merge signals if both exist
-  let cleanupListeners = null
-  const signal = options.signal 
-    ? (() => {
-        const combinedController = new AbortController()
-        const abort = () => combinedController.abort()
-        controller.signal.addEventListener('abort', abort)
-        options.signal.addEventListener('abort', abort)
-        // Store cleanup function to remove listeners
-        cleanupListeners = () => {
-          controller.signal.removeEventListener('abort', abort)
-          options.signal.removeEventListener('abort', abort)
-        }
-        return combinedController.signal
-      })()
-    : controller.signal
-  
-  if (timeSinceLastRequest < 1000) {
-    // Check if request was aborted during delay
-    if (signal.aborted) {
-      clearTimeout(timeoutId)
-      if (cleanupListeners) cleanupListeners()
-      throw new Error('Request aborted')
-    }
-    await new Promise(resolve => setTimeout(resolve, 1000 - timeSinceLastRequest))
-    // Check again after delay
-    if (signal.aborted) {
-      clearTimeout(timeoutId)
-      if (cleanupListeners) cleanupListeners()
-      throw new Error('Request aborted')
-    }
-  }
-  lastRequestTime = Date.now()
-  
+  externalSignal?.addEventListener('abort', handleExternalAbort, { once: true })
+
   try {
-    // iOS Safari fix: Ensure proper fetch options
-    const fetchOptions = {
+    return await fetch(url, { ...options, signal: controller.signal })
+  } catch (error) {
+    if (controller.signal.aborted && !externalSignal?.aborted) {
+      throw new Error(`Request timeout after ${timeoutMs}ms`)
+    }
+    throw error
+  } finally {
+    clearTimeout(timeoutId)
+    externalSignal?.removeEventListener('abort', handleExternalAbort)
+  }
+}
+
+async function rateLimitedFetch(url, options = {}) {
+  try {
+    const fetchRequest = url.startsWith(MB_API_BASE)
+      ? fetchMusicBrainzRequest
+      : fetchWithTimeout
+
+    return await fetchRequest(url, {
       ...options,
-      signal,
       mode: 'cors', // Explicitly request CORS
       credentials: 'omit', // Don't send credentials
       cache: 'default' // Use default cache
-    }
-    
-    const response = await fetch(url, fetchOptions)
-    clearTimeout(timeoutId)
-    if (cleanupListeners) cleanupListeners()
-    return response
+    })
   } catch (error) {
-    clearTimeout(timeoutId)
-    if (cleanupListeners) cleanupListeners()
-    if (error.name === 'AbortError') {
-      throw new Error(`Request timeout after ${timeoutMs}ms`)
-    }
     // Safari (iOS and desktop) specific: "Load failed" usually means network/CORS issue
     if (error.message?.includes('Load failed') || error.message?.includes('Failed to fetch')) {
       const isSafari = /Safari/.test(navigator.userAgent || '') && !/Chrome/.test(navigator.userAgent || '') && !/CriOS/.test(navigator.userAgent || '')
